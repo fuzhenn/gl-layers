@@ -1,6 +1,7 @@
 import Eventable from './common/Eventable';
 import Ajax from './common/Ajax.js';
 import { UrlModifierFunction } from './types/typings';
+import { urlProxy } from '@maptalks/common';
 
 type CachedResource = {
     image: any,
@@ -41,6 +42,7 @@ class InnerResourceLoader {
     }
 
     getArrayBuffer(url: string | string[]): Promise<PromiseResource | PromiseResource[]> {
+        url = urlProxy(url);
         if (Array.isArray(url)) {
             const promises = url.map(u => this.getArrayBuffer(u) as Promise<PromiseResource>);
             return Promise.all(promises);
@@ -62,6 +64,7 @@ class InnerResourceLoader {
     }
 
     disposeRes(url: string | string[]): this {
+        url = urlProxy(url);
         if (Array.isArray(url)) {
             url.forEach(u => this._disposeOne(u));
         } else {
@@ -75,6 +78,7 @@ class InnerResourceLoader {
     }
 
     getDefaultTexture(url: string | string[]): Uint8Array | number[] {
+        url = urlProxy(url);
         if (!Array.isArray(url)) {
             return this.defaultTexture;
         } else {
@@ -83,6 +87,7 @@ class InnerResourceLoader {
     }
 
     _disposeOne(url: string) {
+        url = urlProxy(url);
         const resources = this.resources;
         if (!resources[url]) {
             return;
@@ -93,7 +98,8 @@ class InnerResourceLoader {
         }
     }
 
-    _loadImage(url: string):Promise<PromiseResource> {
+    _loadImage(url: string): Promise<PromiseResource> {
+        url = urlProxy(url);
         const resources = this.resources;
         if (resources[url]) {
             return Promise.resolve({ url, data: resources[url].image });
@@ -103,8 +109,8 @@ class InnerResourceLoader {
             img.crossOrigin = 'anonymous';
             img.onload = function () {
                 resources[url] = {
-                    image : img,
-                    count : 1
+                    image: img,
+                    count: 1
                 };
                 resolve({ url, data: img });
             };
@@ -139,6 +145,6 @@ class InnerResourceLoader {
     }
 }
 
-class ResourceLoader extends Eventable(InnerResourceLoader) {}
+class ResourceLoader extends Eventable(InnerResourceLoader) { }
 
 export default ResourceLoader;

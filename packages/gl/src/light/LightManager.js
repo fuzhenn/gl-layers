@@ -1,5 +1,6 @@
 import createREGL from '@maptalks/regl';
 import * as reshader from '@maptalks/reshader.gl';
+import { urlProxy } from '@maptalks/common';
 
 const PREFILTER_CUBE_SIZE = 128;
 
@@ -87,7 +88,7 @@ class LightManager {
                 this._onSkyboxLoaded(images);
             }
         }
-        const onerror = function() {
+        const onerror = function () {
             throw new Error(`skybox image with url(${this.src}) failed to load, please check the image's url.`);
         }
         const urlModifier = this._urlModifier;
@@ -106,12 +107,14 @@ class LightManager {
                 const img = new Image();
                 img.onload = onload;
                 img.onerror = onerror;
-                img.src = urlModifier && urlModifier(envUrls[i]) || envUrls[i];
+                let url = urlModifier && urlModifier(envUrls[i]) || envUrls[i];
+                url = urlProxy(url);
+                img.src = url;
                 images[i] = img;
             }
         } else {
             const props = {
-                url: resource.url,
+                url: urlProxy(resource.url),
                 arrayBuffer: true,
                 hdr: true,
                 // type: 'uint8',

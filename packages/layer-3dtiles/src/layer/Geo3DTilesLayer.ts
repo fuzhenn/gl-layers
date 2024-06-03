@@ -3,6 +3,7 @@
 // region:
 
 import * as maptalks from 'maptalks';
+import { urlProxy } from '@maptalks/common';
 import { quat, vec2, vec3, mat3, mat4, MaskLayerMixin } from '@maptalks/gl';
 //https://github.com/fuzhenn/frustum-intersects
 import { intersectsSphere, intersectsOrientedBox } from 'frustum-intersects';
@@ -17,11 +18,11 @@ import TileBoundingRegion from './renderer/TileBoundingRegion';
 const options: Geo3DTilesLayerOptions = {
     'services': [],
     // 'maximumScreenSpaceError' : 8,
-    'maxGPUMemory' : maptalks.Browser.mobile ? 32 : 1536,
-    'retireInterval' : 2000,
-    'loadingLimitOnInteracting' : 5,
-    'loadingLimit' : 10,
-    'debug' : false,
+    'maxGPUMemory': maptalks.Browser.mobile ? 32 : 1536,
+    'retireInterval': 2000,
+    'loadingLimitOnInteracting': 5,
+    'loadingLimit': 10,
+    'debug': false,
     'meshLimitPerFrame': 1,
     'i3sNodepageLimitPerFrame': 1,
     'enableI3SCompressedGeometry': true,
@@ -161,14 +162,15 @@ export default class Geo3DTilesLayer extends MaskLayerMixin(maptalks.Layer) {
         this._rootMap = this._rootMap || {};
         this._roots = this._roots || [];
         for (let i = 0; i < urls.length; i++) {
-            const url = urls[i];
+            let url = urls[i];
+            url = urlProxy(url) as string;
             let index = this._rootMap[url];
             if (index === undefined) {
                 index = this._rootMap[url] = this._roots.length;
             }
             this._roots[index] = createRootTile(url, index, this.options.services[i]);
         }
-        this.fire('rootready', { roots : this._roots.slice(0) });
+        this.fire('rootready', { roots: this._roots.slice(0) });
     }
 
     showService(idx: number): this {
@@ -352,7 +354,7 @@ export default class Geo3DTilesLayer extends MaskLayerMixin(maptalks.Layer) {
 
         const root = {
             children: [],
-            level : -1
+            level: -1
         };
         let currentParent: CandinateNode = root;
         // 遍历堆栈
@@ -587,7 +589,7 @@ export default class Geo3DTilesLayer extends MaskLayerMixin(maptalks.Layer) {
             center[2] += heightOffset + (coordOffset[2] || 0);
             radianToCartesian3(volume, toRadian(center[0]), toRadian(center[1]), center[2]);
         }
-        boundingVolume._centerTransformed =  true;
+        boundingVolume._centerTransformed = true;
     }
 
     _offsetChanged(node: TileNode): boolean {
@@ -1161,7 +1163,7 @@ export default class Geo3DTilesLayer extends MaskLayerMixin(maptalks.Layer) {
             return [];
         }
         if (Array.isArray(coordinate)) {
-          coordinate = new maptalks.Coordinate(coordinate);
+            coordinate = new maptalks.Coordinate(coordinate);
         }
         const cp = map.coordToContainerPoint(coordinate);
         return this.identifyAtPoint(cp, options);
@@ -1386,7 +1388,7 @@ function createRootTile(url: string, idx: number, service: Geo3DTilesService): R
         version: 0,
         _empty: true,
         service,
-        visible: isNil(service.visible) ? true: service.visible,
+        visible: isNil(service.visible) ? true : service.visible,
         baseUrl: url.substring(0, url.lastIndexOf('/')) + '/',
         content: {
             url
@@ -1500,7 +1502,7 @@ function getBoxPlaneCenter(out: number[], box: number[], v0: number, v1: number,
     return out;
 }
 
-function isTopTile(node: TileNode): boolean  {
+function isTopTile(node: TileNode): boolean {
     if (!node.content || node.hasParentContent) {
         return false;
     }
@@ -1558,7 +1560,7 @@ export type Geo3DTilesLayerOptions = {
     'offset'?: number[] | OffsetFunction,
     'renderer'?: 'gl',
     'forceRenderOnZooming'?: true,
-    'forceRenderOnRotating'? : true,
+    'forceRenderOnRotating'?: true,
     'forceRenderOnMoving'?: true,
     'optionalExtensions'?: [
         'ANGLE_instanced_arrays',
@@ -1598,7 +1600,7 @@ export type Geo3DTilesServiceOptions = {
      * @english
      * maximum screen space error, default is 8
      */
-    maximumScreenSpaceError? :number,
+    maximumScreenSpaceError?: number,
     /**
      * 是否开启 debug
      * @english

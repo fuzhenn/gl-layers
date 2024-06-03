@@ -6,6 +6,7 @@ import Ajax from "../../worker/util/Ajax";
 import type { ArrayExtent } from "maptalks/dist/geo/Extent";
 import type { Callback } from "maptalks/dist/core/Ajax";
 import VectorTileLayer from "./VectorTileLayer";
+import { urlProxy } from '@maptalks/common';
 
 const options = {
   //feature data to return from worker
@@ -286,12 +287,14 @@ function toAbsoluteURL(url) {
 
 function convertUrl(data, urlModifier) {
   if (data.url) {
+    data.url = urlProxy(data.url);
     if (urlModifier) {
       data.url = urlModifier(data.url);
     } else {
       data.url = toAbsoluteURL(data.url);
     }
   } else {
+    data = urlProxy(data);
     if (urlModifier) {
       data = urlModifier(data);
     } else {

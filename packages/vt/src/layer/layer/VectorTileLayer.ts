@@ -18,6 +18,7 @@ import Ajax from "../../worker/util/Ajax";
 import type { PositionArray, TileLayerOptionsType } from "maptalks";
 import VectorTileLayerRenderer from "../renderer/VectorTileLayerRenderer";
 import { isFunctionDefinition } from "@maptalks/function-type";
+import { styleResourceProxy, urlProxy } from '@maptalks/common';
 
 const TMP_POINT = new maptalks.Point(0, 0);
 const TMP_COORD = new maptalks.Coordinate(0, 0);
@@ -114,6 +115,7 @@ class VectorTileLayer extends maptalks.TileLayer {
 
   // create a layer instance from given json
   static loadFrom(url: string, fetchOptions: any) {
+    url = urlProxy(url);
     return fetch(url, fetchOptions || {})
       .then((data) => {
         return data.json();
@@ -316,7 +318,7 @@ class VectorTileLayer extends maptalks.TileLayer {
     }
   }
 
-  onWorkerReady() {}
+  onWorkerReady() { }
 
   /**
    * 更新图层配置。
@@ -371,13 +373,14 @@ class VectorTileLayer extends maptalks.TileLayer {
    */
   setStyle(style: any) {
     if (style && (isString(style) || style.url)) {
-      const url = style;
+      let url = style.url || style;
+      url = urlProxy(url);
       const endIndex = url.lastIndexOf("/");
       const prefix = endIndex < 0 ? "." : url.substring(0, endIndex);
       const root = prefix;
       this.ready = false;
       Ajax.getJSON(
-        style.url ? style.url : style,
+        url,
         style.url ? style : {},
         (err, json) => {
           if (err) {
@@ -488,6 +491,7 @@ class VectorTileLayer extends maptalks.TileLayer {
     }
     style = JSON.parse(JSON.stringify(style));
     style = uncompress(style);
+    styleResourceProxy(style);
     this._originFeatureStyle = style["featureStyle"] || [];
     this._featureStyle = parseFeatureStyle(style["featureStyle"]);
     this._vtStyle = style["style"] || [];
@@ -1666,7 +1670,7 @@ class VectorTileLayer extends maptalks.TileLayer {
     // }
   }
 
-  static registerPlugin(Plugin: { type: string; [key: string]: unknown }) {
+  static registerPlugin(Plugin: { type: string;[key: string]: unknown }) {
     if (!(VectorTileLayer as any).plugins) {
       (VectorTileLayer as any).plugins = {};
     }

@@ -1,12 +1,16 @@
 import { Marker, Util } from 'maptalks';
 import LRUCache from './LRUCache';
 
+function isImageBitMap(url) {
+    return Util.isFunction(createImageBitmap) && url instanceof ImageBitmap;
+}
+
 export default class IconRequestor {
     //options.errorUrl : alt image when failing loading the icon
     constructor(options) {
         this.options = options || {};
         this._requesting = {};
-        this._cache = new LRUCache(256, function () {});
+        this._cache = new LRUCache(256, function () { });
         const canvas = document.createElement('canvas');
         this.ctx = canvas.getContext('2d', { willReadFrequently: true });
     }
@@ -82,16 +86,16 @@ export default class IconRequestor {
         const urlModifier = this.options.urlModifier;
         let hasRequests = false;
         let marker;
-        for (let i = 0; i < urls.length; i++) {
-            const url = urls[i];
+        urls.forEach((url, i) => {
+            // const url = urls[i];
             const size = icons[url];
             this._ensureMaxSize(url, size);
             const icon = this._getCache(url, size);
             if (icon && icon !== 'error') {
                 images[url] = this._getCache(url, size);
-                continue;
+                return;
             } else if (icon === 'error') {
-                continue;
+                return;
             }
             let symbol, realUrl = url;
             if (url.indexOf('vector://') === 0) {
@@ -101,7 +105,7 @@ export default class IconRequestor {
                 }
             }
             if (url.indexOf('vector://') === 0 && symbol.markerType !== 'path') {
-                marker = marker ||  new Marker([0, 0]);
+                marker = marker || new Marker([0, 0]);
                 const { markerFill, markerLineColor } = symbol;
                 if (markerFill && Array.isArray(markerFill)) {
                     symbol.markerFill = convertColorArray(markerFill);
@@ -142,22 +146,40 @@ export default class IconRequestor {
                     hasRequests = true;
                     count++;
                     this._requesting[url].push(callback);
-                    continue;
+                    return;;
                 }
                 this._requesting[url].push(callback);
-                const img = new Image();
-                img.index = i;
-                img.size = size;
-                img.onload = onload;
-                img.onerror = onerror;
-                img.onabort = onerror;
-                img.url = url;
-                img.crossOrigin = 'Anonymous';
-                hasRequests = true;
-                count++;
-                img.src = urlModifier && urlModifier(realUrl) || realUrl;
+
+                const proxyUrl = urlModifier && urlModifier(realUrl) || realUrl;
+                //imagebitmap
+                if (isImageBitMap(proxyUrl)) {
+                    hasRequests = true;
+                    count++;
+                    createImageBitmap(proxyUrl).then(imgBitMap => {
+                        imgBitMap.size = size;
+                        imgBitMap.index = i;
+                        imgBitMap.url = url;
+                        onload.call(imgBitMap)
+                    }).catch((err) => {
+                        console.error(err);
+                    })
+                } else {
+                    const img = new Image();
+                    img.index = i;
+                    img.size = size;
+                    img.onload = onload;
+                    img.onerror = onerror;
+                    img.onabort = onerror;
+                    img.url = url;
+                    img.crossOrigin = 'Anonymous';
+                    hasRequests = true;
+                    count++;
+                    img.src = proxyUrl;
+                }
+
+
             }
-        }
+        });
         if (!hasRequests) {
             cb(null, { icons: images, buffers });
         }

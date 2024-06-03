@@ -55,11 +55,11 @@ if (production) {
         compress: {
             pure_getters: true
         },
-        output : {
+        output: {
             ecma: 2017,
             // keep_quoted_props: true,
             beautify: true,
-            comments : '/^!/'
+            comments: '/^!/'
         }
     }));
 }
@@ -67,8 +67,8 @@ if (production) {
 module.exports = [
     {
         input: 'src/index.js',
-        external : ['gl-matrix', '@maptalks/gltf-loader', '@maptalks/tbn-packer'],
-        plugins : plugins,
+        external: ['gl-matrix', '@maptalks/gltf-loader', '@maptalks/tbn-packer', 'maptalks'],
+        plugins: plugins,
         output: [
             {
                 'sourcemap': true,

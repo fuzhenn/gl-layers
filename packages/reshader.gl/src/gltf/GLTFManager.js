@@ -1,5 +1,6 @@
-import * as GLTFHelper  from '../GLTFHelper.js';
+import * as GLTFHelper from '../GLTFHelper.js';
 import { simpleModels, getSimpleModel, setSimpleModel } from './SimpleModel';
+import { urlProxy } from '@maptalks/common';
 
 export default class GLTFManager {
     constructor(regl, options) {
@@ -9,10 +10,12 @@ export default class GLTFManager {
     }
 
     getGLTF(url) {
+        url = urlProxy(url);
         return this.resourceMap[url];
     }
 
     loginGLTF(url, requestor) {
+        url = urlProxy(url);
         if (!this.resourceMap[url]) {
             if (simpleModels[url]) { //简单模型不需要request，直接返回数据
                 const data = getSimpleModel(url);
@@ -32,6 +35,7 @@ export default class GLTFManager {
     }
 
     logoutGLTF(url) {
+        url = urlProxy(url);
         if (this.resourceMap[url]) {
             this.resourceMap[url].refCount -= 1;
             if (this.resourceMap[url].refCount < 1) {
@@ -56,6 +60,7 @@ export default class GLTFManager {
     }
 
     isSimpleModel(url) {
+        url = urlProxy(url);
         return simpleModels[url];
     }
 
@@ -68,6 +73,7 @@ export default class GLTFManager {
     }
 
     _exportGLTFResource(gltf, url, useUniqueREGLBuffer = true) {
+        url = urlProxy(url);
         if (!gltf) {
             return null;
         }
@@ -86,12 +92,14 @@ export default class GLTFManager {
     }
 
     fetchGLTF(url) {
+        url = urlProxy(url);
         return GLTFHelper.load(url, this.options).then(gltfData => {
             return gltfData;
         });
     }
 
     _loadGLTFModel(url) {
+        url = urlProxy(url);
         return this.fetchGLTF(url).then(data => {
             this.resourceMap[url] = this._exportGLTFResource(data, url);
             return this.resourceMap[url];

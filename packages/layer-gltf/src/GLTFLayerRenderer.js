@@ -8,6 +8,7 @@ import sceneVert from './common/glsl/sceneVert.vert';
 import extentFrag from './common/glsl/extent.frag';
 import GLTFWorkerConnection from './common/GLTFWorkerConnection';
 import { loadGLTF } from './worker/'
+import { urlProxy } from '@maptalks/common';
 
 const uniformDeclares = [], tempBBox = [];
 const pointLineModes = ['points', 'lines', 'line strip', 'line loop'];
@@ -77,7 +78,7 @@ class GLTFLayerRenderer extends MaskRendererMixin(maptalks.renderer.OverlayLayer
         }
         this._needRefreshPicking = true;
         this.completeRender();
-        this.layer.fire('rendercomplete-debug', { count : renderCount });
+        this.layer.fire('rendercomplete-debug', { count: renderCount });
     }
 
     _renderBBox(uniforms, targetFBO) {
@@ -210,13 +211,13 @@ class GLTFLayerRenderer extends MaskRendererMixin(maptalks.renderer.OverlayLayer
                 alpha: true,
                 depth: true,
                 //antialias: true,
-                stencil : true
+                stencil: true
             };
             this.glOptions = attributes;
             this.gl = this.gl || this._createGLContext(this.canvas, attributes);
             this.regl = createREGL({
-                gl : this.gl,
-                optionalExtensions : [
+                gl: this.gl,
+                optionalExtensions: [
                     'ANGLE_instanced_arrays',
                     'OES_element_index_uint',
                     'OES_standard_derivatives',
@@ -263,10 +264,10 @@ class GLTFLayerRenderer extends MaskRendererMixin(maptalks.renderer.OverlayLayer
         this.renderer = renderer;
         this._uniforms = {
             'projMatrix': map.projMatrix,
-            'projViewMatrix' : map.projViewMatrix,
+            'projViewMatrix': map.projViewMatrix,
             'viewMatrix': map.viewMatrix,
             //TODO 增加uCameraPosition用来适配pbr, 后面需要删掉
-            'cameraPosition' : map.cameraPosition,
+            'cameraPosition': map.cameraPosition,
             'altitudeScale': 1
         };
         reshader.pbr.PBRUtils.loginIBLResOnCanvas(this.canvas, this.regl, map);
@@ -274,12 +275,12 @@ class GLTFLayerRenderer extends MaskRendererMixin(maptalks.renderer.OverlayLayer
         this._picking = new reshader.FBORayPicking(
             renderer,
             {
-                vert : pickingVert,
-                uniforms : [
+                vert: pickingVert,
+                uniforms: [
                     {
-                        name : 'modelViewMatrix',
-                        type : 'function',
-                        fn : function (context, props) {
+                        name: 'modelViewMatrix',
+                        type: 'function',
+                        fn: function (context, props) {
                             return mat4.multiply([], props['viewMatrix'], props['modelMatrix']);
                         }
                     }
@@ -312,6 +313,7 @@ class GLTFLayerRenderer extends MaskRendererMixin(maptalks.renderer.OverlayLayer
     }
 
     _requestor(url) {
+        url = urlProxy(url);
         const urlModifier = this.layer.getURLModifier();
         let promise;
         if (urlModifier) {
@@ -353,12 +355,12 @@ class GLTFLayerRenderer extends MaskRendererMixin(maptalks.renderer.OverlayLayer
     _registerShader(context, name, type, config) {
         if (!this.viewport) {
             this.viewport = {
-                x : 0,
-                y : 0,
-                width : () => {
+                x: 0,
+                y: 0,
+                width: () => {
                     return this.canvas ? this.canvas.width : 1;
                 },
-                height : () => {
+                height: () => {
                     return this.canvas ? this.canvas.height : 1;
                 }
             };
@@ -411,7 +413,7 @@ class GLTFLayerRenderer extends MaskRendererMixin(maptalks.renderer.OverlayLayer
         this.regl.clear({
             color: [0, 0, 0, 0],
             depth: 1,
-            stencil : 0
+            stencil: 0
         });
         super.clearCanvas();
     }
@@ -485,7 +487,7 @@ class GLTFLayerRenderer extends MaskRendererMixin(maptalks.renderer.OverlayLayer
         //首帧由于includesChanged始终为false，需要重新创建shader
         if (context.states.includesChanged) {
             if (Array.isArray(type)) {
-                newShader = new  reshader[type[0]][type[1]](shaderConfig);
+                newShader = new reshader[type[0]][type[1]](shaderConfig);
             } else {
                 newShader = new reshader[type](shaderConfig);
             }
@@ -645,7 +647,7 @@ class GLTFLayerRenderer extends MaskRendererMixin(maptalks.renderer.OverlayLayer
         for (let i = 0; i < names.length; ++i) {
             try {
                 context = canvas.getContext(names[i], options);
-            } catch (e) {}
+            } catch (e) { }
             if (context) {
                 break;
             }
@@ -682,9 +684,9 @@ class GLTFLayerRenderer extends MaskRendererMixin(maptalks.renderer.OverlayLayer
                 'pointSize': this.layer.options['pointSize'] || 1.0
             },
             {
-                viewMatrix : map.viewMatrix,  //viewMatrix和projMatrix用于计算点的世界坐标值
-                projMatrix : map.projMatrix,
-                returnPoint : true
+                viewMatrix: map.viewMatrix,  //viewMatrix和projMatrix用于计算点的世界坐标值
+                projMatrix: map.projMatrix,
+                returnPoint: true
             }
         );
         if (results.length) {
