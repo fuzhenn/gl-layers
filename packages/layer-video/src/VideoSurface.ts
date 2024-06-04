@@ -7,6 +7,8 @@ import {
   VectorLayer,
 } from "maptalks";
 
+import { urlProxy } from '@maptalks/common';
+
 interface VideoSurfaceOptions {
   url?: string;
   opacity?: number;
@@ -90,7 +92,8 @@ export default class VideoSurface extends Eventable(Handlerable(Class)) {
 
   _createVideo() {
     this._videoState = "stop";
-    const url = this.options.url;
+    let url = this.options.url;
+    url = urlProxy(url);
     const id = this.options.elementId;
     let video: any = document.getElementById(id);
     if (url) {

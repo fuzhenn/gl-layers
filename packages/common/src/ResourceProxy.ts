@@ -7,7 +7,7 @@ export function isImageBitMap(url) {
     return maptalks.Browser.imageBitMap && url instanceof ImageBitmap;
 }
 
-export function urlProxy(url: string) {
+function _urlProxy(url: string) {
     if (url && MTK.formatResourceUrl) {
         const proxyUrl = MTK.formatResourceUrl(url);
         if (MTK.GlobalConfig && MTK.GlobalConfig.isTest) {
@@ -16,6 +16,15 @@ export function urlProxy(url: string) {
         return proxyUrl;
     }
     return url;
+}
+
+export function urlProxy(urls: string) {
+    if (Array.isArray(urls)) {
+        return urls.map(url => {
+            return _urlProxy(url);
+        });
+    }
+    return _urlProxy(urls);
 }
 
 export const ResourceKeys = [
