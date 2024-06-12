@@ -42,7 +42,7 @@ class InnerResourceLoader {
     }
 
     getArrayBuffer(url: string | string[]): Promise<PromiseResource | PromiseResource[]> {
-        url = urlProxy(url);
+        url = urlProxy(url, this.urlModifier);
         if (Array.isArray(url)) {
             const promises = url.map(u => this.getArrayBuffer(u) as Promise<PromiseResource>);
             return Promise.all(promises);
@@ -64,7 +64,7 @@ class InnerResourceLoader {
     }
 
     disposeRes(url: string | string[]): this {
-        url = urlProxy(url);
+        url = urlProxy(url, this.urlModifier);
         if (Array.isArray(url)) {
             url.forEach(u => this._disposeOne(u));
         } else {
@@ -78,7 +78,7 @@ class InnerResourceLoader {
     }
 
     getDefaultTexture(url: string | string[]): Uint8Array | number[] {
-        url = urlProxy(url);
+        url = urlProxy(url, this.urlModifier);
         if (!Array.isArray(url)) {
             return this.defaultTexture;
         } else {
@@ -87,7 +87,7 @@ class InnerResourceLoader {
     }
 
     _disposeOne(url: string) {
-        url = urlProxy(url);
+        url = urlProxy(url, this.urlModifier);
         const resources = this.resources;
         if (!resources[url]) {
             return;
@@ -99,7 +99,7 @@ class InnerResourceLoader {
     }
 
     _loadImage(url: string): Promise<PromiseResource> {
-        url = urlProxy(url);
+        url = urlProxy(url, this.urlModifier);
         const resources = this.resources;
         if (resources[url]) {
             return Promise.resolve({ url, data: resources[url].image });

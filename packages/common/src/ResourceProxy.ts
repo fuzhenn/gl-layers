@@ -18,7 +18,10 @@ function _urlProxy(url: string) {
     return url;
 }
 
-export function urlProxy(urls: string) {
+export function urlProxy(urls: string, urlModifier: any) {
+    if (urlModifier) {
+        return urls;
+    }
     if (Array.isArray(urls)) {
         return urls.map(url => {
             return _urlProxy(url);
@@ -44,23 +47,23 @@ export const ResourceKeys = [
 
 ];
 
-export const styleResourceProxy = (style) => {
+export const styleResourceProxy = (style, urlModifier: any) => {
     if (MTK.Util.isObject(style)) {
         for (const key in style) {
             const value = style[key];
             if (MTK.Util.isObject(value)) {
-                styleResourceProxy(value);
+                styleResourceProxy(value, urlModifier);
             } if (Array.isArray(value)) {
-                styleResourceProxy(value);
+                styleResourceProxy(value, urlModifier);
             } else {
                 if (value && ResourceKeys.indexOf(key) > -1) {
-                    style[key] = urlProxy(value);
+                    style[key] = urlProxy(value, urlModifier);
                 }
             }
         }
     } else if (Array.isArray(style)) {
         style.forEach(d => {
-            styleResourceProxy(d);
+            styleResourceProxy(d, urlModifier);
         });
     }
 }

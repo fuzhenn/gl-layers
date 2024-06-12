@@ -313,8 +313,8 @@ class GLTFLayerRenderer extends MaskRendererMixin(maptalks.renderer.OverlayLayer
     }
 
     _requestor(url) {
-        url = urlProxy(url);
         const urlModifier = this.layer.getURLModifier();
+        url = urlProxy(url, urlModifier);
         let promise;
         if (urlModifier) {
             // 有urlModifier时，在主线程中请求模型

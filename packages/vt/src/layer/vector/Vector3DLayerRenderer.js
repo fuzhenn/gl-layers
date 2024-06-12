@@ -504,9 +504,8 @@ class Vector3DLayerRenderer extends maptalks.renderer.CanvasRenderer {
         this._iconRequestor = new IconRequestor({
             iconErrorUrl: layer.options['iconErrorUrl'],
             urlModifier: (url) => {
-                url = urlProxy(url);
                 const modifier = layer.getURLModifier();
-                return modifier && modifier(url) || url;
+                return modifier && modifier(url) || urlProxy(url, modifier);
             }
         });
         const useCharBackBuffer = !this._isEnableWorkAround('win-intel-gpu-crash');

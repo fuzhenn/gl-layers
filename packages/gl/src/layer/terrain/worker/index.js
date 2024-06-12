@@ -615,11 +615,11 @@ function colorTerrain(imgdata, colors) {
     const ci = colorInCache[key];
     const data = imgdata.data;
     for (let i = 0, len = data.length; i < len; i += 4) {
-        const R = data[i], G = data[i + 1], B = data[i + 2], A = data[i + 3];
+        const R = data[i], G = data[i + 1], B = data[i + 2];
         let height = 0;
         //地形解码
         height = -10000 + ((R * 256 * 256 + G * 256 + B) * 0.1);
-        height = Math.max(height, 0);
+        // height = Math.max(height, 0);
         const [r, g, b] = ci.getColor(height);
 
         //根据不同的高度设置不同的颜色

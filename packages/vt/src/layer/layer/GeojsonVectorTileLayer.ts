@@ -287,14 +287,14 @@ function toAbsoluteURL(url) {
 
 function convertUrl(data, urlModifier) {
   if (data.url) {
-    data.url = urlProxy(data.url);
+    data.url = urlProxy(data.url, urlModifier);
     if (urlModifier) {
       data.url = urlModifier(data.url);
     } else {
       data.url = toAbsoluteURL(data.url);
     }
   } else {
-    data = urlProxy(data);
+    data = urlProxy(data, urlModifier);
     if (urlModifier) {
       data = urlModifier(data);
     } else {

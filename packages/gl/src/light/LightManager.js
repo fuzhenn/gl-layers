@@ -108,13 +108,13 @@ class LightManager {
                 img.onload = onload;
                 img.onerror = onerror;
                 let url = urlModifier && urlModifier(envUrls[i]) || envUrls[i];
-                url = urlProxy(url);
+                url = urlProxy(url, urlModifier);
                 img.src = url;
                 images[i] = img;
             }
         } else {
             const props = {
-                url: urlProxy(resource.url),
+                url: urlProxy(resource.url, urlModifier),
                 arrayBuffer: true,
                 hdr: true,
                 // type: 'uint8',
