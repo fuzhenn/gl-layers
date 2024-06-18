@@ -10,6 +10,7 @@ import Vector3DLayer from './Vector3DLayer';
 import { isFunctionDefinition, loadFunctionTypes } from '@maptalks/function-type';
 import convertToPainterFeatures from '../renderer/utils/convert_to_painter_features';
 import { ICON_PAINTER_SCENECONFIG } from '../core/Constant';
+import { urlProxy } from '@maptalks/common';
 
 // const SYMBOL_SIMPLE_PROPS = {
 //     textFill: 1,
@@ -504,7 +505,7 @@ class Vector3DLayerRenderer extends maptalks.renderer.CanvasRenderer {
             iconErrorUrl: layer.options['iconErrorUrl'],
             urlModifier: (url) => {
                 const modifier = layer.getURLModifier();
-                return modifier && modifier(url) || url;
+                return modifier && modifier(url) || urlProxy(url, modifier);
             }
         });
         const useCharBackBuffer = !this._isEnableWorkAround('win-intel-gpu-crash');
@@ -560,7 +561,7 @@ class Vector3DLayerRenderer extends maptalks.renderer.CanvasRenderer {
             return;
         }
 
-        const  { features, center } = this._getFeaturesToRender(this._markerFeatures, this._textFeatures);
+        const { features, center } = this._getFeaturesToRender(this._markerFeatures, this._textFeatures);
 
         const markerFeatures = [];
         const textFeatures = [];
@@ -701,7 +702,7 @@ class Vector3DLayerRenderer extends maptalks.renderer.CanvasRenderer {
         });
     }
 
-    updateMesh() {}
+    updateMesh() { }
 
     _updateMarkerMesh(marker) {
         const symbols = marker['_getInternalSymbol']();
@@ -1247,7 +1248,7 @@ class Vector3DLayerRenderer extends maptalks.renderer.CanvasRenderer {
         let props = e.properties;
         if (Array.isArray(props)) {
             const allChangedProps = {};
-            for (let i = 0 ; i < props.length; i++) {
+            for (let i = 0; i < props.length; i++) {
                 if (props[i]) {
                     extend(allChangedProps, props[i]);
                 }

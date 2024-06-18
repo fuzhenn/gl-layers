@@ -47,6 +47,7 @@
     "rollup": "^4.17.2"
   },
   "dependencies": {
+    "@maptalks/common": "workspace:@maptalks/common@*",
     "frustum-intersects": "^0.2.4"
   },
   "gitHead": "9eeea4807723d460fa7e09969c6556d53f6bed84"

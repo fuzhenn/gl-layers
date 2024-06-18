@@ -38,6 +38,7 @@
   "dependencies": {
     "@maptalks/function-type": "^1.3.1",
     "@maptalks/gltf-loader": "workspace:@maptalks/gltf-loader@*",
+    "@maptalks/common": "workspace:@maptalks/common@*",
     "@maptalks/tbn-packer": "^1.4.5",
     "frustum-intersects": "^0.2.4",
     "gl-matrix": "^3.4.0",

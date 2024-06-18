@@ -21,6 +21,7 @@
   "author": "fuzhenn",
   "license": "UNLICENSED",
   "dependencies": {
+    "@maptalks/common": "workspace:@maptalks/common@*",
     "@mapbox/point-geometry": "^0.1.0",
     "@mapbox/shelf-pack": "^3.1.0",
     "@mapbox/tiny-sdf": "^1.1.0",

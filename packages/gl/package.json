@@ -27,13 +27,15 @@
   "author": "fuzhenn",
   "license": "UNLICENSED",
   "dependencies": {
+    "@maptalks/common": "workspace:@maptalks/common@*",
     "@maptalks/fusiongl": "^0.6.13",
     "@maptalks/gltf-loader": "workspace:@maptalks/gltf-loader@*",
     "@maptalks/martini": "^0.4.0",
     "@maptalks/regl": "^3.3.5",
     "@maptalks/reshader.gl": "workspace:@maptalks/reshader.gl@*",
     "color": "^3.0.0",
-    "colorin": "^0.6.0"
+    "colorin": "^0.6.0",
+    "gl-matrix": "^3.4.0"
   },
   "devDependencies": {
     "@rollup/plugin-commonjs": "^25.0.7",

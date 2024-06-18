@@ -1,5 +1,6 @@
-import * as GLTFHelper  from '../GLTFHelper.js';
+import * as GLTFHelper from '../GLTFHelper.js';
 import { simpleModels, getSimpleModel, setSimpleModel } from './SimpleModel';
+// import { urlProxy } from '@maptalks/common';
 
 export default class GLTFManager {
     constructor(regl, options) {
