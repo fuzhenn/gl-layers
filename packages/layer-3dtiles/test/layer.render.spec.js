@@ -348,6 +348,7 @@ describe('render specs', () => {
             const layer = new Geo3DTilesLayer('3d-tiles', {
                 services : [
                     {
+                        maxTextureSize: 1024,
                         url : `http://localhost:${PORT}/integration/fixtures/${resPath}/tileset.json`,
                         shader: 'pbr',
                         ambientLight: [1, 1, 1]
@@ -2120,6 +2121,21 @@ describe('render specs', () => {
             runner(() => {
                 done();
             }, layer, { path: `./integration/expected/${resPath}/expected.png`, diffCount: 5, renderCount: 4, noGroup: true });
+        });
+
+        it('issue#708, fix incorrect ktx2 min filter', done => {
+            const resPath = 'BatchedDraco/issue-708';
+            const layer = new Geo3DTilesLayer('3d-tiles', {
+                services : [
+                    {
+                        url : `http://localhost:${PORT}/integration/fixtures/${resPath}/tileset.json`,
+                        heightOffset: 0
+                    }
+                ]
+            });
+            runner(() => {
+                done();
+            }, layer, { path: `./integration/expected/${resPath}/expected.png`, zoomOffset: 1, diffCount: 5, renderCount: 1, noGroup: true });
         });
     });
 });

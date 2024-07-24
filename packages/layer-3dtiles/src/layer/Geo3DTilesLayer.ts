@@ -181,22 +181,16 @@ export default class Geo3DTilesLayer extends MaskLayerMixin(maptalks.Layer) {
         return this;
     }
 
-    setToRedraw(): this {
-        const renderer = this.getRenderer();
-        if (renderer) {
-            renderer.setToRedraw();
-        }
-        return this;
+    setToRedraw() {
+      this._setToRedraw();
+      return this;
     }
 
     addService(info: Geo3DTilesService): this {
         this.options.services = this.options.services || [];
         this.options.services.push(info);
         this._initRoots();
-        const renderer = this.getRenderer();
-        if (renderer) {
-            renderer.setToRedraw();
-        }
+        this._setToRedraw();
         return this;
     }
 
@@ -224,10 +218,7 @@ export default class Geo3DTilesLayer extends MaskLayerMixin(maptalks.Layer) {
                 rootNode.version++;
             }
         }
-        const renderer = this.getRenderer();
-        if (renderer) {
-            renderer.setToRedraw();
-        }
+        this._setToRedraw();
         return this;
     }
 
@@ -243,10 +234,7 @@ export default class Geo3DTilesLayer extends MaskLayerMixin(maptalks.Layer) {
             services.splice(idx, 1);
         }
 
-        const renderer = this.getRenderer();
-        if (renderer) {
-            renderer.setToRedraw();
-        }
+        this._setToRedraw();
         return this;
     }
 
@@ -619,10 +607,7 @@ export default class Geo3DTilesLayer extends MaskLayerMixin(maptalks.Layer) {
             node.children = tile.children;
             const url = node.content.url;
             node.baseUrl = url.substring(0, url.lastIndexOf('/') + 1);
-            const renderer = this.getRenderer();
-            if (renderer) {
-                renderer.setToRedraw();
-            }
+            this._setToRedraw();
         }
     }
 
@@ -1190,7 +1175,11 @@ export default class Geo3DTilesLayer extends MaskLayerMixin(maptalks.Layer) {
         const dpr = map.getDevicePixelRatio();
         const picked = renderer.pick(point.x * dpr, point.y * dpr, options);
         pushIn(results, picked);
-        return results;
+        if (options && options.filter) {
+          return results.filter(g => options.filter(g));
+        } else {
+          return results;
+        }
     }
 
     getCurrentBatchIDs(): number[] {
@@ -1287,7 +1276,7 @@ export default class Geo3DTilesLayer extends MaskLayerMixin(maptalks.Layer) {
         if (!renderer) {
             return this;
         }
-        renderer.setToRedraw();
+        this._setToRedraw();
         return this;
     }
 
@@ -1300,7 +1289,7 @@ export default class Geo3DTilesLayer extends MaskLayerMixin(maptalks.Layer) {
         if (!renderer) {
             return this;
         }
-        renderer.setToRedraw();
+        this._setToRedraw();
         return this;
     }
 
@@ -1784,7 +1773,9 @@ export type IdentifyOptions = {
      * @english
      * tolerance in pixel, default is 0
      */
-    tolerance?: number
+    tolerance?: number,
+    count?: number,
+    filter?: (picked: any) => boolean
 };
 
 type TileBoxCenter = {

@@ -36,6 +36,10 @@ class FillPainter extends BasicPainter {
         return ['polygonBloom'];
     }
 
+    isUniqueStencilRefPerTile() {
+        return true;
+    }
+
     prepareSymbol(symbol) {
         const polygonFill = symbol.polygonFill;
         if (Array.isArray(polygonFill)) {
@@ -496,14 +500,13 @@ class FillPainter extends BasicPainter {
         super.paint(context);
     }
 
-    isEnableStencil(context) {
-        const renderer = this.layer.getRenderer();
+    isEnableTileStencil(context) {
         const isRenderingTerrainSkin = !!(context && context.isRenderingTerrain && this.isTerrainSkin());
-        const isEnableStencil = !!(!isRenderingTerrainSkin && renderer.isEnableTileStencil && renderer.isEnableTileStencil());
+        const isEnableStencil = !isRenderingTerrainSkin;
         // 只在VectorTileLayer上打开stencil maptalks/issues#566
         // 原有stencil打开后，前面的polygon绘制后，后面的polygon不再绘制，用以解决底图上，半透明polygon重叠时的z-fighting，但比较反直觉
         // GeoJSONVectorTileLayer不用于底图绘制，所以应该关闭该特性
-        return isEnableStencil && this.layer.getJSONType() === 'VectorTileLayer';
+        return isEnableStencil;
     }
 
     init(context) {
@@ -523,33 +526,31 @@ class FillPainter extends BasicPainter {
                 return props.viewport ? props.viewport.height : (canvas ? canvas.height : 1);
             },
         };
-
+        const isVT = this.layer.getJSONType() === 'VectorTileLayer';
         this.renderer = new reshader.Renderer(regl);
-        const renderer = this.layer.getRenderer();
         const depthRange = this.sceneConfig.depthRange;
         const extraCommandProps = {
             viewport,
             stencil: {
                 enable: () => {
-                    return this.isEnableStencil(context);
+                    return this.isEnableTileStencil(context) && (isVT || this.isOnly2D());
                 },
                 func: {
                     cmp: () => {
-                        const stencil = renderer.isEnableTileStencil && renderer.isEnableTileStencil();
-                        return stencil ? '=' : '<=';
+                        return this.isOnly2D() ? '=' : '<=';
                     },
                     ref: (context, props) => {
-                        const stencil = renderer.isEnableTileStencil && renderer.isEnableTileStencil();
-                        return stencil ? props.stencilRef : props.level;
+                        return props.stencilRef;
                     }
                 },
                 op: {
                     fail: 'keep',
                     zfail: 'keep',
                     zpass: () => {
-                        const stencil = renderer.isEnableTileStencil && renderer.isEnableTileStencil();
+                        const stencil = this.isOnly2D();
                         return stencil ? 'zero' : 'replace';
                     }
+
                 }
             },
             depth: {

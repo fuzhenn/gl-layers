@@ -19,7 +19,7 @@ export default class BaseLayerWorker {
         this._compileStyle(options.style);
         this.requests = {};
         this._cache = tileCache;
-        this._styleCounter = 0;
+        this._styleCounter = 1;
         this.loadings = tileLoading;
     }
 
@@ -124,7 +124,7 @@ export default class BaseLayerWorker {
                 cb(null, { canceled: true });
                 return;
             }
-            data.data.style = context.styleCounter;
+            data.data.styleCounter = context.styleCounter;
             if (props) {
                 extend(data.data, props);
             }
@@ -365,7 +365,10 @@ export default class BaseLayerWorker {
             promises.push(promise);
         }
 
-        return Promise.all(promises).then(([styleCount, ...tileDatas]) => {
+        return Promise.all(promises).then(([styleCounter, ...tileDatas]) => {
+            if (styleCounter !== this._styleCounter) {
+                return { canceled: true };
+            }
             function handleTileData(tileData, i) {
                 if (tileData.data.ref !== undefined) {
                     return;
@@ -378,9 +381,6 @@ export default class BaseLayerWorker {
                         buffers.push(tileData.buffers[i]);
                     }
                 }
-            }
-            if (styleCount !== this._styleCounter) {
-                return { canceled: true };
             }
             for (let i = 0; i < tileDatas.length; i++) {
                 if (!tileDatas[i]) {
@@ -492,6 +492,7 @@ export default class BaseLayerWorker {
             }
             return {
                 data: {
+                    styleCounter,
                     schema,
                     data,
                     featureData,
@@ -527,7 +528,7 @@ export default class BaseLayerWorker {
             if (t) {
                 dataConfig.uv = 1;
                 if (t === 2) {
-                    dataConfig.tangent = 1;
+                    // dataConfig.tangent = 1;
                 }
             }
             const projectionCode = this.options.projectionCode;
@@ -565,10 +566,10 @@ export default class BaseLayerWorker {
                 requestor: this.fetchIconGlyphs.bind(this),
                 tileRatio
             });
-            return parseSymbolAndGenPromises(features, symbol, options, LinePack);
+            return parseSymbolAndGenPromises(features, symbol, options, LinePack, 1, true);
             // return Promise.resolve(null);
         } else if (type === 'native-line') {
-            return parseSymbolAndGenPromises(features, symbol, options, NativeLinePack);
+            return parseSymbolAndGenPromises(features, symbol, options, NativeLinePack, 1, true);
         } /*else if (type === 'pixel-line') {
             options = extend(options, {
                 requestor: this.fetchIconGlyphs.bind(this),
@@ -589,7 +590,7 @@ export default class BaseLayerWorker {
             if (t) {
                 dataConfig.uv = 1;
                 if (t === 2) {
-                    dataConfig.tangent = 1;
+                    // dataConfig.tangent = 1;
                 }
             }
             options = extend(options, {
@@ -597,6 +598,10 @@ export default class BaseLayerWorker {
                 zScale,
                 glScale
             });
+            if (symbol.mergeOnProperty) {
+                const fnTypes = VectorPack.genFnTypes(symbol);
+                features = LinePack.mergeLineFeatures(features, symbol, fnTypes, options.zoom);
+            }
             if (t) {
                 const packs = [];
                 if (dataConfig.top !== false) {
@@ -879,7 +884,7 @@ export function hasTexture(symbol) {
     return t;
 }
 
-function parseSymbolAndGenPromises(features, symbol, options, clazz, scale) {
+function parseSymbolAndGenPromises(features, symbol, options, clazz, scale, isLine) {
     const parsed = {};
     const symbols = Array.isArray(symbol) ? symbol : [symbol];
     let first = -1;
@@ -897,14 +902,19 @@ function parseSymbolAndGenPromises(features, symbol, options, clazz, scale) {
         }
         // 用来在 VectorPack 中生成 symbolIndex
         symbols[i].index = { index: i };
+        let packFeatures = features;
+        if (isLine && symbols[i].mergeOnProperty) {
+            const fnTypes = VectorPack.genFnTypes(symbols[i]);
+            packFeatures = LinePack.mergeLineFeatures(features, symbols[0], fnTypes, options.zoom);
+        }
         if (!parsed[i]) {
             if (i === first) {
-                promises.push(new clazz(features, symbols[i], options).load(scale));
+                promises.push(new clazz(packFeatures, symbols[i], options).load(scale));
             } else {
                 promises.push({ data: { ref: first, symbolIndex: { index: i } } });
             }
         } else {
-            promises.push(new clazz(features, symbols[i], options).load(scale));
+            promises.push(new clazz(packFeatures, symbols[i], options).load(scale));
         }
     }
     return Promise.all(promises);

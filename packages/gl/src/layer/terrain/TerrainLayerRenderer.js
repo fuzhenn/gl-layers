@@ -6,7 +6,7 @@ import skinVert from './glsl/terrainSkin.vert';
 import skinFrag from './glsl/terrainSkin.frag';
 import { getCascadeTileIds, getSkinTileScale, getSkinTileRes, createEmtpyTerrainHeights, EMPTY_TERRAIN_GEO } from './TerrainTileUtil';
 import { createMartiniData } from './util/martini';
-import  { isNil, extend, pushIn } from '../util/util';
+import { isNil, extend, pushIn } from '../util/util';
 import TerrainPainter from './TerrainPainter';
 import TerrainLitPainter from './TerrainLitPainter';
 import MaskRendererMixin from '../mask/MaskRendererMixin';
@@ -24,6 +24,21 @@ const TERRAIN_CLEAR = {
     depth: 1,
     stencil: 0
 };
+
+function terrainExaggeration(terrainData, exaggeration = 1) {
+    if (isNil(exaggeration) || !terrainData || !terrainData.mesh || exaggeration === 1) {
+        return;
+    }
+    const positions = terrainData.mesh.positions;
+    if (!positions) {
+        return;
+    }
+    for (let i = 0, len = positions.length; i < len; i += 3) {
+        positions[i + 2] *= exaggeration;
+    }
+}
+
+
 
 class TerrainLayerRenderer extends MaskRendererMixin(maptalks.renderer.TileLayerCanvasRenderer) {
 
@@ -148,6 +163,7 @@ class TerrainLayerRenderer extends MaskRendererMixin(maptalks.renderer.TileLayer
 
     _createMesh(tileImage, tileInfo) {
         if (tileImage && tileImage.mesh) {
+            // console.log(tileImage,tileInfo);
             tileImage.terrainMesh = this._painter.createTerrainMesh(tileInfo, tileImage);
             tileInfo.minAltitude = tileImage.data.min;
             tileInfo.maxAltitude = tileImage.data.max;
@@ -181,7 +197,7 @@ class TerrainLayerRenderer extends MaskRendererMixin(maptalks.renderer.TileLayer
 
     draw(timestamp, parentContext) {
         this._createPainter();
-        this._painter.startFrame();
+        this._painter.startFrame(parentContext);
         super.draw(timestamp, parentContext);
         this._endFrame(parentContext);
     }
@@ -383,7 +399,7 @@ class TerrainLayerRenderer extends MaskRendererMixin(maptalks.renderer.TileLayer
             tileImage.skinTileIds = [];
         }
 
-        const isAnimating  = renderer.isAnimating && renderer.isAnimating();
+        const isAnimating = renderer.isAnimating && renderer.isAnimating();
 
         const status = tileImage.skinStatus[skinIndex];
 
@@ -552,7 +568,7 @@ class TerrainLayerRenderer extends MaskRendererMixin(maptalks.renderer.TileLayer
             return;
         }
         if (!tileImage.skin) {
-            tileImage.skin = this._createTerrainTexture();
+            tileImage.skin = this._createTerrainTexture(terrainTileInfo, tileImage);
 
         } else {
             TERRAIN_CLEAR.framebuffer = tileImage.skin;
@@ -637,7 +653,7 @@ class TerrainLayerRenderer extends MaskRendererMixin(maptalks.renderer.TileLayer
         canvas.width = tileSize;
         canvas.height = tileSize;
         const ctx = canvas.getContext('2d');
-        ctx.font = '40px monospace';
+        ctx.font = '20px monospace';
 
         const color = this.layer.options['debugOutline'];
         ctx.fillStyle = color;
@@ -660,20 +676,34 @@ class TerrainLayerRenderer extends MaskRendererMixin(maptalks.renderer.TileLayer
         });
     }
 
-    _createTerrainTexture() {
+    _createTerrainTexture(tileInfo/*, tileImage*/) {
         const tileSize = this.layer.getTileSize().width;
         // 乘以2是为了瓦片（缩放时）被放大后保持清晰度
         const width = tileSize * 2;
         const height = tileSize * 2;
         const regl = this.regl;
-        const color = regl.texture({
-            min: 'linear',
-            mag: 'linear',
-            type: 'uint8',
-            width,
-            height,
-            flipY: true
-        });
+        const colorsTexture = tileInfo.colorsTexture;
+        let color;
+        if (colorsTexture && colorsTexture instanceof Uint8Array) {
+            color = regl.texture({
+                data: colorsTexture,
+                min: 'linear',
+                mag: 'linear',
+                type: 'uint8',
+                width,
+                height,
+                flipY: true
+            });
+        } else {
+            color = regl.texture({
+                min: 'linear',
+                mag: 'linear',
+                type: 'uint8',
+                width,
+                height,
+                flipY: true
+            });
+        }
         const fboInfo = {
             width,
             height,
@@ -858,7 +888,7 @@ class TerrainLayerRenderer extends MaskRendererMixin(maptalks.renderer.TileLayer
             const terrainData = this._createTerrainFromParent(tile);
             if (terrainData.sourceZoom === -1) {
                 //改为请求maxAvailableZoom上的瓦片
-                const { requests, isFirst, x, y, idx, idy  } = this._getParentTileRequest(tile, true);
+                const { requests, isFirst, x, y, idx, idy } = this._getParentTileRequest(tile, true);
                 requests.add(tile);
                 if (!isFirst) {
                     return terrainData;
@@ -883,7 +913,8 @@ class TerrainLayerRenderer extends MaskRendererMixin(maptalks.renderer.TileLayer
             type: layerOptions.type,
             accessToken: layerOptions.accessToken,
             cesiumIonTokenURL: layerOptions.cesiumIonTokenURL,
-            error: error
+            error: error,
+            colors: layerOptions.colors
         };
         this.workerConn.fetchTerrain(terrainUrl, options, (err, resource) => {
             if (this._parentRequests) {
@@ -906,8 +937,10 @@ class TerrainLayerRenderer extends MaskRendererMixin(maptalks.renderer.TileLayer
                 return;
             }
             maptalks.Util.extend(terrainData, resource);
+            terrainExaggeration(terrainData, this.layer.options.exaggeration);
 
             // this.consumeTile(terrainData, tile);
+            tile.colorsTexture = terrainData.colorsTexture;
             this.onTileLoad(terrainData, tile);
         });
         return terrainData;
@@ -1071,7 +1104,7 @@ class TerrainLayerRenderer extends MaskRendererMixin(maptalks.renderer.TileLayer
         super.abortTileLoading(tileImage, tileInfo);
     }
 
-    onTileError(data, tile)  {
+    onTileError(data, tile) {
         // TODO
         super.onTileError(data, tile);
     }

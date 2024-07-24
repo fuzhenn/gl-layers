@@ -16,6 +16,8 @@ import { buildNormals } from '@maptalks/tbn-packer';
 import { project } from './Projection';
 import getTranscoders from '../loaders/transcoders.js';
 
+
+const DEFAULT_MAX_TEXTURE_SIZE = 0;
 const Y_TO_Z = [1, 0, 0, 0, 0, 0, 1, 0, 0, -1, 0, 0, 0, 0, 0, 1];
 const X_TO_Z = [0, 0, 1, 0, 0, 1, 0, 0, -1, 0, 0, 0, 0, 0, 0, 1];
 const RATIO = 2 * Math.PI * 6378137 / 360;
@@ -108,7 +110,7 @@ export default class BaseLayerWorker {
         fetchOptions.referrerPolicy = fetchOptions.referrerPolicy || 'origin';
         if (isI3SURL(url)) {
             const i3sInfo = params.i3sInfo;
-            const maxTextureSize = service.maxTextureSize || 1024;
+            const maxTextureSize = service.maxTextureSize || DEFAULT_MAX_TEXTURE_SIZE;
             const promise = loadI3STile(i3sInfo, params.supportedFormats, this.options.projection, params.projection, maxTextureSize, fetchOptions);
             promise.then(i3sData => {
                 delete this._requests[url];
@@ -124,7 +126,10 @@ export default class BaseLayerWorker {
                 i3sData.gltf.url = url;
                 const { transferables } = i3sData;
                 i3sData.magic = 'b3dm';
-                this._compressAttrFloat32ToInt16(i3sData.gltf);
+                this._createGLTFMissedAttrs(i3sData.gltf);
+                if (service.compressGeometry) {
+                    this._compressAttrFloat32ToInt16(i3sData.gltf);
+                }
                 cb(null, i3sData, transferables);
             });
             this._requests[url] = promise.xhr;
@@ -199,14 +204,17 @@ export default class BaseLayerWorker {
         magic = magic && magic.toLowerCase();
         const { service } = params;
         if (magic === 'b3dm') {
-            const promise = this._b3dmLoader.load(url, arraybuffer, 0, 0, { maxTextureSize: service.maxTextureSize || 1024 });
+            const promise = this._b3dmLoader.load(url, arraybuffer, 0, 0, { maxTextureSize: service.maxTextureSize || DEFAULT_MAX_TEXTURE_SIZE });
             promise.then(tile => {
                 if (tile.error) {
                     cb(tile);
                     return;
                 }
                 const { content, transferables } = this._processB3DM(tile, params);
-                this._compressAttrFloat32ToInt16(content.gltf);
+                this._createGLTFMissedAttrs(content.gltf);
+                if (service.compressGeometry) {
+                    this._compressAttrFloat32ToInt16(content.gltf);
+                }
                 cb(null, content, transferables);
             }).catch(err => {
                 cb(err);
@@ -221,17 +229,23 @@ export default class BaseLayerWorker {
             });
         } else if (magic === 'i3dm') {
             const transform = params.transform || IDENTITY_MATRIX;
-            const promise =  this._i3dmLoader.load(url, arraybuffer, 0, 0, { maxTextureSize: service.maxTextureSize || 1024 });
+            const promise =  this._i3dmLoader.load(url, arraybuffer, 0, 0, { maxTextureSize: service.maxTextureSize || DEFAULT_MAX_TEXTURE_SIZE });
             promise.then(tile => {
                 const { content:i3dm, transferables } = this._loadI3DM(tile, transform, params.rootIdx);
-                this._compressAttrFloat32ToInt16(i3dm.gltf);
+                this._createGLTFMissedAttrs(i3dm.gltf);
+                if (service.compressGeometry) {
+                    this._compressAttrFloat32ToInt16(i3dm.gltf);
+                }
                 cb(null, i3dm, transferables);
             });
         } else if (magic === 'cmpt') {
-            const promise = new CMPTLoader(this._bindedRequestImage, GLTFLoader, this._supportedFormats, service.maxTextureSize || 1024).load(url, arraybuffer, 0, 0, { maxTextureSize: service.maxTextureSize || 1024 });
+            const promise = new CMPTLoader(this._bindedRequestImage, GLTFLoader, this._supportedFormats, service.maxTextureSize || DEFAULT_MAX_TEXTURE_SIZE).load(url, arraybuffer, 0, 0, { maxTextureSize: service.maxTextureSize || DEFAULT_MAX_TEXTURE_SIZE });
             promise.then(tile => {
                 const { content: cmpt, transferables } = this._processCMPT(tile, params);
-                this._iterateCMPTContent(cmpt);
+                this._createCMPTMissedAttrs(cmpt);
+                if (service.compressGeometry) {
+                    this._compressCMPTContent(cmpt);
+                }
                 cb(null, cmpt, transferables);
             }).catch(err => {
                 cb(err);
@@ -247,12 +261,15 @@ export default class BaseLayerWorker {
                 requestImage: this._bindedRequestImage,
                 decoders: this._decoders,
                 supportedFormats: this._supportedFormats,
-                maxTextureSize: service.maxTextureSize || 1024
+                maxTextureSize: service.maxTextureSize || DEFAULT_MAX_TEXTURE_SIZE
             });
             loader.load({ skipAttributeTransform: false }).then(gltf => {
                 gltf.url = url;
                 this._processGLTF(gltf, null, params);
-                this._compressAttrFloat32ToInt16(gltf);
+                this._createGLTFMissedAttrs(gltf);
+                if (service.compressGeometry) {
+                    this._compressAttrFloat32ToInt16(gltf);
+                }
                 cb(null, { magic: 'gltf', gltf }, loader.transferables);
             });
         } else {
@@ -260,10 +277,20 @@ export default class BaseLayerWorker {
         }
     }
 
-    _iterateCMPTContent(cmpt) {
+    _createCMPTMissedAttrs(cmpt) {
         if (cmpt.content) {
             cmpt.content.forEach(contentItem => {
-                this._iterateCMPTContent(contentItem);
+                this._createCMPTMissedAttrs(contentItem);
+            });
+        } else {
+            this._createGLTFMissedAttrs(cmpt.gltf);
+        }
+    }
+
+    _compressCMPTContent(cmpt) {
+        if (cmpt.content) {
+            cmpt.content.forEach(contentItem => {
+                this._compressCMPTContent(contentItem);
             });
         } else {
             this._compressAttrFloat32ToInt16(cmpt.gltf);
@@ -326,7 +353,7 @@ export default class BaseLayerWorker {
         for (const primitiveIndex in meshes) {
             const primitives = meshes[primitiveIndex].primitives;
             primitives.forEach(primitive => {
-                this._createMissedAttrs(primitive, gltf);
+                // this._createMissedAttrs(primitive, gltf);
                 primitive.compressed_int16_params = {};
                 const attributes = primitive.attributes;
                 for (const attrName in attributes) {
@@ -348,6 +375,24 @@ export default class BaseLayerWorker {
                         primitive.compressed_int16_params[attrName] = range;
                     }
                 }
+            });
+        }
+    }
+
+    _createGLTFMissedAttrs(gltf) {
+        //采用KHR_techniques_webgl的模型是自定义shader，这里不做压缩处理
+        if (!gltf || !gltf.meshes || (gltf.extensionsUsed && gltf.extensionsUsed.indexOf('KHR_techniques_webgl') > -1)) {
+            return;
+        }
+        // 如果开启sharePosition，会造成tokyo.html爆内存，无法正常加载模型
+        if (gltf.asset && gltf.asset.sharePosition) {
+            return;
+        }
+        const meshes = gltf.meshes;
+        for (const primitiveIndex in meshes) {
+            const primitives = meshes[primitiveIndex].primitives;
+            primitives.forEach(primitive => {
+                this._createMissedAttrs(primitive, gltf);
             });
         }
     }
@@ -389,7 +434,7 @@ export default class BaseLayerWorker {
     //     // bytesOffset += Uint32Array.BYTES_PER_ELEMENT;
     //     // const unzipBuffer = unZip(arraybuffer, bytesOffset);
     //     const service = this.options.services[params.rootIdx];
-    //     parseS3M({ buffer: arraybuffer, bytesOffset: 0 }, service.maxTextureSize || 1024).then(s3mData => {
+    //     parseS3M({ buffer: arraybuffer, bytesOffset: 0 }, service.maxTextureSize || DEFAULT_MAX_TEXTURE_SIZE).then(s3mData => {
     //         s3mData.gltf.url = url;
     //         const { content, transferables } = this._processB3DM(s3mData, params);
     //         content.magic = 'b3dm';

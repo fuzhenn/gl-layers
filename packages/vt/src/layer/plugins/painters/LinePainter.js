@@ -20,6 +20,11 @@ class LinePainter extends BasicPainter {
         return ['lineBloom'];
     }
 
+    isUniqueStencilRefPerTile() {
+        //如果用unique ref，会导致邻居瓦片内的 linecap或linejoin 没有绘制，导致线在瓦片间出现空隙
+        return false;
+    }
+
     prepareSymbol(symbol) {
         const lineColor = symbol.lineColor;
         if (Array.isArray(lineColor)) {
@@ -192,6 +197,8 @@ class LinePainter extends BasicPainter {
             mesh.forEach(m => {
                 this._prepareMesh(m);
             });
+        } else {
+            this._prepareMesh(mesh);
         }
         super.addMesh(...args);
     }
@@ -487,12 +494,19 @@ class LinePainter extends BasicPainter {
             vert, frag,
             uniforms,
             defines,
-            extraCommandProps: this.getExtraCommandProps()
+            extraCommandProps: this.getExtraCommandProps(context)
         });
     }
 
-    getExtraCommandProps() {
-        const stencil = this.layer.getRenderer().isEnableTileStencil && this.layer.getRenderer().isEnableTileStencil();
+    // LinePainter 需要在2d下打开stencil，否则会因为子级瓦片无法遮住父级瓦片的绘制，出现一些奇怪的现象
+    // https://github.com/maptalks/issues/issues/677
+    isEnableTileStencil(context) {
+        const isRenderingTerrainSkin = !!(context && context.isRenderingTerrain && this.isTerrainSkin());
+        const isEnableStencil = !isRenderingTerrainSkin;
+        return isEnableStencil;
+    }
+
+    getExtraCommandProps(context) {
         const canvas = this.canvas;
         const viewport = {
             x: (_, props) => {
@@ -512,21 +526,22 @@ class LinePainter extends BasicPainter {
         return {
             viewport,
             stencil: {
-                enable: false,
+                enable: () => {
+                    return this.isEnableTileStencil(context);
+                },
+                mask: 0xff,
                 func: {
                     cmp: () => {
-                        return stencil ? '=' : '<=';
+                        return '<=';
                     },
                     ref: (context, props) => {
-                        return stencil ? props.stencilRef : props.level;
+                        return props.stencilRef;
                     }
                 },
                 op: {
                     fail: 'keep',
                     zfail: 'keep',
-                    zpass: () => {
-                        return stencil ? 'zero' : 'replace';
-                    }
+                    zpass: 'replace'
                 }
             },
             depth: {

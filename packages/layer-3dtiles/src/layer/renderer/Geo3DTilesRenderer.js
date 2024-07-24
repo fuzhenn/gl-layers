@@ -104,8 +104,9 @@ export default class Geo3DTilesRenderer extends MaskRendererMixin(maptalks.rende
             this.completeRender();
             return;
         }
+        this.painter.prepareRender(parentContext);
         this._consumeI3SQueue();
-        this._consumeModelQueue();
+        this._consumeModelQueue(parentContext);
         const { selectedTiles, leaves, requests} = this._selectTiles(root, tiles);
 
         if (requests.length) {
@@ -556,7 +557,7 @@ export default class Geo3DTilesRenderer extends MaskRendererMixin(maptalks.rende
         const url = errorUrl || node.content.url;
 
         const info = err && err.message || err;
-        if (!REPORTED_ERRORS.has(info)) {
+        if ((!err || err.status !== 404 && err.status !== 204) && !REPORTED_ERRORS.has(info)) {
             console.warn('failed to load 3d tile: ' + url);
             console.warn(err);
             REPORTED_ERRORS.add(info);
@@ -583,6 +584,27 @@ export default class Geo3DTilesRenderer extends MaskRendererMixin(maptalks.rende
 
     getCachedTile(id) {
         return this.tileCache.get(id);
+    }
+
+    getShadowMeshes() {
+        if (!this.painter) {
+            return;
+        }
+        const meshes = [];
+        const b3dmMeshes = this.painter.getCurrentB3DMMeshes();
+
+        for (const p in b3dmMeshes) {
+            if (b3dmMeshes[p]) {
+                meshes.push(b3dmMeshes[p]);
+            }
+        }
+        const i3dmMeshes = this.painter.getCurrentI3DMMeshes();
+        for (const p in i3dmMeshes) {
+            if (i3dmMeshes[p]) {
+                meshes.push(i3dmMeshes[p]);
+            }
+        }
+        return meshes;
     }
 
     _addErrorToCache(node, err) {

@@ -11,19 +11,22 @@ class Base {}
 class Material extends Eventable(Base) {
     uniforms: ShaderUniforms
     refCount: number
+    // 如果unlit，则不产生阴影（但接受阴影）
+    unlit: boolean
     private _version: number
+    private _propVerion: number
     private _uniformVer?: number
     private _uniformKeys?: string
     private _reglUniforms: ShaderUniforms
     private _bindedOnTextureComplete: () => void
     private _doubleSided: boolean
     private _loadingCount?: number
-    private _dirtyProps?: string[]
     private _disposed?: boolean
 
     constructor(uniforms: ShaderUniforms = {}, defaultUniforms: ShaderUniforms) {
         super()
         this._version = 0;
+        this._propVerion = 0;
         this.uniforms = extendWithoutNil({}, defaultUniforms || {}, uniforms);
         for (const p in uniforms) {
             const getter = Object.getOwnPropertyDescriptor(uniforms, p).get;
@@ -33,6 +36,7 @@ class Material extends Eventable(Base) {
                 });
             }
         }
+        this.unlit = false;
         this._reglUniforms = {};
         this.refCount = 0;
         this._bindedOnTextureComplete = this._onTextureComplete.bind(this);
@@ -46,6 +50,10 @@ class Material extends Eventable(Base) {
 
     get version(): number {
         return this._version;
+    }
+
+    get propVersion(): number {
+        return this._propVerion;
     }
 
     set doubleSided(value: boolean) {
@@ -72,8 +80,7 @@ class Material extends Eventable(Base) {
             if (this._reglUniforms) {
                 const descriptor = Object.getOwnPropertyDescriptor(this._reglUniforms, k);
                 if (descriptor && !descriptor.get) {
-                    this._dirtyProps = this._dirtyProps || [];
-                    this._dirtyProps.push(k);
+                    this._propVerion++;
                     this._reglUniforms[k] = v;
                 }
             }
@@ -92,6 +99,8 @@ class Material extends Eventable(Base) {
     }
 
     setFunctionUniform(k: string, fn: () => ShaderUniformValue): this {
+      this._genUniformKeys();
+      this._incrVersion();
       Object.defineProperty(this.uniforms, k, {
         enumerable: true,
         get: fn
@@ -101,14 +110,6 @@ class Material extends Eventable(Base) {
 
     hasFunctionUniform(k: string): boolean {
       return Object.prototype.hasOwnProperty.call(this.uniforms, k);
-    }
-
-    _getDirtyProps(): string[] {
-        return this._dirtyProps;
-    }
-
-    _clearDirtyProps() {
-        this._dirtyProps = null;
     }
 
     get(k: string): ShaderUniformValue {

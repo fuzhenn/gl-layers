@@ -138,7 +138,7 @@ export default class VectorPack {
         } else {
             return [
                 {
-                    type: Int16Array,
+                    type: Float32Array,
                     width: 3,
                     name: 'aPosition'
                 }
@@ -161,11 +161,24 @@ export default class VectorPack {
         }
         // 乘以100是把米转为厘米
         if (this.needAltitudeAttribute()) {
-            data.aPosition.push(x, y);
-            data.aAltitude.push(altitude);
+            let index = data.aPosition.currentIndex;
+            data.aPosition[index++] = x;
+            data.aPosition[index++] = y;
+            data.aPosition.currentIndex = index;
+
+            index = data.aAltitude.currentIndex;
+            data.aAltitude[index++] = altitude;
+            data.aAltitude.currentIndex = index;
+
+            // data.aPosition.push(x, y);
+            // data.aAltitude.push(altitude);
         } else {
             packPosition(TEMP_PACK_POS, x, y, altitude);
-            data.aPosition.push(TEMP_PACK_POS[0], TEMP_PACK_POS[1], TEMP_PACK_POS[2]);
+            let index = data.aPosition.currentIndex;
+            data.aPosition[index++] = TEMP_PACK_POS[0];
+            data.aPosition[index++] = TEMP_PACK_POS[1];
+            data.aPosition[index++] = TEMP_PACK_POS[2];
+            data.aPosition.currentIndex = index;
         }
     }
 
@@ -446,14 +459,18 @@ export default class VectorPack {
         const data = this.data = {};
         this._arrayPool = arrayPool;
         arrayPool.reset();
+        // !! 这里是危险区域，需要格外注意：
+        // 2024年06月，为了提升arrayPool中数组的性能，arrayPool.get方法范围的数组不再使用Proxy对array进行包装，导致array.length不再返回array中的数据条数，而是数组本身的大小。
+        // 所以使用该类数组时，需要使用 array.getLength() 才能返回正确的数据条数，而用 array.length 会返回错误的值
         let elements = this.elements = arrayPool.get();
         //uniforms: opacity, u_size_t
 
-        const format = this.getFormat(Array.isArray(vectors[0]) ? vectors[0][0].symbol : vectors[0].symbol);
+        const format = this._dataFormat = this.getFormat(Array.isArray(vectors[0]) ? vectors[0][0].symbol : vectors[0].symbol);
         const positionSize = this.needAltitudeAttribute() ? 2 : 3;
 
+        // 创建format各属性需要的类型数组
         for (let i = 0; i < format.length; i++) {
-            data[format[i].name] = arrayPool.get();
+            data[format[i].name] = arrayPool.get(format[i].type);
         }
         //每个顶点的feature index, 用于构造 pickingId
         let feaIdxValues = arrayPool.get();
@@ -492,7 +509,7 @@ export default class VectorPack {
                     hasNegative = true;
                 }
             }
-            const eleCount = this.data.aPosition.length;
+            const eleCount = this.data.aPosition.getLength();
             if (!Array.isArray(vectors[i])) {
                 this._placeVector(vectors[i], scale);
             } else {
@@ -500,7 +517,7 @@ export default class VectorPack {
                     this._placeVector(vectors[i][j], scale);
                 }
             }
-            const count = (data.aPosition.length - eleCount) / positionSize;
+            const count = (data.aPosition.getLength() - eleCount) / positionSize;
             //fill feature index of every data
             for (let ii = 0; ii < count; ii++) {
                 feaIdxValues.push(vectors[i].featureIdx);
@@ -513,7 +530,7 @@ export default class VectorPack {
         if (this.countOutOfAngle > 0) {
             console.warn('text anchor along line is ignored as anchor\'s line angle is bigger than textMaxAngle.');
         }
-        if (this.hasElements() && !elements.length) {
+        if (this.hasElements() && !elements.getLength()) {
             return null;
         }
         const isVector3D = !!this.options.center;
@@ -530,7 +547,8 @@ export default class VectorPack {
         const center = this.options.center;
         if (center && (center[0] || center[1])) {
             const aPosition = data.aPosition;
-            for (let i = 0; i < aPosition.length; i += positionSize) {
+            const count = aPosition.getLength();
+            for (let i = 0; i < count; i += positionSize) {
                 aPosition[i] -= center[0];
                 aPosition[i + 1] -= center[1];
             }
@@ -559,8 +577,8 @@ export default class VectorPack {
         const ElementType = getIndexArrayType(this.maxIndex);
         elements = ArrayPool.createTypedArray(elements, ElementType);
 
-        // elements = new ElementType(elements);
         buffers.push(elements.buffer);
+        // 最终传递给主线程的数据结构
         const result = {
             data: arrays,
             isIdUnique,
@@ -581,7 +599,7 @@ export default class VectorPack {
             result.textPlacement = this._packTextPlacement;
         }
 
-        if (featIds.length) {
+        if (featIds.getLength()) {
             const feaCtor = hasNegative ? getPosArrayType(maxFeaId) : getUnsignedArrayType(maxFeaId);
             // featureIds 里存放的是 feature.id
             result.featureIds = ArrayPool.createTypedArray(featIds, feaCtor);
@@ -602,9 +620,13 @@ export default class VectorPack {
         this.placeVector(vector, scale, this.formatWidth);
     }
 
-    addElements(...e) {
-        this.maxIndex = Math.max(this.maxIndex, ...e);
-        this.elements.push(...e);
+    addElements(e0, e1, e2) {
+        this.maxIndex = Math.max(this.maxIndex, e0, e1, e2);
+        let index = this.elements.currentIndex;
+        this.elements[index++] = e0;
+        this.elements[index++] = e1;
+        this.elements[index++] = e2;
+        this.elements.currentIndex = index;
     }
 
     hasElements() {
@@ -635,6 +657,19 @@ export default class VectorPack {
             }
         }
         return max;
+    }
+
+    ensureDataCapacity(countPerVertex, vertexCount) {
+        const format = this._dataFormat;
+        for (let i = 0; i < format.length; i++) {
+            const array = this.data[format[i].name];
+            if (!array) {
+                continue;
+            }
+            const estimatedItemCount = format[i].width * countPerVertex;
+            const length = array.getLength();
+            this.data[format[i].name] = ArrayPool.ensureCapacity(array, length + estimatedItemCount * vertexCount);
+        }
     }
 }
 
