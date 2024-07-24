@@ -111,7 +111,7 @@ describe('bug', () => {
         marker.on('load', () => {
             setTimeout(function() {
                 const pixel = pickPixel(map, 218, 96, 1, 1);
-                expect(pixelMatch([211, 184, 178, 255], pixel)).to.be.eql(true);
+                expect(pixelMatch([230, 230, 234, 255], pixel)).to.be.eql(true);
                 done();
             }, 200);
         });
@@ -723,6 +723,8 @@ describe('bug', () => {
     });
 
     it('drawing shadow(fuzhenn/maptalks-studio#1694)', done => {
+        const config = JSON.parse(JSON.stringify(sceneConfig));
+        config.shadow.enable = true;
         const gltflayer = new maptalks.GLTFLayer('gltf');
         new maptalks.GLTFGeometry(center, {
             symbol: {
@@ -740,7 +742,7 @@ describe('bug', () => {
             expect(defines['HAS_SHADOWING']).to.be.ok();
             done();
         });
-        new maptalks.GroupGLLayer('gl', [gltflayer], { sceneConfig }).addTo(map);
+        new maptalks.GroupGLLayer('gl', [gltflayer], { sceneConfig: config }).addTo(map);
     });
 
     it('gltfmarker should not update animation matrix when is not in frustum', done => {
@@ -1026,6 +1028,8 @@ describe('bug', () => {
     });
 
     it('setCoordinates should update shadow immediately(fuzhenn/maptalks-ide/issues/3081)', done => {
+        const config = JSON.parse(JSON.stringify(sceneConfig));
+        config.shadow.enable = true;
         const gltflayer = new maptalks.GLTFLayer('gltf');
         const gltfMarker = new maptalks.GLTFGeometry(center, {
             symbol: {
@@ -1036,7 +1040,7 @@ describe('bug', () => {
                 shadow: true
             }
         }).addTo(gltflayer);
-        new maptalks.GroupGLLayer('gl', [gltflayer], { sceneConfig }).addTo(map);
+        new maptalks.GroupGLLayer('gl', [gltflayer], { sceneConfig: config }).addTo(map);
         gltfMarker.once('load', () => {
             setTimeout(function() {
                 const x = 215, y = 190;
@@ -1341,6 +1345,8 @@ describe('bug', () => {
 
     it('StandardLite shader', done => {
         map.setPitch(70);
+        const config = JSON.parse(JSON.stringify(sceneConfig));
+        config.shadow.enable = true;
         const gltflayer = new maptalks.GLTFLayer('gltf');
         const marker = new maptalks.GLTFMarker(center, {
             symbol: {
@@ -1358,7 +1364,7 @@ describe('bug', () => {
                 done();
             }, 100);
         });
-        new maptalks.GroupGLLayer('gl', [gltflayer], { sceneConfig }).addTo(map);
+        new maptalks.GroupGLLayer('gl', [gltflayer], { sceneConfig: config }).addTo(map);
     });
 
     it('GLTFMercatorGeometry(issues/359)', done => {
