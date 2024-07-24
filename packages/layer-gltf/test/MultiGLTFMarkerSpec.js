@@ -724,4 +724,30 @@ describe('MultiGLTFMarker', () => {
             }, 300);
         });
     });
+
+    it('multigltfmarker support highlight', done => {
+        const gltflayer = new maptalks.GLTFLayer('gltf');
+        new maptalks.GroupGLLayer('group', [gltflayer],  { sceneConfig }).addTo(map);
+        const importData = initInstanceDataInArray(100);
+        const multigltfmarker = new maptalks.MultiGLTFMarker(importData, {
+            symbol: {
+                url: url2,
+                scaleX: 80,
+                scaleY: 80,
+                scaleZ: 80
+            }
+        }).addTo(gltflayer);
+        map.setPitch(45);
+        multigltfmarker.once('load', () => {
+            multigltfmarker.highlight(52, {
+                color: [1, 0, 0],
+                opacity: 0.8
+            });
+            setTimeout(function() {
+                const pixel = pickPixel(map, map.width / 2, map.height / 2, 1, 1);
+                expect(pixelMatch([60, 8, 8, 186], pixel)).to.be.eql(true);
+                done();
+            }, 100);
+        });
+    });
 });

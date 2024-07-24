@@ -9,6 +9,47 @@ describe('bug', () => {
         removeMap(map);
     });
 
+    it('The units for translations are meters', (done) => {
+        const gltflayer = new maptalks.GLTFLayer('gltflayer');
+        const marker = new maptalks.GLTFGeometry(center, {
+            symbol: {
+                translationX: 0,
+                translationY: 100,
+                translationZ: 0
+            }
+        }).addTo(gltflayer);
+        marker.on('click', () => {
+            done();
+        });
+        new maptalks.GroupGLLayer('gl', [gltflayer], {sceneConfig}).addTo(map);
+        const clickPoint = new maptalks.Point([200, 50]);
+        marker.on('load', () => {
+            setTimeout(function() {
+                happen.click(eventContainer, {
+                    'clientX': clickPoint.x,
+                    'clientY': clickPoint.y
+                });
+            }, 100);
+        });
+    });
+
+    it('change translation, rotation, and scale', function (done) {
+        const gltflayer = new maptalks.GLTFLayer('gltf5').addTo(map);
+        const marker = new maptalks.GLTFGeometry(center, { symbol: { url: url1 }});
+        gltflayer.addGeometry(marker);
+        marker.setTranslation(10, 10, 10);
+        marker.setRotation(0, 60, 0);
+        marker.setScale(20, 20, 20);
+        marker.on('load', () => {
+            setTimeout(function() {
+                const expectMatrix = maptalksgl.mat4.fromValues(10.000000000000002, 0, -17.32050807568877, 0, 0, 20, 0, 0, 17.32050807568877, 0, 10.000000000000002, 0, 0.13082664542728, 0.1308266454209729, 0.1707822812928094, 1);
+                const modelMatrix = marker.getModelMatrix();
+                expect(maptalksgl.mat4.equals(expectMatrix, modelMatrix)).to.be.ok();
+                done();
+            }, 100);
+        });
+    });
+
     it('clear markers and then add a new one(fuzhenn/maptalks-studio#1390)', (done) => {
         const gltflayer = new maptalks.GLTFLayer('gltf');
         const marker = new maptalks.GLTFGeometry(center, {
@@ -1643,14 +1684,14 @@ describe('bug', () => {
             marker.cancelHighlight();
             setTimeout(function() {
                 const pixel = pickPixel(map, map.width / 2, map.height / 2, 1, 1);
-                expect(pixel).to.be.eql([146, 146, 146, 255]);
+                expect(pixelMatch([146, 146, 146, 255], pixel)).to.be.eql(true);
                 done();
             }, 100);
         }
         function checkColor() {
             setTimeout(function() {
                 const pixel = pickPixel(map, map.width / 2, map.height / 2, 1, 1);
-                expect(pixel).to.be.eql([255, 115, 115, 255]);
+                expect(pixelMatch([255, 115, 115, 255], pixel)).to.be.eql(true);
                 cancelHighlight();
             }, 100);
         }
@@ -1878,5 +1919,47 @@ describe('bug', () => {
             checkColor();
         });
         new maptalks.GroupGLLayer('gl', [gltflayer], { sceneConfig }).addTo(map);
-    })
+    });
+
+    it('highlightNodes before added to gltflayer(maptalks/issues#709)', (done) => {
+        const gltflayer = new maptalks.GLTFLayer('gltf');
+        const marker = new maptalks.GLTFGeometry(center,
+            { symbol: { url: url2,
+                scaleX: 80,
+                scaleY: 80,
+                scaleZ: 80
+            }});
+        marker.highlightNodes([{
+            nodeIndex: 0,
+            color: [0.8, 0, 0, 1],
+            bloom: true
+        }, {
+            nodeIndex: 1,
+            color: [0.8, 0, 0, 1],
+            bloom: true
+        }]);
+        gltflayer.addGeometry(marker);
+
+        function cancelHighlight() {
+            marker.cancelHighlight();
+            setTimeout(function() {
+                const pixel = pickPixel(map, map.width / 2, map.height / 2, 1, 1);
+                expect(pixelMatch([146, 146, 146, 255], pixel)).to.be.eql(true);
+                done();
+            }, 100);
+        }
+        function checkColor() {
+            setTimeout(function() {
+                const pixel = pickPixel(map, map.width / 2, map.height / 2, 1, 1);
+                expect(pixelMatch([255, 115, 115, 255], pixel)).to.be.eql(true);
+                cancelHighlight();
+            }, 100);
+        }
+        marker.on('load', () => {
+            setTimeout(function () {
+                checkColor();
+            }, 100);
+        });
+        new maptalks.GroupGLLayer('gl', [gltflayer], { sceneConfig }).addTo(map);
+    });
 });
