@@ -1640,7 +1640,7 @@ describe('update style specs', () => {
                     painted = true;
                 } else if (!finished) {
                     count++;
-                    if (count >= 6) {
+                    if (count >= 7) {
                         finished = true;
                         assert.deepEqual(pixel, [41, 44, 48, 255]);
                         done();
