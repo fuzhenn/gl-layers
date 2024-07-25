@@ -108,7 +108,7 @@ export default class GLTFLayer extends MaskLayerMixin(AbstractGLTFLayer) {
                 results.push(picked);
             }
         }
-        if (options && options.filter) {
+        if (options && options.filter && !options['excludeMasks']) {
             return results.filter(g => options.filter(g.data || g));
         } else {
             return results;

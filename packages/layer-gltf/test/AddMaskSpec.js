@@ -5,9 +5,9 @@ describe('setMask', () => {
         eventContainer = map._panels.canvasContainer;
     });
 
-    // afterEach(function() {
-    //     removeMap(map);
-    // });
+    afterEach(function() {
+        removeMap(map);
+    });
 
     const coord1 = [
         [-0.0002, 0.0003], [0.0004, 0.0004], [0.0005, -0.0003], [-0.0003, -0.0003]

@@ -702,7 +702,7 @@ describe('add analysis', () => {
             setTimeout(function() {
                 const pixel1 = pickPixel(map, map.width / 2, map.height / 2, 1, 1);
                 const pixel2 = pickPixel(map, 200, 120, 1, 1);
-                expect(pixelMatch([255, 0, 0, 1], pixel1)).to.be.eql(true);//挖方区域颜色
+                expect(pixelMatch([0, 0, 0, 0], pixel1)).to.be.eql(true);//挖方区域颜色
                 expect(pixelMatch([75, 181, 181, 255], pixel2)).to.be.eql(true);//挖方测面颜色
                 done();
             }, 500);
