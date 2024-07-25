@@ -404,7 +404,7 @@ class VectorTileLayerRenderer extends maptalks.renderer.TileLayerCanvasRenderer 
         const layer = this.layer;
         this.prepareCanvas();
         if (!this.ready || !layer.ready) {
-            this.completeRender();
+            // this.completeRender();
             return;
         }
         let plugins = this._plugins[this._styleCounter];
@@ -415,7 +415,7 @@ class VectorTileLayerRenderer extends maptalks.renderer.TileLayerCanvasRenderer 
         }
         const featurePlugins = this._getFeaturePlugins();
         if (!layer.isDefaultRender() && (!plugins.length && !featurePlugins.length)) {
-            // this.completeRender();
+            this.completeRender();
             return;
         }
         if (layer.options['collision']) {
