@@ -29,6 +29,6 @@ const style = [
 
 module.exports = {
     style,
-    renderingCount: 2,
+    renderingCount: 8,
     data
 };
