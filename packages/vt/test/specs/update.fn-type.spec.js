@@ -214,7 +214,7 @@ describe('update function type style specs', () => {
             dirty = true;
         });
         //因为是setStyle时，数据会被清空重绘，所以需要监听两次canvasisdirty
-        layer.on(isSetStyle ? 'canvasisdirty' : 'layerload', () => {
+        layer.on(isSetStyle ? 'canvasisdirty' : 'canvasisdirty', () => {
             if (!dirty) {
                 return;
             }

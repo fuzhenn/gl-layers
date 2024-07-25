@@ -29,5 +29,6 @@ const style = [
 
 module.exports = {
     style,
+    renderingCount: 2,
     data
 };
