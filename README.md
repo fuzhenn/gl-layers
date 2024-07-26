@@ -49,7 +49,7 @@ pnpm i
 因为packages间存在依赖关系（具体可以参考各个package中package.json中的定义），可以先用下面的指令做一次整体编译：
 
 ```shell
-pnpm --filter * run build
+pnpm run build
 ```
 
 ### 调试编译
@@ -57,7 +57,7 @@ pnpm --filter * run build
 如果需要调试编译，即用watch模式编译，每次修改后都能自动编译，且编译目标包含源代码，方便在浏览器或测试中查看调试代码，在需要调试编译的工程下运行下面的指令即可：
 
 ```shell
-npm run dev
+pnpm run dev
 ```
 
 ## 测试
@@ -73,7 +73,7 @@ npm run dev
 * 如果工程基于 [electron-mocha](https://github.com/jprichardson/electron-mocha)，运行
 
 ```shell
-npm run tdd -- -g "spec keywords"
+pnpm run tdd -- -g "spec keywords"
 ```
 
 * 如果工程基于 [karma](https://karma-runner.github.io/latest/index.html)，则需要修改测试源代码，通过mocha中的only方法来指定运行的用例，例如:
