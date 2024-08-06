@@ -15,8 +15,9 @@ import { distanceToCamera } from '../common/intersects_oriented_box.js';
 import TileBoundingRegion from './renderer/TileBoundingRegion';
 import { LayerJSONType } from 'maptalks/dist/layer/Layer';
 
+type BBOX = [number, number, number, number];
 
-function extentToBBOX(extent: maptalks.Extent) {
+function extentToBBOX(extent: maptalks.Extent): BBOX {
     return [extent.xmin, extent.ymin, extent.xmax, extent.ymax];
 }
 //why?rollup会Object.defineProperty() 包裹命名空间(maptalks),使用maptalks.xxx访问属性,在for循环里会导致性能问题比较严重,其他的包也应该注意这个问题
@@ -112,6 +113,7 @@ const DEFAULT_ROTATION: [number, number, number] = [0, 0, 0];
 const DEFAULT_SCALE: vec3 = [1, 1, 1];
 const TEMP_SERVICE_SCALE: vec3 = [0, 0, 0];
 const DEFAULT_TRANSLATION: vec3 = [0, 0, 0];
+const TILENODE_BBOX: BBOX = [0, 0, 0, 0];
 
 // BOX template
 //    v2----- v1
@@ -357,7 +359,6 @@ export default class Geo3DTilesLayer extends MaskLayerMixin(maptalks.Layer) {
         mapExtent.xmax += halfWidth;
         mapExtent.ymax += halfHeight;
         const mapExtentBBOX = extentToBBOX(mapExtent);
-        const nodeBBOX = [];
         const clipMasks = (this.getMasks() || []).filter(mask => {
             return mask && mask instanceof ClipOutsideMask;
         });
@@ -400,37 +401,9 @@ export default class Geo3DTilesLayer extends MaskLayerMixin(maptalks.Layer) {
                 // if (this.options.debugTile && node.id === this.options.debugTile) {
                 //     debugger
                 // }
-                let inCurrentView = true;
-                let visible = TileVisibility.VISIBLE;
-                const enableBBOX = !!(node.extent && BBOXUtil);
-                if (enableBBOX) {
-                    const nodeExtent = node.extent;
-                    nodeBBOX[0] = nodeExtent.xmin;
-                    nodeBBOX[1] = nodeExtent.ymin;
-                    nodeBBOX[2] = nodeExtent.xmax;
-                    nodeBBOX[3] = nodeExtent.ymax;
-                    //filter by map extent
-                    inCurrentView = BBOXUtil.bboxIntersect(nodeBBOX, mapExtentBBOX);
-                }
+                const visible = this._isVisible(node, maxExtent, projectionView, mapExtentBBOX, clipMasks);
 
-                let inMasks = false;
-                if (enableBBOX && clipMasks.length > 0) {
-                    for (let i = 0, len = clipMasks.length; i < len; i++) {
-                        const maskGeoJSON = clipMasks[i].maskGeoJSON;
-                        //filter by masks
-                        if (!maskGeoJSON || !maskGeoJSON.bbox || BBOXUtil.bboxInMask(nodeBBOX, maskGeoJSON)) {
-                            inMasks = true;
-                            break;
-                        }
-                    }
-                } else {
-                    inMasks = true;
-                }
-                if (!inCurrentView || !inMasks) {
-                    visible = TileVisibility.OUT_OF_FRUSTUM;
-                } else {
-                    visible = this._isVisible(node, maxExtent, projectionView);
-                }
+
                 // // find ancestors
                 // if (node.id === 117) {
                 //     let ancestors = [];
@@ -745,7 +718,39 @@ export default class Geo3DTilesLayer extends MaskLayerMixin(maptalks.Layer) {
         this.fire('loadtileset', { tileset, index: parent && parent._rootIdx, url });
     }
 
-    _isVisible(node: TileNode, maxExtent: maptalks.Extent, projectionView: number[]): TileVisibility {
+    _isTileInMasks(node: TileNode, mapExtentBBOX: number[], clipMasks: ClipOutsideMask[]) {
+        if (!node.extent || !BBOXUtil || !mapExtentBBOX) {
+            return true;
+        }
+        const nodeExtent = node.extent;
+        TILENODE_BBOX[0] = nodeExtent.xmin;
+        TILENODE_BBOX[1] = nodeExtent.ymin;
+        TILENODE_BBOX[2] = nodeExtent.xmax;
+        TILENODE_BBOX[3] = nodeExtent.ymax;
+        const inCurrentView = BBOXUtil.bboxIntersect(TILENODE_BBOX, mapExtentBBOX);
+        if (!inCurrentView) {
+            return false;
+        }
+        if (clipMasks.length > 0) {
+            let inMasks = false;
+            for (let i = 0, len = clipMasks.length; i < len; i++) {
+                const maskGeoJSON = (clipMasks[i] as any).maskGeoJSON;
+                //filter by masks
+                if (!maskGeoJSON || !maskGeoJSON.bbox || BBOXUtil.bboxInMask(TILENODE_BBOX, maskGeoJSON)) {
+                    inMasks = true;
+                    break;
+                }
+            }
+            return inMasks;
+        }
+        return true;
+    }
+
+
+    _isVisible(node: TileNode, maxExtent: maptalks.Extent, projectionView: number[], mapExtentBBOX: BBOX, clipMasks: ClipOutsideMask[]): TileVisibility {
+        if (!this._isTileInMasks(node, mapExtentBBOX, clipMasks)) {
+            return TileVisibility.OUT_OF_FRUSTUM;
+        }
         node._cameraDistance = Infinity;
         if (node._level === 0 || node._empty) {
             this._updateRootCenter(node as RootTileNode);
