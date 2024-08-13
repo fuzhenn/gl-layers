@@ -8,7 +8,8 @@ class BoundingBox{
     max: vec3
     vertex?: vec3[]
     center: vec3
-    private _dirty?: boolean
+    //@internal
+    _dirty?: boolean
 
     constructor(min?: vec3, max?: vec3) {
         this.min = min || [Infinity, Infinity, Infinity];

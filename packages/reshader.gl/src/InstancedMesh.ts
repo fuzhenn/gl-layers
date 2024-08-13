@@ -7,9 +7,11 @@ import Material from './Material';
 import Geometry from './Geometry';
 
 export default class InstancedMesh extends Mesh {
-    private _instanceCount: number
+    //@internal
+    _instanceCount: number
     instancedData: InstancedAttribute
-    private _vao: Record<string, any>
+    //@internal
+    _vao: Record<string, any>
 
     constructor(instancedData: InstancedAttribute, instanceCount: number, geometry: Geometry, material?: Material, config: MeshOptions = {}) {
         super(geometry, material, config);
@@ -33,6 +35,7 @@ export default class InstancedMesh extends Mesh {
         return super.getMemorySize() + this._getInstanceMemorySize();
     }
 
+    //@internal
     _getInstanceMemorySize() {
         let size = 0;
         for (const p in this.instancedData) {
@@ -43,6 +46,7 @@ export default class InstancedMesh extends Mesh {
         return size;
     }
 
+    //@internal
     _checkInstancedProp() {
         for (const p in this.instancedData) {
             if (this.geometry.data[p]) {
@@ -51,6 +55,7 @@ export default class InstancedMesh extends Mesh {
         }
     }
 
+    //@internal
     _getREGLAttrData(regl: Regl, activeAttributes: ActiveAttributes) {
         // 只需要获得 geometry的 attr 数据，不需要elements
         const geoBuffers = this.geometry.getAttrData(activeAttributes);

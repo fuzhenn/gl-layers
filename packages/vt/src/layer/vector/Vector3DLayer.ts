@@ -27,9 +27,12 @@ const defaultOptions = {
 const VECTOR_TILE_SIZE = new maptalks.Size(1, 1);
 
 class Vector3DLayer extends maptalks.OverlayLayer {
-  private _urlModifier: Function;
-  private _polygonOffset: number;
-  private _totalPolygonOffset: number;
+  //@internal
+  _urlModifier: Function;
+  //@internal
+  _polygonOffset: number;
+  //@internal
+  _totalPolygonOffset: number;
 
   static registerPainter(name: string, clazz: unknown) {
     if (!(Vector3DLayer as any).painters) {
@@ -233,6 +236,7 @@ class Vector3DLayer extends maptalks.OverlayLayer {
     return VECTOR_TILE_SIZE;
   }
 
+  //@internal
   _onSpatialReferenceChange() {
     const renderer: Record<string, any> = this.getRenderer();
     if (!renderer) {

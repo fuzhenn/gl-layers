@@ -96,22 +96,36 @@ class VectorTileLayer extends maptalks.TileLayer {
   VERSION: string;
   ready: boolean;
 
+  //@internal
   _polygonOffset: number;
-//   _pathRoot?: string;
+  //_pathRoot?: string;
 
-  private _featureStates: Record<string, Map<unknown, unknown>>;
-  private _featureStamp?: any;
-  private _schema: Record<number, object> = {};
-  private _originFeatureStyle?: VtComposeStyle;
-  private _featureStyle?: VtStyle[];
-  private _vtStyle?: VtBaseStyle[];
-  private _background?: BackgroundStyle;
-  private _backgroundConfig?: BackgroundConfig;
-  private _totalPolygonOffset?: number;
-  private _isDefaultRender?: boolean;
-  private _highlighted: any[];
-  private _replacer?: Function;
-  private _urlModifier?: Function;
+  //@internal
+  _featureStates: Record<string, Map<unknown, unknown>>;
+  //@internal
+  _featureStamp?: any;
+  //@internal
+  _schema: Record<number, object> = {};
+  //@internal
+  _originFeatureStyle?: VtComposeStyle;
+  //@internal
+  _featureStyle?: VtStyle[];
+  //@internal
+  _vtStyle?: VtBaseStyle[];
+  //@internal
+  _background?: BackgroundStyle;
+  //@internal
+  _backgroundConfig?: BackgroundConfig;
+  //@internal
+  _totalPolygonOffset?: number;
+  //@internal
+  _isDefaultRender?: boolean;
+  //@internal
+  _highlighted: any[];
+  //@internal
+  _replacer?: Function;
+  //@internal
+  _urlModifier?: Function;
   options: VectorTileLayerOptionsType;
 
   // create a layer instance from given json
@@ -264,7 +278,8 @@ class VectorTileLayer extends maptalks.TileLayer {
     return stateMap.get(source.id);
   }
 
-  private _markFeatureState() {
+  //@internal
+  _markFeatureState() {
     const renderer = this.getRenderer();
     if (!renderer) {
       return;
@@ -273,10 +288,12 @@ class VectorTileLayer extends maptalks.TileLayer {
     this._featureStamp = timestamp;
   }
 
+  //@internal
   _getFeatureStateStamp() {
     return this._featureStamp;
   }
 
+  //@internal
   _isFeatureStateDirty(timestamp: number) {
     return this._featureStamp && this._featureStamp !== timestamp;
   }
@@ -409,7 +426,8 @@ class VectorTileLayer extends maptalks.TileLayer {
     return this;
   }
 
-  private _tilePointToPoint(out: any, point: any, tilePoint: any, extent: any) {
+  //@internal
+  _tilePointToPoint(out: any, point: any, tilePoint: any, extent: any) {
     const tileSize = this.getTileSize().width;
     const tileScale = extent / tileSize;
     const srcPoint = out.set(
@@ -464,7 +482,8 @@ class VectorTileLayer extends maptalks.TileLayer {
     return terrainHelper.getTerrainTiles(tileInfo);
   }
 
-  private _setStyle(style: any) {
+  //@internal
+  _setStyle(style: any) {
     // this._pathRoot = null;
     if (style && style["$root"]) {
       let root = style["$root"];
@@ -576,7 +595,8 @@ class VectorTileLayer extends maptalks.TileLayer {
     return this._totalPolygonOffset;
   }
 
-  private _convertFeatures(features) {
+  //@internal
+  _convertFeatures(features) {
     if (!features || !features.length) {
       return;
     }
@@ -759,7 +779,8 @@ class VectorTileLayer extends maptalks.TileLayer {
     return this;
   }
 
-  private _validateHighlight(highlights: any) {
+  //@internal
+  _validateHighlight(highlights: any) {
     if (Array.isArray(highlights)) {
       for (let i = 0; i < highlights.length; i++) {
         this._validateHighlight(highlights[i]);
@@ -781,6 +802,7 @@ class VectorTileLayer extends maptalks.TileLayer {
     }
   }
 
+  //@internal
   _resumeHighlights() {
     if (this._highlighted) {
       for (let i = 0; i < this._highlighted.length; i++) {
@@ -808,7 +830,8 @@ class VectorTileLayer extends maptalks.TileLayer {
     return this;
   }
 
-  private _parseStylePath() {
+  //@internal
+  _parseStylePath() {
     maptalks.Util.convertStylePath(this._vtStyle, this._replacer);
     maptalks.Util.convertStylePath(this._featureStyle, this._replacer);
   }
@@ -847,7 +870,8 @@ class VectorTileLayer extends maptalks.TileLayer {
     return this._updateSceneConfig(1, idx, sceneConfig, styleIdx);
   }
 
-  private _updateSceneConfig(
+  //@internal
+  _updateSceneConfig(
     type: number,
     idx: number,
     sceneConfig: VtSceneConfig,
@@ -951,7 +975,8 @@ class VectorTileLayer extends maptalks.TileLayer {
     return this._updateDataConfig(1, idx, dataConfig, styleIdx);
   }
 
-  private _updateDataConfig(
+  //@internal
+  _updateDataConfig(
     type: number,
     idx: number,
     dataConfig: VtDataConfig,
@@ -1039,7 +1064,8 @@ class VectorTileLayer extends maptalks.TileLayer {
     return this._updateSymbol(1, idx, symbol, feaStyleIdx);
   }
 
-  private _updateSymbol(
+  //@internal
+  _updateSymbol(
     type: number,
     idx: number,
     symbol: VtSymbol,
@@ -1170,6 +1196,7 @@ class VectorTileLayer extends maptalks.TileLayer {
     return this;
   }
 
+  //@internal
   _getTargetStyle(type: number, allStyles?: any) {
     if (allStyles) {
       const styles = type === 0 ? allStyles.style : allStyles.featureStyle;
@@ -1426,7 +1453,8 @@ class VectorTileLayer extends maptalks.TileLayer {
   //     return -1;
   // }
 
-  private _getStyleIndex(name: string) {
+  //@internal
+  _getStyleIndex(name: string) {
     const styles = this._vtStyle;
     if (!styles) {
       return -1;
@@ -1475,6 +1503,7 @@ class VectorTileLayer extends maptalks.TileLayer {
     return JSON.parse(JSON.stringify(this._getComputedStyle()));
   }
 
+  //@internal
   _getComputedStyle() {
     return {
       background: this._background,
@@ -1554,7 +1583,8 @@ class VectorTileLayer extends maptalks.TileLayer {
     }
   }
 
-  private _convertPickedFeature(picks: any[]) {
+  //@internal
+  _convertPickedFeature(picks: any[]) {
     const renderer = this.getRenderer();
     if (!renderer) {
       return picks;
@@ -1590,7 +1620,8 @@ class VectorTileLayer extends maptalks.TileLayer {
     return picks;
   }
 
-  private _convertGeometry(
+  //@internal
+  _convertGeometry(
     type: number,
     geometry: any | any[],
     nw: maptalks.Point,
@@ -1651,7 +1682,8 @@ class VectorTileLayer extends maptalks.TileLayer {
     };
   }
 
-  private _convertGeometryCoords(
+  //@internal
+  _convertGeometryCoords(
     geometry: any | any[],
     nw: maptalks.Point,
     extent: number,
@@ -1757,6 +1789,7 @@ class VectorTileLayer extends maptalks.TileLayer {
     return new VectorTileLayer(layerJSON["id"], layerJSON["options"]);
   }
 
+  //@internal
   _compileStyle() {
     // if (this._vtStyle) {
     //     this._compiledStyles = compileStyle(this._vtStyle);

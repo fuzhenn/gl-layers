@@ -8,7 +8,7 @@ export default class Trajectory {
   current: LanePosition;
   next: LanePosition;
   car: Car;
-  private temp: LanePosition;
+  temp: LanePosition;
 
   constructor(car: Car, lane: Lane, position: number) {
     this.car = car;
@@ -153,7 +153,8 @@ export default class Trajectory {
     return this._startChangingLanes(nextLane, nextPosition);
   }
 
-  private _getAdjacentLaneChangeCurve() {
+  //@internal
+  _getAdjacentLaneChangeCurve() {
     const p1 = this.current.lane.getPoint(this.current.relativePosition);
     const p2 = this.next.lane.getPoint(this.next.relativePosition);
     const distance = p2.subtract(p1).length;
@@ -168,10 +169,12 @@ export default class Trajectory {
     return new Curve(p1, p2, control1, control2);
   }
 
-  private _getCurve() {
+  //@internal
+  _getCurve() {
     return this._getAdjacentLaneChangeCurve();
   }
 
+  //@internal
   _startChangingLanes(nextLane: Lane, nextPosition: number) {
     if (this.isChangingLanes) {
       throw Error("already changing lane");
@@ -189,6 +192,7 @@ export default class Trajectory {
     return (this.next.position -= this.temp.lane.length);
   }
 
+  //@internal
   _finishChangingLanes() {
     if (!this.isChangingLanes) {
       throw Error("no lane changing is going on");
