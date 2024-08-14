@@ -4,6 +4,7 @@ const terser = require('@rollup/plugin-terser');
 const replace = require('@rollup/plugin-replace');
 const pkg = require('./package.json');
 const typescript = require('@rollup/plugin-typescript');
+const { dts } = require("rollup-plugin-dts");
 
 const production = process.env.BUILD === 'production';
 const outputFile = pkg.main;
@@ -168,7 +169,7 @@ module.exports = [
             name: 'maptalks',
             file: outputFile,
             format: 'umd',
-            sourcemap: production ? false : 'inline',
+            sourcemap: true
         },
         watch: {
             include: ['src/layer/**/*', 'build/worker.js']
@@ -212,11 +213,24 @@ if (production) {
                 name: 'maptalks',
                 file: outputESFile,
                 format: 'es',
-                sourcemap: production ? false : 'inline',
+                sourcemap: true
             },
             watch: {
                 include: ['src/**/*']
             }
+        },
+        {
+            input: 'dist/layer/index.d.ts',
+            plugins: [dts()],
+            output: [
+                {
+                    'sourcemap': false,
+                    'format': 'es',
+                    'name': 'maptalks',
+                    banner,
+                    'file': pkg['types']
+                }
+            ]
         }
     )
 }

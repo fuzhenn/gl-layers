@@ -6,6 +6,7 @@ import clipLine from './util/clip_line';
 import { isFunctionDefinition } from '@maptalks/function-type';
 import Point from '@mapbox/point-geometry';
 import Point3 from './point3/Point3';
+import mergeLineFeatures from './util/merge_line_features';
 
 // NOTE ON EXTRUDE SCALE:
 // scale the extrusion vector so that the normal length is this value.
@@ -56,6 +57,10 @@ const TEMP_NORMAL_3 = new Point();
  * 3. 遍历 StyledLine, 生成
  */
 export default class LinePack extends VectorPack {
+
+    static mergeLineFeatures(features, symbolDef, fnTypes, zoom) {
+        return mergeLineFeatures(features, symbolDef, fnTypes, zoom);
+    }
 
     constructor(features, symbol, options) {
         super(features, symbol, options);
@@ -231,7 +236,7 @@ export default class LinePack extends VectorPack {
         if (isPolygon) {
             //Polygon时，需要遍历elements，去掉(filter)瓦片范围外的edge
             //所以this.elements只会存放当前line的elements，方便filter处理
-            this.elements = [];
+            this.elements = this._arrayPool.get();
         }
         let join = symbol['lineJoin'] || 'miter', cap = symbol['lineCap'] || 'butt';
         if (lineJoinFn) {
@@ -444,13 +449,13 @@ export default class LinePack extends VectorPack {
         const positionSize = this.needAltitudeAttribute() ? 2 : 3;
         for (let i = 0; i < lines.length; i++) {
             //element offset when calling this.addElements in _addLine
-            this.offset = this.data.aPosition.length / positionSize;
+            this.offset = this.data.aPosition.getLength() / positionSize;
             const line = lines[i];
             // 把polygon clip后的边框当作line来渲染
             this._addLine(line, feature, join, cap, miterLimit, roundLimit);
             if (isPolygon) {
                 this._filterPolygonEdges(elements);
-                this.elements = [];
+                this.elements = this._arrayPool.get();
             }
         }
         if (isPolygon) {
@@ -549,6 +554,8 @@ export default class LinePack extends VectorPack {
             nextNormal = vertices[first].sub(currentVertex)._unit()._perp();
         }
 
+        this.ensureDataCapacity(join, len, 360, 2);
+
         for (let i = first; i < len; i++) {
 
             nextVertex = i === len - 1 ?
@@ -639,6 +646,7 @@ export default class LinePack extends VectorPack {
                     currentJoin = 'fakeround';
                 }
             }
+
 
             if (currentJoin === 'miter' && miterLength > miterLimit && !isTube) {
                 currentJoin = 'bevel';
@@ -786,6 +794,14 @@ export default class LinePack extends VectorPack {
         }
     }
 
+    ensureDataCapacity(join, vertexCount, approxAngle, halfVertexCount) {
+        const n = join === 'round' ? Math.round(approxAngle / DEG_PER_TRIANGLE) - 1: 0;
+        // 6: max count of addCurrentVertex
+        // n: fakeround's addCurrentVertex
+        // 2: addCurrentVertex = 2 * addHalfVertex
+        super.ensureDataCapacity((6 + n) * halfVertexCount, vertexCount)
+    }
+
     /**
      * Add two vertices to the buffers.
      *
@@ -884,38 +900,67 @@ export default class LinePack extends VectorPack {
         // 用最后一位存up
         aExtrudeY = (Math.sign(aExtrudeY) || 1) * (((Math.floor(Math.abs(aExtrudeY)) >> 1) << 1) + (+up));
 
-        data.aExtrude.push(
-            aExtrudeX,
-            aExtrudeY
-        );
+        let index = data.aExtrude.currentIndex;
+        data.aExtrude[index++] = aExtrudeX;
+        data.aExtrude[index++] = aExtrudeY;
 
         if (this.iconAtlas || this.hasDasharray) {
-            data.aExtrude.push(EXTRUDE_SCALE * normalDistance);
+            data.aExtrude[index++] = EXTRUDE_SCALE * normalDistance;
         }
+        data.aExtrude.currentIndex = index;
 
-        data.aLinesofar.push(linesofar);
+        index = data.aLinesofar.currentIndex;
+        data.aLinesofar[index++] = linesofar;
+        data.aLinesofar.currentIndex = index;
+
         if (lineWidthFn) {
             //乘以2是为了解决 #190
-            data.aLineWidth.push(Math.round(this.feaLineWidth * 2));
+            index = data.aLineWidth.currentIndex;
+            data.aLineWidth[index++] = Math.round(this.feaLineWidth * 2);
+            data.aLineWidth.currentIndex = index;
         }
         if (lineStrokeWidthFn) {
             //乘以2是为了解决 #190
-            data.aLineStrokeWidth.push(Math.round(this.feaLineStrokeWidth * 2));
+            index = data.aLineStrokeWidth.currentIndex;
+            data.aLineStrokeWidth[index++] = Math.round(this.feaLineStrokeWidth * 2);
+            data.aLineStrokeWidth.currentIndex = index;
         }
         if (lineColorFn) {
-            data.aColor.push(...this.feaColor);
+            index = data.aColor.currentIndex;
+            data.aColor[index++] = this.feaColor[0];
+            data.aColor[index++] = this.feaColor[1];
+            data.aColor[index++] = this.feaColor[2];
+            data.aColor[index++] = this.feaColor[3];
+            data.aColor.currentIndex = index;
         }
         if (lineStrokeColorFn) {
-            data.aStrokeColor.push(...this.feaStrokeColor);
+            index = data.aStrokeColor.currentIndex;
+            data.aStrokeColor[index++] = this.feaStrokeColor[0];
+            data.aStrokeColor[index++] = this.feaStrokeColor[1];
+            data.aStrokeColor[index++] = this.feaStrokeColor[2];
+            data.aStrokeColor[index++] = this.feaStrokeColor[3];
+            data.aStrokeColor.currentIndex = index;
         }
         if (lineOpacityFn) {
-            data.aOpacity.push(this.feaOpacity);
+            index = data.aOpacity.currentIndex;
+            data.aOpacity[index++] = this.feaOpacity;
+            data.aOpacity.currentIndex = index;
         }
         if (this.dasharrayFn) {
-            data.aDasharray.push(...this.feaDash);
+            index = data.aDasharray.currentIndex;
+            data.aDasharray[index++] = this.feaDash[0];
+            data.aDasharray[index++] = this.feaDash[1];
+            data.aDasharray[index++] = this.feaDash[2];
+            data.aDasharray[index++] = this.feaDash[3];
+            data.aDasharray.currentIndex = index;
         }
         if (this.dashColorFn) {
-            data.aDashColor.push(...this.feaDashColor);
+            index = data.aDashColor.currentIndex;
+            data.aDashColor[index++] = this.feaDashColor[0];
+            data.aDashColor[index++] = this.feaDashColor[1];
+            data.aDashColor[index++] = this.feaDashColor[2];
+            data.aDashColor[index++] = this.feaDashColor[3];
+            data.aDashColor.currentIndex = index;
         }
         // if (this.symbol['lineOffset']) {
         //     //添加 aExtrudeOffset 数据，用来在vert glsl中决定offset的矢量方向
@@ -936,16 +981,27 @@ export default class LinePack extends VectorPack {
         // }
 
         if (this.iconAtlas) {
-            data.aTexInfo.push(...this.feaTexInfo);
+            index = data.aTexInfo.currentIndex;
+            data.aTexInfo[index++] = this.feaTexInfo[0];
+            data.aTexInfo[index++] = this.feaTexInfo[1];
+            data.aTexInfo[index++] = this.feaTexInfo[2];
+            data.aTexInfo[index++] = this.feaTexInfo[3];
+            data.aTexInfo.currentIndex = index;
         }
         if (lineDxFn || lineDyFn) {
-            data.aLineDxDy.push(this.feaLineDx || 0, this.feaLineDy || 0);
+            index = data.aLineDxDy.currentIndex;
+            data.aLineDxDy[index++] = this.feaLineDx || 0;
+            data.aLineDxDy[index++] = this.feaLineDy || 0;
+            data.aLineDxDy.currentIndex = index;
         }
         // if (lineDyFn) {
         //     data.aLineDy.push(this.feaLineDy);
         // }
         if (linePatternAnimSpeedFn || linePatternGapFn) {
-            data.aLinePattern.push((this.feaPatternAnimSpeed || 0) * 127, (this.feaLinePatternGap || 0) * 10);
+            index = data.aLinePattern.currentIndex;
+            data.aLinePattern[index++] = (this.feaPatternAnimSpeed || 0) * 127;
+            data.aLinePattern[index++] = (this.feaLinePatternGap || 0) * 10;
+            data.aLinePattern.currentIndex = index;
         }
         // if (linePatternGapFn) {
         //     // 0 - 25.5
@@ -965,7 +1021,12 @@ export default class LinePack extends VectorPack {
         for (let i = 0; i < edges.length; i += 3) {
             if (EXTENT === Infinity || !isClippedLineEdge(this.data.aPosition, edges[i], edges[i + 1], positionSize, EXTENT) &&
                 !isClippedLineEdge(this.data.aPosition, edges[i + 1], edges[i + 2], positionSize, EXTENT)) {
-                elements.push(edges[i], edges[i + 1], edges[i + 2]);
+                // elements.push(edges[i], edges[i + 1], edges[i + 2]);
+                let index = elements.currentIndex;
+                elements[index++] = edges[i];
+                elements[index++] = edges[i + 1];
+                elements[index++] = edges[i + 2];
+                elements.currentIndex = index;
             }
         }
     }
@@ -1062,14 +1123,11 @@ function hasFeatureDash(features, zoom, fn) {
     return false;
 }
 
-const TEMP_D_NORMAL = new Point(0, 0);
 const ORIGINZERO = new Point(0, 0);
 
 function getNormalDistance(perp, normal) {
     const x = perp.mag();
     const z = normal.mag();
-    TEMP_D_NORMAL.x = normal.x;
-    TEMP_D_NORMAL.y = normal.y;
     const perpAngle = perp.angleTo(ORIGINZERO);
     const normalAngle = normal.angleTo(ORIGINZERO);
     const sign = Math.sign(normalAngle - perpAngle);

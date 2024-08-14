@@ -4,9 +4,11 @@
   "description": "Packer to pack simple vector graphics for gl",
   "module": "dist/vector-packer.es.js",
   "files": [
-    "dist/vector-packer.es.js"
+    "dist/vector-packer.es.js",
+    "dist/vector-packer.es.js.map"
   ],
   "scripts": {
+    "clean": "rimraf dist",
     "build": "rollup --environment BUILD:production -c rollup.config.js",
     "build-dev": "rollup -c rollup.config.js",
     "dev": "rollup -w -c rollup.config.js",
@@ -30,6 +32,7 @@
     "color": "^3.0.0",
     "earcut": "^2.2.4",
     "gl-matrix": "^3.4.0",
+    "maptalks": "1.0.0-rc.33",
     "pbf": "^3.2.1",
     "quickselect": "^1.0.0",
     "tinyqueue": "^2.0.3"

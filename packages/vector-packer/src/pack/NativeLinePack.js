@@ -42,17 +42,17 @@ export default class NativeLinePack extends VectorPack {
             lines = feature.geometry;
         const elements = this.elements;
         if (isPolygon) {
-            this.elements = [];
+            this.elements = this._arrayPool.get();
         }
         const positionSize = this.needAltitudeAttribute() ? 2 : 3;
         for (let i = 0; i < lines.length; i++) {
             //element offset when calling this.addElements in _addLine
-            this.offset = this.data.aPosition.length / positionSize;
+            this.offset = this.data.aPosition.getLength() / positionSize;
             this._addLine(lines[i], feature);
             if (isPolygon) {
                 //去掉polygon在瓦片范围外的边
                 this._filterPolygonEdges(elements);
-                this.elements = [];
+                this.elements = this._arrayPool.get();
             }
         }
         if (isPolygon) {
@@ -147,15 +147,24 @@ export default class NativeLinePack extends VectorPack {
     }
 
     addElements(e1, e2) {
-        super.addElements(this.offset + e1, this.offset + e2);
+        this.maxIndex = Math.max(this.maxIndex, this.offset + e1, this.offset + e2);
+        let index = this.elements.currentIndex;
+        this.elements[index++] = this.offset + e1;
+        this.elements[index++] = this.offset + e2;
+        this.elements.currentIndex = index;
     }
 
     _filterPolygonEdges(elements) {
         const EXTENT = this.options['EXTENT'],
             edges = this.elements;
-        for (let i = 0; i < edges.length; i += 2) {
+        const count = edges.getLength();
+        for (let i = 0; i < count; i += 2) {
             if (!isClippedEdge(this.data.aPosition, edges[i], edges[i + 1], 3, EXTENT)) {
-                elements.push(edges[i], edges[i + 1]);
+                // elements.push(edges[i], edges[i + 1]);
+                let index = elements.currentIndex;
+                elements[index++] = edges[i];
+                elements[index++] = edges[i + 1];
+                elements.currentIndex = index;
             }
         }
     }

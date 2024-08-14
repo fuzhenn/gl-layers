@@ -3,6 +3,7 @@ const commonjs = require("@rollup/plugin-commonjs");
 const terser = require("@rollup/plugin-terser");
 const typescript = require("@rollup/plugin-typescript");
 const pkg = require("./package.json");
+const { dts } = require("rollup-plugin-dts");
 
 const production = process.env.BUILD === "production";
 const outputFile = pkg.main;
@@ -48,16 +49,16 @@ const basePlugins = [
 
 module.exports = [
     {
-        input: "src/index.js",
-        external: ["maptalks", "@maptalks/gltf-layer", "turf"],
+        input: "src/index.ts",
+        external: ["maptalks", "@maptalks/gltf-layer", "@turf/turf"],
         plugins: basePlugins.concat(plugins),
         output: {
             globals: {
                 maptalks: "maptalks",
                 "@maptalks/gltf-layer": "maptalks",
-                turf: "turf",
+                '@turf/turf': "turf",
             },
-            sourcemap: production ? false : "inline",
+            sourcemap: true,
             format: "umd",
             name: "maptalks",
             banner: banner,
@@ -67,7 +68,7 @@ module.exports = [
         },
     },
     {
-        input: "src/index.js",
+        input: "src/index.ts",
         plugins: basePlugins.concat(
             production
                 ? [
@@ -83,14 +84,14 @@ module.exports = [
                   ]
                 : []
         ),
-        external: ["maptalks", "@maptalks/gltf-layer", "turf"],
+        external: ["maptalks", "@maptalks/gltf-layer", "@turf/turf"],
         output: {
             globals: {
                 maptalks: "maptalks",
                 "@maptalks/gltf-layer": "maptalks",
-                turf: "turf",
+                '@turf/turf': "turf",
             },
-            sourcemap: false,
+            sourcemap: true,
             format: "es",
             banner: banner,
             extend: true,
@@ -100,3 +101,18 @@ module.exports = [
         },
     },
 ];
+if (production) {
+    module.exports.push({
+        input: 'dist/index.d.ts',
+        plugins: [dts()],
+        output: [
+            {
+                'sourcemap': true,
+                'format': 'es',
+                'name': 'maptalks',
+                banner,
+                'file': pkg['types']
+            }
+        ]
+    });
+}

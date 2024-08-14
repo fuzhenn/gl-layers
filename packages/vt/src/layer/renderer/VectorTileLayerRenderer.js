@@ -64,7 +64,7 @@ class VectorTileLayerRenderer extends maptalks.renderer.TileLayerCanvasRenderer 
         return this._styleCounter;
     }
 
-    setStyle(silent) {
+    setStyle() {
         if (this._groundPainter) {
             this._groundPainter.update();
         }
@@ -77,13 +77,12 @@ class VectorTileLayerRenderer extends maptalks.renderer.TileLayerCanvasRenderer 
             this._workerConn.updateStyle(style, err => {
                 this._workersyncing = false;
                 if (err) throw new Error(err);
-                if (!silent) {
-                    this._needRetire = true;
-                    // this.clear();
-                    // this._clearPlugin();
-                    this._initPlugins();
-                    this.setToRedraw();
-                }
+                this._needRetire = true;
+                // this.clear();
+                // this._clearPlugin();
+                this._initPlugins();
+                this.setToRedraw();
+
                 this.layer.fire('refreshstyle');
             });
         } else {
@@ -175,7 +174,7 @@ class VectorTileLayerRenderer extends maptalks.renderer.TileLayerCanvasRenderer 
         plugin.style = styles[idx];
         const needRefresh = plugin.updateSymbol(symbol, styles[idx].symbol);
         if (!needRefresh && needRefreshStyle(symbol)) {
-            this.setStyle(true);
+            this.setStyle();
         }
         this.setToRedraw();
         return needRefresh;
@@ -210,6 +209,18 @@ class VectorTileLayerRenderer extends maptalks.renderer.TileLayerCanvasRenderer 
     }
 
     isAnimating() {
+        // maptalks/issues#712
+        // 当highlight更新时，在当前帧（通过frametimestamp来识别）一直返回animating为true，让所有瓦片渲染时都能正确的渲染更新
+        const mapRenderer = this.getMap().getRenderer();
+        // 老版本核心库的mapRenderer上没有定义getFrameTimestamp
+        const timestamp = mapRenderer.getFrameTimestamp && mapRenderer.getFrameTimestamp() || mapRenderer['_frameTimestamp'];
+        if (this._highlightUpdated) {
+            this._highlightFrametime = timestamp;
+            delete this._highlightUpdated;
+        }
+        if (this._highlightFrametime === timestamp) {
+            return true;
+        }
         const plugins = this._getFramePlugins();
         for (let i = 0; i < plugins.length; i++) {
             if (plugins[i] && plugins[i].isAnimating()) {
@@ -392,7 +403,7 @@ class VectorTileLayerRenderer extends maptalks.renderer.TileLayerCanvasRenderer 
         const layer = this.layer;
         this.prepareCanvas();
         if (!this.ready || !layer.ready) {
-            this.completeRender();
+            // this.completeRender();
             return;
         }
         let plugins = this._plugins[this._styleCounter];
@@ -420,8 +431,7 @@ class VectorTileLayerRenderer extends maptalks.renderer.TileLayerCanvasRenderer 
         }
 
         this._endFrame(timestamp);
-
-        this.completeRender();
+        // this.completeRender();
         this._currentTimestamp = timestamp;
     }
 
@@ -990,12 +1000,11 @@ class VectorTileLayerRenderer extends maptalks.renderer.TileLayerCanvasRenderer 
                 stencil: 0xFF,
                 framebuffer: targetFBO
             });
-            if (this.isEnableTileStencil() && plugin.painter && !plugin.painter.needClearStencil()) {
-                this._drawTileStencil(targetFBO);
-            }
-
             const polygonOffsetIndex = this._pluginOffsets[idx] || 0;
             const context = this._getPluginContext(plugin, polygonOffsetIndex, cameraPosition, timestamp);
+            if (plugin.painter && plugin.painter.isEnableTileStencil(context)) {
+                this._drawTileStencil(targetFBO, plugin.painter);
+            }
             const status = plugin.endFrame(context);
             if (status && status.redraw) {
                 //let plugin to determine when to redraw
@@ -1096,8 +1105,8 @@ class VectorTileLayerRenderer extends maptalks.renderer.TileLayerCanvasRenderer 
         return meshes.filter(mesh => filter(mesh) || mesh.properties.hlBloomMesh && filter(mesh.properties.hlBloomMesh)).length > 0;
     }
 
-    _drawTileStencil(fbo) {
-        const only2D = this.isEnableTileStencil();
+    _drawTileStencil(fbo, painter) {
+        const uniqueRef = painter.isUniqueStencilRefPerTile();
         const tileZoom = this.getCurrentTileZoom();
         let stencilRenderer = this._stencilRenderer;
         if (!stencilRenderer) {
@@ -1109,18 +1118,21 @@ class VectorTileLayerRenderer extends maptalks.renderer.TileLayerCanvasRenderer 
         let ref = 1;
         childTiles = childTiles.sort(sortByLevel);
         for (let i = 0; i < childTiles.length; i++) {
-            this._addTileStencil(childTiles[i].info, only2D ? ref : this.getTileLevelValue(childTiles[i].info.z, tileZoom));
+            const stencilRef = uniqueRef ? ref : this.getTileLevelValue(childTiles[i].info, tileZoom);
+            this._addTileStencil(childTiles[i].info, stencilRef);
             ref++;
         }
         parentTiles = parentTiles.sort(sortByLevel);
         for (let i = 0; i < parentTiles.length; i++) {
-            this._addTileStencil(parentTiles[i].info, only2D ? ref : this.getTileLevelValue(parentTiles[i].info.z, tileZoom));
+            const stencilRef = uniqueRef ? ref : this.getTileLevelValue(parentTiles[i].info, tileZoom);
+            this._addTileStencil(parentTiles[i].info, stencilRef);
             ref++;
         }
         //默认情况下瓦片是按照level从小到大排列的，所以倒序排列，让level较小的tile最后画（优先级最高）
         const currentTiles = tiles.sort(sortByLevel);
         for (let i = currentTiles.length - 1; i >= 0; i--) {
-            this._addTileStencil(currentTiles[i].info, only2D ? ref : this.getTileLevelValue(currentTiles[i].info.z, tileZoom));
+            const stencilRef = uniqueRef ? ref : this.getTileLevelValue(currentTiles[i].info, tileZoom);
+            this._addTileStencil(currentTiles[i].info, stencilRef);
             ref++;
         }
 
@@ -1908,6 +1920,7 @@ class VectorTileLayerRenderer extends maptalks.renderer.TileLayerCanvasRenderer 
         plugins.forEach(plugin => {
             plugin.highlight(this._highlighted);
         });
+        this._highlightUpdated = true;
     }
 
     cancelHighlight(names) {
@@ -1925,14 +1938,19 @@ class VectorTileLayerRenderer extends maptalks.renderer.TileLayerCanvasRenderer 
         plugins.forEach(plugin => {
             plugin.highlight(this._highlighted);
         });
+        this._highlightUpdated = true;
     }
 
     cancelAllHighlight() {
+        if (!this._highlighted) {
+            return;
+        }
         delete this._highlighted;
         const plugins = this._getFramePlugins();
         plugins.forEach(plugin => {
             plugin.cancelAllHighlight();
         });
+        this._highlightUpdated = true;
     }
 
     _getLayerOpacity() {

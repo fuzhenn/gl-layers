@@ -11,9 +11,12 @@
   "module": "dist/maptalks.video.es.js",
   "files": [
     "dist/maptalks.video.js",
-    "dist/maptalks.video.es.js"
+    "dist/maptalks.video.js.map",
+    "dist/maptalks.video.es.js",
+    "dist/maptalks.video.es.js.map"
   ],
   "scripts": {
+    "clean": "rimraf dist",
     "dev": "rollup -w -c rollup.config.js",
     "build": "rollup --environment BUILD:production -c rollup.config.js",
     "build-dev": "rollup -c rollup.config.js",
@@ -26,7 +29,7 @@
     "prepublishOnly": "npm run lint && npm run build"
   },
   "devDependencies": {
-    "@maptalks/gl": "workspace:@maptalks/gl@*",
+    "@maptalks/gl": "workspace:*",
     "@rollup/plugin-commonjs": "^25.0.7",
     "@rollup/plugin-node-resolve": "^15.2.3",
     "@rollup/plugin-replace": "^5.0.5",
@@ -42,7 +45,7 @@
     "karma-happen": "^0.1.0",
     "karma-mocha": "^2.0.1",
     "karma-mocha-reporter": "^2.2.5",
-    "maptalks": "^1.0.0-rc.33",
+    "maptalks": "^1.0.0-rc.35",
     "mocha": "^10.3.0",
     "rollup": "^4.17.2"
   },

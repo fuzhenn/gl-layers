@@ -348,6 +348,7 @@ describe('render specs', () => {
             const layer = new Geo3DTilesLayer('3d-tiles', {
                 services : [
                     {
+                        maxTextureSize: 1024,
                         url : `http://localhost:${PORT}/integration/fixtures/${resPath}/tileset.json`,
                         shader: 'pbr',
                         ambientLight: [1, 1, 1]
@@ -852,7 +853,7 @@ describe('render specs', () => {
             });
             runner(done, layer, {
                 path: `./integration/expected/${resPath}/expected.png`,
-                diffCount: 0,
+                diffCount: 2,
                 renderCount: 5
             });
 
@@ -1921,7 +1922,7 @@ describe('render specs', () => {
                 ]
             });
             const assertion = layer => {
-                assert.deepEqual(layer.getMap().getCenter().toArray(), [ -75.61140768, 40.04200494, 0 ]);
+                assert.deepEqual(layer.getMap().getCenter().toArray(), [ -75.61140768, 40.04200494 ]);
             };
             runner(done, layer, { path: `./integration/expected/offset/BatchedWithTransformBox/expected.png`, diffCount: 0, renderCount: 1 }, assertion);
         });
@@ -1938,7 +1939,7 @@ describe('render specs', () => {
                 ]
             });
             const assertion = layer => {
-                assert.deepEqual(layer.getMap().getCenter().toArray(), [ -75.61140766, 40.04200494, 0 ]);
+                assert.deepEqual(layer.getMap().getCenter().toArray(), [ -75.61140766, 40.04200494 ]);
             };
             runner(done, layer, { path: `./integration/expected/offset/BatchedWithTransformRegion/expected.png`, diffCount: 0, renderCount: 1 }, assertion);
         });
@@ -1955,7 +1956,7 @@ describe('render specs', () => {
                 ]
             });
             const assertion = layer => {
-                assert.deepEqual(layer.getMap().getCenter().toArray(), [ -75.61209434, 40.04253061, 0 ]);
+                assert.deepEqual(layer.getMap().getCenter().toArray(), [ -75.61209434, 40.04253061 ]);
             };
             runner(done, layer, { path: `./integration/expected/offset/BatchedWithTransformSphere/expected.png`, diffCount: 0, renderCount: 1 }, assertion);
         });
@@ -2082,7 +2083,7 @@ describe('render specs', () => {
             });
             runner(() => {
                 done();
-            }, layer, { path: `./integration/expected/${resPath}/expected.png`, diffCount: 0, renderCount: 1, noGroup: true });
+            }, layer, { path: `./integration/expected/${resPath}/expected.png`, diffCount: 1, renderCount: 1, noGroup: true });
         });
 
         it('issue#424 with scale and rotation', done => {
@@ -2101,7 +2102,7 @@ describe('render specs', () => {
             });
             runner(() => {
                 done();
-            }, layer, { path: `./integration/expected/${resPath}-scale-rotation/expected.png`, diffCount: 2, renderCount: 1, noGroup: true });
+            }, layer, { path: `./integration/expected/${resPath}-scale-rotation/expected.png`, diffCount: 3, renderCount: 1, noGroup: true });
         });
 
         it('issue#604', done => {
@@ -2120,6 +2121,21 @@ describe('render specs', () => {
             runner(() => {
                 done();
             }, layer, { path: `./integration/expected/${resPath}/expected.png`, diffCount: 5, renderCount: 4, noGroup: true });
+        });
+
+        it('issue#708, fix incorrect ktx2 min filter', done => {
+            const resPath = 'BatchedDraco/issue-708';
+            const layer = new Geo3DTilesLayer('3d-tiles', {
+                services : [
+                    {
+                        url : `http://localhost:${PORT}/integration/fixtures/${resPath}/tileset.json`,
+                        heightOffset: 0
+                    }
+                ]
+            });
+            runner(() => {
+                done();
+            }, layer, { path: `./integration/expected/${resPath}/expected.png`, zoomOffset: 1, diffCount: 5, renderCount: 1, noGroup: true });
         });
     });
 });

@@ -144,7 +144,6 @@ function createPainterPlugin(type, Painter) {
 
         _createMeshes(geometries, context) {
              const {
-                layer,
                 tileInfo,
                 tileExtent,
                 tileTransform,
@@ -158,11 +157,10 @@ function createPainterPlugin(type, Painter) {
             const tilePoint = [tileInfo.extent2d.xmin, tileInfo.extent2d.ymax];
             const meshes = painter.createMeshes(geometries, tileTransform, { tileExtent, tilePoint, tileZoom, tileTranslationMatrix, tileVectorTransform }, context);
             if (meshes.length) {
-                const enableTileStencil = layer.getRenderer().isEnableTileStencil();
                 for (let i = 0; i < meshes.length; i++) {
                     if (meshes[i]) {
                         retire = true;
-                        this._fillMeshProps(meshes[i], tileTransform, context.timestamp, meshUID++, enableTileStencil);
+                        this._fillMeshProps(meshes[i], tileTransform, context.timestamp, meshUID++, painter.isEnableTileStencil());
                     }
                 }
                 if (sceneConfig.animation) {
@@ -248,20 +246,19 @@ function createPainterPlugin(type, Painter) {
                 const defines = mesh.defines || {};
                 defines['ENABLE_TILE_STENCIL'] = 1;
                 mesh.setDefines(defines);
-                if (!('stencilRef' in mesh.uniforms)) {
-                    Object.defineProperty(mesh.uniforms, 'stencilRef', {
-                        enumerable: true,
-                        get: function () {
-                            // return mesh.properties.tile ? mesh.properties.tile.stencilRef : 255;
-                            if (mesh.properties.tile && mesh.properties.tile.stencilRef !== undefined) {
-                                return mesh.properties.tile.stencilRef;
-                            }
-                            // return maxZoom - mesh.properties.tile.z;
-                            return mesh.properties.level;
+            }
+            if (!('stencilRef' in mesh.uniforms)) {
+                Object.defineProperty(mesh.uniforms, 'stencilRef', {
+                    enumerable: true,
+                    get: function () {
+                        // return mesh.properties.tile ? mesh.properties.tile.stencilRef : 255;
+                        if (mesh.properties.tile && mesh.properties.tile.stencilRef !== undefined) {
+                            return mesh.properties.tile.stencilRef;
                         }
-                    });
-                }
-
+                        // return maxZoom - mesh.properties.tile.z;
+                        return mesh.properties.level;
+                    }
+                });
             }
         },
 

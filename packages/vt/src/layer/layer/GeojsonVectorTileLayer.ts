@@ -3,9 +3,8 @@ import * as maptalks from "maptalks";
 import { isNumber, isObject, isString } from "../../common/Util";
 
 import Ajax from "../../worker/util/Ajax";
-import type { ArrayExtent } from "maptalks/dist/geo/Extent";
-import type { Callback } from "maptalks/dist/core/Ajax";
-import VectorTileLayer from "./VectorTileLayer";
+import type { ArrayExtent, Callback, LayerJSONType } from "maptalks";
+import VectorTileLayer, { VectorTileLayerOptionsType } from "./VectorTileLayer";
 
 const options = {
   //feature data to return from worker
@@ -59,13 +58,17 @@ function get4326SpatialReference(maxZoom: number, code: string) {
 }
 
 class GeoJSONVectorTileLayer extends VectorTileLayer {
-  features: Record<string, any>;
+    options: GeoJSONVectorTileLayerOptionsType;
+    features: Record<string, any>;
 
-  _dataExtent: maptalks.Extent;
-  _idMaps: Record<string, any>;
+    //@internal
+    _dataExtent: maptalks.Extent;
+    //@internal
+    _idMaps: Record<string, any>;
 
-  constructor(id: string, options: any = {}) {
+    constructor(id: string, options: GeoJSONVectorTileLayerOptionsType) {
     // use map's spatial reference
+    options = options || { urlTemplate: null };
     options.spatialReference = null;
     super(id, options);
     this.setData(options["data"]);
@@ -75,7 +78,7 @@ class GeoJSONVectorTileLayer extends VectorTileLayer {
     this._prepareOptions();
   }
 
-  _prepareOptions() {
+  protected _prepareOptions() {
     const map = this.getMap();
     const maxNativeZoom = map.getMaxNativeZoom();
     const projection = map.getProjection();
@@ -127,6 +130,7 @@ class GeoJSONVectorTileLayer extends VectorTileLayer {
     return this;
   }
 
+  //@internal
   _setData(data: unknown) {
     if (this.options.convertFn) {
       const fn = new Function(
@@ -141,6 +145,7 @@ class GeoJSONVectorTileLayer extends VectorTileLayer {
     return this;
   }
 
+  //@internal
   _updateWorker() {
     const renderer = this.getRenderer();
     if (renderer) {
@@ -188,10 +193,12 @@ class GeoJSONVectorTileLayer extends VectorTileLayer {
     this.fire("dataload", { extent: params && params.extent });
   }
 
+  //@internal
   _setExtent(extent: ArrayExtent) {
     this._dataExtent = new maptalks.Extent(...extent);
   }
 
+  //@internal
   _fetchData(data: any, cb: Callback) {
     if (isString(data)) {
       Ajax.getJSON(data, cb);
@@ -212,14 +219,15 @@ class GeoJSONVectorTileLayer extends VectorTileLayer {
     return this._idMaps[id];
   }
 
-  static fromJSON(layerJSON) {
+  static fromJSON(layerJSON: LayerJSONType) : GeoJSONVectorTileLayer | null {
     if (!layerJSON || layerJSON["type"] !== "GeoJSONVectorTileLayer") {
       return null;
     }
 
-    return new GeoJSONVectorTileLayer(layerJSON["id"], layerJSON["options"]);
+    return new GeoJSONVectorTileLayer(layerJSON["id"], layerJSON["options"] as any);
   }
 
+  //@internal
   _generateIdMap() {
     if (!this.features) {
       return;
@@ -300,3 +308,15 @@ function convertUrl(data, urlModifier) {
   }
   return data;
 }
+
+export type GeoJSONVectorTileLayerOptionsType = {
+    features?: string,
+    tileBuffer?: number,
+    extent?: number,
+    pyramidMode?: 1,
+    simplifyTolerance?: number,
+    tileStackDepth?: number,
+    generateOMBB?: boolean,
+    data?: any;
+    convertFn?: (data: any) => any;
+} & VectorTileLayerOptionsType;

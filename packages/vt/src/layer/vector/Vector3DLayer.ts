@@ -1,6 +1,6 @@
 import * as maptalks from "maptalks";
 
-import { OverlayLayerOptionsType } from "maptalks/dist/layer/OverlayLayer";
+import { LayerIdentifyOptionsType } from "maptalks";
 import { extend } from "../../common/Util";
 
 const defaultOptions = {
@@ -27,8 +27,11 @@ const defaultOptions = {
 const VECTOR_TILE_SIZE = new maptalks.Size(1, 1);
 
 class Vector3DLayer extends maptalks.OverlayLayer {
+  //@internal
   _urlModifier: Function;
+  //@internal
   _polygonOffset: number;
+  //@internal
   _totalPolygonOffset: number;
 
   static registerPainter(name: string, clazz: unknown) {
@@ -135,7 +138,7 @@ class Vector3DLayer extends maptalks.OverlayLayer {
    */
   identify(
     coordinate: maptalks.Coordinate,
-    options: { tolerance?: object; count?: object } = {}
+    options: LayerIdentifyOptionsType = {}
   ): maptalks.Geometry[] {
     const map = this.getMap();
     const renderer = this.getRenderer();
@@ -148,15 +151,15 @@ class Vector3DLayer extends maptalks.OverlayLayer {
 
   /**
    * Identify the geometries on the given container point
-   * @param  {maptalks.Point} point   - point to identify
-   * @param  {Object} [options=null]  - options
-   * @param  {Object} [options.tolerance=0] - identify tolerance in pixel
-   * @param  {Object} [options.count=null]  - result count
-   * @return {Geometry[]} geometries identified
+   * @param  point   - point to identify
+   * @param  [options=null]  - options
+   * @param  [options.tolerance=0] - identify tolerance in pixel
+   * @param  [options.count=null]  - result count
+   * @return geometries identified
    */
   identifyAtPoint(
     point: maptalks.Point,
-    options: { tolerance?: object; count?: object } = {}
+    options: { tolerance?: number; count?: number, filter?: (picked: any) => boolean } = {}
   ): any[] {
     const map = this.getMap();
     const renderer: Record<string, any> = this.getRenderer();
@@ -164,7 +167,12 @@ class Vector3DLayer extends maptalks.OverlayLayer {
       return [];
     }
     const dpr = this.getMap().getDevicePixelRatio();
-    return renderer.pick(point.x * dpr, point.y * dpr, options);
+    const results = renderer.pick(point.x * dpr, point.y * dpr, options);
+    if (options && options.filter) {
+      return results.filter(g => options.filter(g));
+    } else {
+      return results;
+    }
   }
 
   getComputedStyle() {
@@ -228,6 +236,7 @@ class Vector3DLayer extends maptalks.OverlayLayer {
     return VECTOR_TILE_SIZE;
   }
 
+  //@internal
   _onSpatialReferenceChange() {
     const renderer: Record<string, any> = this.getRenderer();
     if (!renderer) {

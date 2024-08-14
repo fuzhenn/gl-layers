@@ -5,7 +5,8 @@
   "main": "dist/maptalksgl.js",
   "module": "dist/maptalksgl.es.js",
   "scripts": {
-    "build": "npm run lint && cd ../reshader.gl && npm run build && cd ../gl && rollup --environment BUILD:production -c rollup.config.js",
+    "clean": "rimraf dist && rimraf ./build/gl",
+    "build": "npm run clean && rollup --environment BUILD:production -c rollup.config.js",
     "build-dev": "cd ../reshader.gl && npm run build-dev && cd ../gl && rollup -c rollup.config.js",
     "dev": "cd ../reshader.gl && npm run build-dev && cd ../gl && rollup -w -c rollup.config.js",
     "test": "cd ../layer-gltf && npm run build && cd ../gl && karma start --single-run",
@@ -17,21 +18,25 @@
   },
   "files": [
     "dist/maptalksgl.js",
+    "dist/maptalksgl.js.map",
     "dist/maptalksgl.es.js",
+    "dist/maptalksgl.es.js.map",
+    "dist/maptalksgl.d.ts",
     "dist/transcoders.js"
   ],
   "keywords": [
     "webgl",
     "maptalks"
   ],
+  "types": "dist/maptalksgl.d.ts",
   "author": "fuzhenn",
   "license": "UNLICENSED",
   "dependencies": {
     "@maptalks/fusiongl": "^0.6.13",
-    "@maptalks/gltf-loader": "workspace:@maptalks/gltf-loader@*",
+    "@maptalks/gltf-loader": "workspace:*",
     "@maptalks/martini": "^0.4.0",
     "@maptalks/regl": "^3.3.5",
-    "@maptalks/reshader.gl": "workspace:@maptalks/reshader.gl@*",
+    "@maptalks/reshader.gl": "workspace:*",
     "color": "^3.0.0",
     "colorin": "^0.6.0"
   },
@@ -47,10 +52,11 @@
     "karma-chrome-launcher": "^3.1.1",
     "karma-mocha": "^2.0.1",
     "karma-mocha-reporter": "^2.2.5",
-    "maptalks": "^1.0.0-rc.33",
+    "maptalks": "^1.0.0-rc.35",
     "mocha": "^10.3.0",
     "pixelmatch": "^4.0.2",
     "rollup": "^4.17.2",
+    "rollup-plugin-dts": "^6.1.0",
     "tslib": "^2.6.2",
     "typescript": "^5.4.2",
     "typescript-eslint": "^7.3.1"

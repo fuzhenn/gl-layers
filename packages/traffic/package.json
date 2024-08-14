@@ -9,15 +9,20 @@
   },
   "main": "dist/maptalks.traffic.js",
   "module": "dist/maptalks.traffic.es.js",
+  "types": "dist/maptalks.traffic.d.ts",
   "unpkg": "dist/maptalks.traffic.js",
   "jsdelivr": "dist/maptalks.traffic.js",
   "files": [
     "dist/maptalks.traffic.js",
-    "dist/maptalks.traffic.es.js"
+    "dist/maptalks.traffic.js.map",
+    "dist/maptalks.traffic.es.js",
+    "dist/maptalks.traffic.es.js.map",
+    "dist/maptalks.traffic.d.ts"
   ],
   "scripts": {
+    "clean": "rimraf dist",
     "dev": "rollup -w -c rollup.config.js",
-    "build": "rollup --environment BUILD:production -c rollup.config.js",
+    "build": "npm run clean && rollup --environment BUILD:production -c rollup.config.js",
     "build-dev": "rollup -c rollup.config.js",
     "pretest": "npm run lint && npm run build",
     "test": "karma start --single-run",
@@ -27,13 +32,16 @@
     "lint": "eslint src/**/*.js",
     "prepublishOnly": "npm run build"
   },
+  "dependencies": {
+    "@maptalks/gltf-layer": "workspace:*"
+  },
   "devDependencies": {
-    "@maptalks/gl-layers": "*",
     "@rollup/plugin-commonjs": "^25.0.7",
     "@rollup/plugin-node-resolve": "^15.2.3",
     "@rollup/plugin-replace": "^5.0.5",
     "@rollup/plugin-terser": "0.4.4",
     "@rollup/plugin-typescript": "^11.1.6",
+    "@turf/turf": "7.0.0",
     "eslint": "^8.57.0",
     "eslint-plugin-mocha": "^10.4.1",
     "expect.js": "^0.3.1",
@@ -42,10 +50,10 @@
     "karma-expect": "^1.1.3",
     "karma-mocha": "^2.0.1",
     "karma-mocha-reporter": "^2.2.5",
-    "maptalks": "^1.0.0-rc.33",
+    "maptalks": "^1.0.0-rc.35",
     "mocha": "^10.3.0",
     "rollup": "^4.17.2",
-    "turf": "3.0.14"
+    "rollup-plugin-dts": "^6.1.0"
   },
   "gitHead": "9eeea4807723d460fa7e09969c6556d53f6bed84"
 }

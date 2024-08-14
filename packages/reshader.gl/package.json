@@ -4,6 +4,7 @@
   "description": "A shader centric WebGL engine based on regl",
   "module": "dist/reshadergl.es.js",
   "scripts": {
+    "clean": "rimraf dist",
     "build": "rollup --environment BUILD:production -c rollup.config.js",
     "build-dev": "rollup -c rollup.config.js",
     "dev": "rollup -w -c rollup.config.js",
@@ -12,15 +13,18 @@
     "preversion": "npm run lint"
   },
   "files": [
-    "dist/reshadergl.es.js"
+    "dist/reshadergl.es.js.map",
+    "dist/reshadergl.es.js",
+    "dist/reshadergl.d.ts"
   ],
   "keywords": [
     "webgl"
   ],
   "author": "fuzhenn",
   "license": "UNLICENSED",
+  "types": "dist/reshadergl.d.ts",
   "dependencies": {
-    "@maptalks/gltf-loader": "workspace:@maptalks/gltf-loader@*",
+    "@maptalks/gltf-loader": "workspace:*",
     "@maptalks/regl": "^3.3.5",
     "@maptalks/tbn-packer": "^1.4.5",
     "earcut": "^2.2.4",
@@ -34,7 +38,8 @@
     "eslint": "^8.57.0",
     "eslint-plugin-mocha": "^10.4.1",
     "mocha": "^10.3.0",
-    "rollup": "^4.17.2"
+    "rollup": "^4.17.2",
+    "rollup-plugin-dts": "^6.1.0"
   },
   "gitHead": "9eeea4807723d460fa7e09969c6556d53f6bed84"
 }

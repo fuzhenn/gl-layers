@@ -1,6 +1,6 @@
 import * as maptalks from "maptalks";
-import * as turf from "turf";
-
+import * as turf from "@turf/turf";
+//@ts-expect-error-error
 import { GLTFLayer, MultiGLTFMarker } from "@maptalks/gltf-layer";
 
 import Car from "./Car";
@@ -26,16 +26,25 @@ export default class TrafficScene {
   intersections: Pool;
   roads: Pool;
 
+  //@internal
   _lastUpdate = 0;
 
-  private _previousTime = 0;
-  private _carlayer = new GLTFLayer("traffic");
-  private _timeFactor = 5;
-  private _state = "stop";
-  private _symbols = [];
-  private _instanceMap = {};
-  private _rafId: number;
-  private _groupgllayer: any;
+  //@internal
+  _previousTime = 0;
+  //@internal
+  _carlayer = new GLTFLayer("traffic");
+  //@internal
+  _timeFactor = 5;
+  //@internal
+  _state = "stop";
+  //@internal
+  _symbols = [];
+  //@internal
+  _instanceMap = {};
+  //@internal
+  _rafId: number;
+  //@internal
+  _groupgllayer: any;
 
   constructor(options: TrafficSceneOptions) {
     this.options = options || {};
@@ -100,6 +109,7 @@ export default class TrafficScene {
     }
   }
 
+  //@internal
   _update() {
     if (this._state !== "running") {
       return;
@@ -127,6 +137,7 @@ export default class TrafficScene {
     this._rafId = window.requestAnimationFrame(this._update.bind(this));
   }
 
+  //@internal
   _updateInstanceData() {
     for (const t in this._instanceMap) {
       this._instanceMap[t].removeData();
@@ -138,6 +149,7 @@ export default class TrafficScene {
     }
   }
 
+  //@internal
   _addCar(car: Car) {
     const id = car.id.substring(3);
     if (!this.carsList[id]) {
@@ -228,6 +240,7 @@ export default class TrafficScene {
     player.play();
   }
 
+  //@internal
   _getInstanceIndex(id: string) {
     const car = this.carsList[id];
     if (!car) {
@@ -239,6 +252,7 @@ export default class TrafficScene {
     return index;
   }
 
+  //@internal
   _removeCar(id: string) {
     const ids = id.substring(3);
     if (this.carsList[ids] != null) {
@@ -376,7 +390,7 @@ export default class TrafficScene {
    * @param line - line data
    * @return intersect data info
    */
-  intersectSegment(segment, line) {
+  intersectSegment(segment, line): any {
     for (let i = 0; i < line.length - 1; i++) {
       const lineSegment = [line[i], line[i + 1]];
       const turfSegment = turf.lineString(lineSegment);

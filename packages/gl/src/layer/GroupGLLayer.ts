@@ -5,6 +5,7 @@ import { isNil, extend } from './util/util.js';
 import TerrainLayer from './terrain/TerrainLayer';
 import RayCaster from './raycaster/RayCaster.js';
 import Mask from './mask/Mask.js';
+import { LayerJSONType } from 'maptalks';
 
 const options: GroupGLLayerOptions = {
     renderer : 'gl',
@@ -66,13 +67,18 @@ export default class GroupGLLayer extends maptalks.Layer {
     }
 
     options: GroupGLLayerOptions
-    private layers: maptalks.Layer[]
-    private _layerMap: Record<string, maptalks.Layer>
-    private _polygonOffset?: number
+    layers: maptalks.Layer[]
+    //@internal
+    _layerMap: Record<string, maptalks.Layer>
+    //@internal
+    _polygonOffset?: number
     //TODO 需要等analysis类型定义
-    private _analysisTaskList: Analysis[]
-    private _terrainLayer: TerrainLayer
-    private _raycaster: RayCaster
+    //@internal
+    _analysisTaskList: Analysis[]
+    //@internal
+    _terrainLayer: TerrainLayer
+    //@internal
+    _raycaster: RayCaster
 
     /**
      * @param id    - layer's id
@@ -115,6 +121,7 @@ export default class GroupGLLayer extends maptalks.Layer {
         return JSON.parse(JSON.stringify(this._getSceneConfig()));
     }
 
+    //@internal
     _getSceneConfig(): GroupGLLayerSceneConfig {
         return this.options.sceneConfig || {};
     }
@@ -168,11 +175,11 @@ export default class GroupGLLayer extends maptalks.Layer {
         if (idx < 0) {
             return this;
         }
-        const layerRenderer = layer.getRenderer();
+        const layerRenderer = layer.getRenderer() as any;
         if (layerRenderer && layerRenderer.setTerrainHelper) {
             layerRenderer.setTerrainHelper(null);
         }
-        layer._doRemove();
+        layer['_doRemove']();
         this._unbindChildListeners(layer);
         delete this._layerMap[layer.getId()];
         this.layers.splice(idx, 1);
@@ -196,19 +203,22 @@ export default class GroupGLLayer extends maptalks.Layer {
         return this;
     }
 
+    //@internal
     _updatePolygonOffset() {
         let total = 0;
         for (let i = 0; i < this.layers.length; i++) {
-            if (this.layers[i].setPolygonOffset && this.layers[i].getPolygonOffsetCount) {
-                total += this.layers[i].getPolygonOffsetCount();
+            const layer = this.layers[i] as any;
+            if (layer.setPolygonOffset && layer.getPolygonOffsetCount) {
+                total += layer.getPolygonOffsetCount();
             }
         }
         let offset = 0;
         const len = this.layers.length;
         for (let i = len - 1; i >= 0; i--) {
-            if (this.layers[i].setPolygonOffset && this.layers[i].getPolygonOffsetCount) {
-                this.layers[i].setPolygonOffset(offset, total);
-                offset += this.layers[i].getPolygonOffsetCount();
+            const layer = this.layers[i] as any;
+            if (layer.setPolygonOffset && layer.getPolygonOffsetCount) {
+                layer.setPolygonOffset(offset, total);
+                offset += layer.getPolygonOffsetCount();
             }
         }
         this._polygonOffset = offset;
@@ -226,6 +236,7 @@ export default class GroupGLLayer extends maptalks.Layer {
         return this.layers.slice();
     }
 
+    //@internal
     _getLayers(): maptalks.Layer[] {
         return this.layers;
     }
@@ -238,7 +249,7 @@ export default class GroupGLLayer extends maptalks.Layer {
      * It can be used to reproduce the instance by [fromJSON]{@link Layer#fromJSON} method
      * @return layer's profile JSON
      */
-    toJSON(): object {
+    toJSON(): LayerJSONType {
         const layers = [];
         if (this.layers) {
             for (let i = 0; i < this.layers.length; i++) {
@@ -270,7 +281,8 @@ export default class GroupGLLayer extends maptalks.Layer {
         super.onLoadEnd();
     }
 
-    private _prepareLayer(layer: maptalks.Layer) {
+    //@internal
+    _prepareLayer(layer: maptalks.Layer) {
         const map = (this as any).getMap();
         this._layerMap[layer.getId()] = layer;
         layer['_canvas'] = (this as any).getRenderer().canvas;
@@ -281,6 +293,7 @@ export default class GroupGLLayer extends maptalks.Layer {
             this.removeLayer(layer);
             layer.constructor.prototype.remove.call(layer);
             delete layer.remove;
+            return this;
         };
         layer.load();
         this._bindChildListeners(layer);
@@ -307,24 +320,28 @@ export default class GroupGLLayer extends maptalks.Layer {
         return this.getChildLayer(id);
     }
 
-    private _bindChildListeners(layer: maptalks.Layer) {
+    //@internal
+    _bindChildListeners(layer: maptalks.Layer) {
         layer.on('show hide', this._onLayerShowHide, this);
         layer.on('idchange', this._onLayerIDChange, this);
     }
 
-    private _unbindChildListeners(layer: maptalks.Layer) {
+    //@internal
+    _unbindChildListeners(layer: maptalks.Layer) {
         layer.off('show hide', this._onLayerShowHide, this);
         layer.off('idchange', this._onLayerIDChange, this);
     }
 
-    private _onLayerShowHide() {
+    //@internal
+    _onLayerShowHide() {
         const renderer = (this as any).getRenderer();
         if (renderer) {
             renderer.setToRedraw();
         }
     }
 
-    private _onLayerIDChange(e) {
+    //@internal
+    _onLayerIDChange(e) {
         const newId = e.new;
         const oldId = e.old;
         const layer = this.getLayer(oldId);
@@ -332,7 +349,8 @@ export default class GroupGLLayer extends maptalks.Layer {
         this._layerMap[newId] = layer;
     }
 
-    private _onChildRendererCreate(e) {
+    //@internal
+    _onChildRendererCreate(e) {
         e.renderer.clearCanvas = empty;
     }
 
@@ -356,7 +374,8 @@ export default class GroupGLLayer extends maptalks.Layer {
     //     return false;
     // }
 
-    private _checkChildren() {
+    //@internal
+    _checkChildren() {
         const ids = {};
         this.layers.forEach(layer => {
             const layerId = layer.getId();
@@ -455,14 +474,8 @@ export default class GroupGLLayer extends maptalks.Layer {
                     continue;
                 }
             }
-            let picks = layer.identifyAtPoint(point, options);
+            const picks = layer.identifyAtPoint(point, options);
             if (!picks || !picks.length) {
-                continue;
-            }
-            if (options.filter) {
-                picks = picks.filter(g => options.filter(g));
-            }
-            if (!picks.length) {
                 continue;
             }
             const id = layer.getId();
@@ -520,6 +533,7 @@ export default class GroupGLLayer extends maptalks.Layer {
         this._terrainLayer.updateMaterial(mat);
     }
 
+    //@internal
     _initTerrainLayer() {
         const renderer = (this as any).getRenderer();
         if (renderer) {
@@ -527,15 +541,16 @@ export default class GroupGLLayer extends maptalks.Layer {
         }
         const info = this.options['terrain'];
         if (this._terrainLayer) {
-            const options = this._terrainLayer.options;
+            const terrainLayer = this._terrainLayer as any;
+            const options = terrainLayer.options;
             if (!info || options.urlTemplate !== info.urlTemplate || options.spatialReference !== info.spatialReference) {
                 this._removeTerrainLayer();
             } else {
                 for (const p in info) {
                     if (p === 'material') {
-                        this._terrainLayer.setMaterial(info[p]);
+                        terrainLayer.setMaterial(info[p]);
                     } else if (p !== 'urlTemplate' && p !== 'spatialReference') {
-                        this._terrainLayer.config(p, info[p]);
+                        terrainLayer.config(p, info[p]);
                     }
                 }
                 return this;
@@ -547,13 +562,14 @@ export default class GroupGLLayer extends maptalks.Layer {
         }
         this._terrainLayer = new TerrainLayer('__terrain_in_group', info);
         this._updateTerrainSkinLayers();
-        this._terrainLayer.on('tileload', this._onTerrainTileLoad, this);
-        this._prepareLayer(this._terrainLayer);
+        const terrainLayer = this._terrainLayer as any;
+        terrainLayer.on('tileload', this._onTerrainTileLoad, this);
+        this._prepareLayer(terrainLayer);
         const masks = info.masks;
         if (masks && masks.length) {
-            this._terrainLayer.setMask(masks);
+            terrainLayer.setMask(masks);
         } else {
-            this._terrainLayer.removeMask();
+            terrainLayer.removeMask();
         }
         this.fire('terrainlayercreated');
         return this;
@@ -586,8 +602,8 @@ export default class GroupGLLayer extends maptalks.Layer {
         coord0[3] = coord1[3] = 1;
         applyMatrix(coord0 as vec3, coord0 as vec3, map.projViewMatrixInverse);
         applyMatrix(coord1 as vec3, coord1 as vec3, map.projViewMatrixInverse);
-        const point0 = new maptalks.Point(coord0.slice(0, 3));
-        const point1 = new maptalks.Point(coord1.slice(0, 3));
+        const point0 = new maptalks.Point(coord0.slice(0, 3) as [number, number, number]);
+        const point1 = new maptalks.Point(coord1.slice(0, 3) as [number, number, number]);
         const from = map.pointAtResToCoordinate(point0, glRes, EMPTY_COORD0);
         from.z = coord0[2] / map.altitudeToPoint(1, glRes);
         const to = map.pointAtResToCoordinate(point1, glRes, EMPTY_COORD1);
@@ -599,7 +615,8 @@ export default class GroupGLLayer extends maptalks.Layer {
             this._raycaster.setFromPoint(from);
             this._raycaster.setToPoint(to);
         }
-        const terrainRenderer = this._terrainLayer.getRenderer();
+        const terrainLayer = this._terrainLayer as any;
+        const terrainRenderer = terrainLayer.getRenderer();
         const meshes = terrainRenderer.getAnalysisMeshes();
         const results = this._raycaster.test(meshes, map);
         const coordinates = [];
@@ -626,6 +643,7 @@ export default class GroupGLLayer extends maptalks.Layer {
         return this._terrainLayer.queryTerrainByProjCoord(projCoord, out);
     }
 
+    //@internal
     _updateTerrainSkinLayers() {
         if (!this._terrainLayer) {
             return;
@@ -636,8 +654,8 @@ export default class GroupGLLayer extends maptalks.Layer {
             if (!layers[i]) {
                 continue;
             }
-            const layer = layers[i];
-            const renderer = layer.getRenderer();
+            const layer = layers[i] as any;
+            const renderer = layer.getRenderer() as any;
             if (renderer.renderTerrainSkin) {
                 if (renderer.deleteTile === emptyMethod) {
                     // 已经被初始化过了
@@ -669,11 +687,12 @@ export default class GroupGLLayer extends maptalks.Layer {
         this._terrainLayer.setSkinLayers(skinLayers);
     }
 
+    //@internal
     _resetSkinLayer(layer: maptalks.Layer) {
         if (!isTerrainSkin(layer)) {
             return;
         }
-        const renderer = layer.getRenderer();
+        const renderer = layer.getRenderer() as any;
         if (renderer) {
             if (renderer.setTerrainHelper) {
                 renderer.setTerrainHelper(null);
@@ -685,9 +704,10 @@ export default class GroupGLLayer extends maptalks.Layer {
             delete renderer.deleteTile;
         }
 
-        delete layer.getTiles;
+        delete (layer as any).getTiles;
     }
 
+    //@internal
     _resetTerrainSkinLayers() {
         const layers = this.layers;
         for (let i = 0; i < layers.length; i++) {
@@ -698,6 +718,7 @@ export default class GroupGLLayer extends maptalks.Layer {
         }
     }
 
+    //@internal
     _onTerrainTileLoad() {
         const renderer = (this as any).getRenderer();
         if (renderer) {
@@ -705,9 +726,10 @@ export default class GroupGLLayer extends maptalks.Layer {
         }
     }
 
+    //@internal
     _removeTerrainLayer() {
         if (this._terrainLayer) {
-            const layer = this._terrainLayer;
+            const layer = this._terrainLayer as any;
             layer.off('tileload', this._onTerrainTileLoad, this);
             this._unbindChildListeners(layer);
             this._terrainLayer['_doRemove']();
@@ -720,6 +742,7 @@ export default class GroupGLLayer extends maptalks.Layer {
         return this._terrainLayer;
     }
 
+    //@internal
     _bindMap(...args) {
         if (this.options['single']) {
             const map = args[0];
@@ -743,6 +766,7 @@ export default class GroupGLLayer extends maptalks.Layer {
                 }
             }
         }
+        //@ts-expect-error-error
         super.fire(...args);
     }
 }
@@ -768,7 +792,7 @@ function isTerrainSkin(layer: maptalks.Layer) {
     if (!layer) {
         return false;
     }
-    const renderer = layer.getRenderer();
+    const renderer = layer.getRenderer() as any;
     if (!renderer) {
         return false;
     }
@@ -906,12 +930,12 @@ export type ScenePostProcess = {
     ssr?: {
         enable?: boolean
     },
-    ssao?: {
-        enable?: boolean,
-        bias?: number,
-        radius?: number,
-        intensity?: number
-    },
+    // ssao?: {
+    //     enable?: boolean,
+    //     bias?: number,
+    //     radius?: number,
+    //     intensity?: number
+    // },
     sharpen?: {
         enable?: boolean,
         factor?: number

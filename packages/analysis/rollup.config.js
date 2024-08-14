@@ -60,7 +60,7 @@ module.exports = [
         plugins: basePlugins.concat(plugins),
         external : ['maptalks', '@maptalks/gl', '@maptalks/vt'],
         output: {
-            'sourcemap': production ? false : 'inline',
+            'sourcemap': true,
             'format': 'umd',
             'name': 'maptalks',
             'banner': banner,
@@ -93,7 +93,7 @@ module.exports = [
         ] : []),
         external : ['maptalks', '@maptalks/gltf-loader', '@maptalks/gl', '@maptalks/vt'],
         output: {
-            'sourcemap': false,
+            'sourcemap': true,
             'format': 'es',
             'banner': banner,
             'outro' : outro,

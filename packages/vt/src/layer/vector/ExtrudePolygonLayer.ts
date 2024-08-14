@@ -5,7 +5,7 @@ import { extend, isNil } from "../../common/Util";
 
 import { DEFAULT_TEX_WIDTH } from "@maptalks/vector-packer";
 import { ID_PROP } from "./util/convert_to_feature";
-import type { OverlayLayerOptionsType } from "maptalks/dist/layer/OverlayLayer";
+import type { OverlayLayerOptionsType } from "maptalks";
 import { PROP_OMBB } from "../../common/Constant";
 import { PolygonLayerRenderer } from "./PolygonLayer";
 import Vector3DLayer from "./Vector3DLayer";
@@ -153,12 +153,14 @@ class ExtrudePolygonLayerRenderer extends PolygonLayerRenderer {
   sidePainter: Record<string, any>;
   sidePainterSymbol: Record<string, any>;
 
+  //@internal
   _extrudeCenter: number[];
 
   constructor(...args: any) {
     super(...args);
   }
 
+  //@internal
   _groupPolygonFeatures(features) {
     return [features];
   }
@@ -185,6 +187,7 @@ class ExtrudePolygonLayerRenderer extends PolygonLayerRenderer {
     this.setToRedraw();
   }
 
+  //@internal
   _deleteSideMaterial() {
     if (!this.sidePainter) {
       return;
@@ -241,33 +244,40 @@ class ExtrudePolygonLayerRenderer extends PolygonLayerRenderer {
       this.painterSymbol,
       StandardPainter.getBloomSymbol()
     );
+    const layer = this.layer;
     const dataConfig = extend(
       {},
       DEFAULT_DATACONFIG,
-      this.layer.options.dataConfig || {}
+      layer.options.dataConfig || {}
     );
-    if (this.layer.options.material) {
-      this.painterSymbol.material = this.layer.options.material;
+    if (layer.options.material) {
+      this.painterSymbol.material = layer.options.material;
     }
-    if (this.layer.options.sideMaterial) {
-      this.sidePainterSymbol.material = this.layer.options.sideMaterial;
+    if (layer.options.sideMaterial) {
+      this.sidePainterSymbol.material = layer.options.sideMaterial;
     } else {
-      this.sidePainterSymbol.material = this.layer.options.material;
+      this.sidePainterSymbol.material = layer.options.material;
     }
     const sceneConfig = {
-      cullFace: this.layer.options.cullFace,
+      cullFace: layer.options.cullFace,
     };
     Object.defineProperty(sceneConfig, "castShadow", {
       enumerable: true,
       get: () => {
-        return this.layer.options["castShadow"];
+        return layer.options["castShadow"];
+      },
+    });
+    Object.defineProperty(sceneConfig, "depthMask", {
+      enumerable: true,
+      get: () => {
+        return layer.options["depthMask"];
       },
     });
     const topDataConfig = extend({}, dataConfig);
     topDataConfig.upsideUpTexture = true;
     const painter = new StandardPainter(
       this.regl,
-      this.layer,
+      layer,
       this.painterSymbol,
       sceneConfig,
       0,
@@ -275,7 +285,7 @@ class ExtrudePolygonLayerRenderer extends PolygonLayerRenderer {
     );
     this.sidePainter = new StandardPainter(
       this.regl,
-      this.layer,
+      layer,
       this.sidePainterSymbol,
       sceneConfig,
       0,
@@ -284,6 +294,7 @@ class ExtrudePolygonLayerRenderer extends PolygonLayerRenderer {
     return painter;
   }
 
+  //@internal
   _startFrame(...args: any) {
     super._startFrame(...args);
     const painter = this.painter;
@@ -292,6 +303,7 @@ class ExtrudePolygonLayerRenderer extends PolygonLayerRenderer {
     this.painter = painter;
   }
 
+  //@internal
   _renderMeshes(...args: any) {
     const context = args[0];
     const sceneFilter = context.sceneFilter;
@@ -350,6 +362,7 @@ class ExtrudePolygonLayerRenderer extends PolygonLayerRenderer {
     return meshes;
   }
 
+  //@internal
   _createPackData(features, symbol, top, side) {
     const map = this.getMap();
     symbol = SYMBOL;
@@ -365,7 +378,7 @@ class ExtrudePolygonLayerRenderer extends PolygonLayerRenderer {
       DEFAULT_DATACONFIG,
       this.layer.options.dataConfig
     );
-    dataConfig.tangent = 1;
+    dataConfig.uv = true;
     if (dataConfig.top) {
       dataConfig.top = top;
     }
@@ -414,7 +427,7 @@ class ExtrudePolygonLayerRenderer extends PolygonLayerRenderer {
   updateMesh(polygon: unknown): any {
     const uid = polygon[ID_PROP];
     let feature = this.features[uid];
-    if (!feature) {
+    if (!feature || !this.meshes) {
       return;
     }
     const data = this._createPackData(
@@ -438,6 +451,7 @@ class ExtrudePolygonLayerRenderer extends PolygonLayerRenderer {
     }
   }
 
+  //@internal
   _convertGeo(geo) {
     if (!geo.getProperties()) {
       geo.setProperties({});
