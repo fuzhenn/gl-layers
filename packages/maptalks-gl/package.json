@@ -1,6 +1,6 @@
 {
   "name": "maptalks-gl",
-  "version": "0.97.4",
+  "version": "0.98.0",
   "description": "All-in-one package for maptalks webgl layers",
   "module": "index.js",
   "main": "dist/maptalks-gl.js",
@@ -8,9 +8,9 @@
   "jsdelivr": "dist/maptalks-gl.js",
   "types": "index.d.ts",
   "scripts": {
+    "clean": "rimraf dist",
     "dev": "rollup -w -c rollup.config.js",
-    "build": "rollup -c rollup.config.js",
-    "prepare": "npm run build"
+    "build": "npm run clean && rollup -c rollup.config.js"
   },
   "files": [
     "dist/maptalks-gl.js",
@@ -45,6 +45,6 @@
     "@maptalks/transform-control": "workspace:*",
     "@maptalks/video-layer": "workspace:*",
     "@maptalks/vt": "workspace:*",
-    "maptalks": "1.0.0-rc.33"
+    "maptalks": "^1.0.0-rc.36"
   }
 }

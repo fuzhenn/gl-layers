@@ -1,15 +1,14 @@
 {
   "name": "@maptalks/transcoders.ktx2",
-  "version": "0.97.4",
+  "version": "0.98.2",
   "description": "ktx2 transcoder for @maptalks/gl",
   "main": "dist/transcoders.ktx2.js",
   "module": "dist/transcoders.ktx2.es.js",
   "scripts": {
     "clean": "rimraf dist",
-    "build": "rollup --environment BUILD:production -c rollup.config.js",
+    "build": "npm run clean && rollup --environment BUILD:production -c rollup.config.js",
     "build-dev": "rollup -c rollup.config.js",
-    "dev": "rollup -w -c rollup.config.js",
-    "prepublishOnly": "npm run build"
+    "dev": "rollup -w -c rollup.config.js"
   },
   "keywords": [
     "webgl",

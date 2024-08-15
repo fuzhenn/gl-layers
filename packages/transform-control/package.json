@@ -1,6 +1,6 @@
 {
   "name": "@maptalks/transform-control",
-  "version": "0.97.4",
+  "version": "0.98.4",
   "description": "a plugin to control model's translate、rotation and scale",
   "license": "UNLICENSED",
   "repository": {
@@ -18,14 +18,13 @@
   "scripts": {
     "clean": "rimraf dist",
     "dev": "rollup -w -c rollup.config.js",
-    "build": "rollup --environment BUILD:production -c rollup.config.js",
+    "build": "npm run clean && npm run lint && rollup --environment BUILD:production -c rollup.config.js",
     "build-dev": "rollup -c rollup.config.js",
     "pretest": "npm run lint && npm run build",
     "tdd": "karma start --no-single-run",
     "preversion": "npm run lint",
     "version": "npm run build",
-    "lint": "eslint src/**/*.js",
-    "prepublishOnly": "npm run lint && npm run build"
+    "lint": "eslint src/**/*.js"
   },
   "devDependencies": {
     "@rollup/plugin-commonjs": "^25.0.7",
@@ -34,13 +33,13 @@
     "@rollup/plugin-terser": "0.4.4",
     "eslint": "^8.57.0",
     "eslint-plugin-mocha": "^10.4.1",
+    "maptalks": "1.0.0-rc.35",
     "pixelmatch": "^4.0.2",
     "rollup": "^4.17.2"
   },
   "dependencies": {
     "@maptalks/gl": "workspace:*",
-    "@maptalks/gltf-loader": "workspace:*",
-    "maptalks": "1.0.0-rc.33"
+    "@maptalks/gltf-loader": "workspace:*"
   },
   "gitHead": "9eeea4807723d460fa7e09969c6556d53f6bed84"
 }

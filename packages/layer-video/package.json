@@ -1,6 +1,6 @@
 {
   "name": "@maptalks/video-layer",
-  "version": "0.97.4",
+  "version": "0.98.2",
   "description": "A maptalks Layer to render video",
   "license": "UNLICENSED",
   "repository": {
@@ -18,15 +18,14 @@
   "scripts": {
     "clean": "rimraf dist",
     "dev": "rollup -w -c rollup.config.js",
-    "build": "rollup --environment BUILD:production -c rollup.config.js",
+    "build": "npm run clean && npm run lint && rollup --environment BUILD:production -c rollup.config.js",
     "build-dev": "rollup -c rollup.config.js",
     "pretest": "npm run lint && npm run build",
     "test": "karma start --single-run",
     "tdd": "karma start --no-single-run",
     "preversion": "npm run lint",
     "version": "npm run build",
-    "lint": "eslint src/**/*.js test/**/*.js",
-    "prepublishOnly": "npm run lint && npm run build"
+    "lint": "eslint src/**/*.js test/**/*.js"
   },
   "devDependencies": {
     "@maptalks/gl": "workspace:*",
@@ -45,7 +44,7 @@
     "karma-happen": "^0.1.0",
     "karma-mocha": "^2.0.1",
     "karma-mocha-reporter": "^2.2.5",
-    "maptalks": "^1.0.0-rc.35",
+    "maptalks": "^1.0.0-rc.36",
     "mocha": "^10.3.0",
     "rollup": "^4.17.2"
   },

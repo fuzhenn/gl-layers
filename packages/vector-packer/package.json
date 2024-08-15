@@ -1,6 +1,6 @@
 {
   "name": "@maptalks/vector-packer",
-  "version": "0.95.0",
+  "version": "0.96.4",
   "description": "Packer to pack simple vector graphics for gl",
   "module": "dist/vector-packer.es.js",
   "files": [
@@ -9,11 +9,10 @@
   ],
   "scripts": {
     "clean": "rimraf dist",
-    "build": "rollup --environment BUILD:production -c rollup.config.js",
+    "build": "npm run clean && npm run lint && rollup --environment BUILD:production -c rollup.config.js",
     "build-dev": "rollup -c rollup.config.js",
     "dev": "rollup -w -c rollup.config.js",
     "test": "echo \"Error: no test specified\" && exit 1",
-    "prepublishOnly": "npm run lint && npm run build",
     "lint": "eslint src/**/*.js",
     "preversion": "npm run lint"
   },
@@ -32,7 +31,6 @@
     "color": "^3.0.0",
     "earcut": "^2.2.4",
     "gl-matrix": "^3.4.0",
-    "maptalks": "1.0.0-rc.33",
     "pbf": "^3.2.1",
     "quickselect": "^1.0.0",
     "tinyqueue": "^2.0.3"
@@ -43,6 +41,7 @@
     "@rollup/plugin-terser": "0.4.4",
     "eslint": "^8.57.0",
     "eslint-plugin-mocha": "^10.4.1",
+    "maptalks": "1.0.0-rc.35",
     "rollup": "^4.17.2"
   }
 }

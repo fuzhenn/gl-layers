@@ -1,6 +1,6 @@
 {
   "name": "@maptalks/vt",
-  "version": "0.95.0",
+  "version": "0.96.4",
   "description": "The vector-tile plugin for maptalks.js",
   "main": "dist/maptalks.vt.js",
   "module": "dist/maptalks.vt.es.js",
@@ -16,12 +16,11 @@
     "clean": "rimraf dist",
     "lint": "eslint src/**/*.js test/**/*.js",
     "dev": "rollup -w -c build/rollup.config.js",
-    "build": "cd ../vector-packer && npm run build && cd ../vt && npm run clean && rollup --environment BUILD:production -c build/rollup.config.js",
+    "build": "cd ../vector-packer && npm run build && cd ../vt && npm run clean && npm run lint && rollup --environment BUILD:production -c build/rollup.config.js",
     "build-dev": "rollup -c build/rollup.config.js",
     "test": "electron-mocha --show-window --renderer ./test/**/*.spec.js",
     "tdd": "electron-mocha --interactive --renderer ./test/**/*.spec.js",
-    "pretest": "npm run lint && npm run build",
-    "prepublishOnly": "npm run build",
+    "pretest": "npm run build",
     "preversion": "npm run pretest"
   },
   "dependencies": {
@@ -58,7 +57,7 @@
     "eslint-plugin-mocha": "^10.4.1",
     "express": "^4.17.1",
     "happen": "^0.3.1",
-    "maptalks": "^1.0.0-rc.35",
+    "maptalks": "^1.0.0-rc.36",
     "mocha": "^10.3.0",
     "pixelmatch": "^4.0.2",
     "rollup": "^4.17.2",

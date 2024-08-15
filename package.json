@@ -4,19 +4,25 @@
     "packages/*"
   ],
   "scripts": {
-    "clean": "turbo run clean --filter=@maptalks/*",
-    "dev": "turbo run dev --filter=@maptalks/*",
-    "build": "turbo run build --filter=@maptalks/*",
-    "build-dev": "turbo run build-dev --filter=@maptalks/*",
-    "lint": "turbo run lint --filter=@maptalks/*",
+    "clean": "turbo run clean",
+    "dev": "turbo run dev",
+    "build": "turbo run build",
+    "build-dev": "turbo run build-dev*",
+    "lint": "turbo run lint",
     "prettier": "prettier --parser=typescript --write **/*.{js,ts,md}",
-    "test": "turbo run test --filter=@maptalks/*"
+    "test": "turbo run test",
+    "changeset": "changeset",
+    "changeset-version": "changeset version",
+    "release": "pnpm build && changeset publish",
+    "changeset-version-snapshot": "changeset version --snaphot",
+    "release-snapshot": "pnpm build && changeset publish --no-git-tag --snapshot --tag snapshot"
   },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/fuzhenn/gl-layers.git"
   },
   "devDependencies": {
+    "@changesets/cli": "^2.27.7",
     "@types/node": "^18.6.4",
     "cross-env": "^7.0.3",
     "eslint": "^8.57.0",
