@@ -12,7 +12,7 @@ const style = [
             }
         },
         symbol: {
-            textName: ['string', ['get', nameKey]],
+            textName: `{${nameKey}}`,
             textSize: 12
         }
     }
