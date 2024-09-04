@@ -11,25 +11,9 @@ const _diff = [];
 // MIT license
 export default class Ray {
     constructor(from, to) {
-        this.from = from;
-        this.to = to;
         this.origin = from;
-        this._init();
-    }
-
-    _init() {
         const direction = [];
-        this.direction = vec3.normalize(direction, vec3.sub(direction, this.to, this.from));
-    }
-
-    setFromPoint(from) {
-        this.origin = from;
-        this._init();
-    }
-
-    setToPoint(to) {
-        this.to = to;
-        this._init();
+        this.direction = vec3.normalize(direction, vec3.sub(direction, to, from));
     }
 
     intersectBox( box, target ) {
@@ -44,25 +28,25 @@ export default class Ray {
 
 		if ( invdirx >= 0 ) {
 
-			tmin = ( box.min[0] - origin[0] ) * invdirx;
-			tmax = ( box.max[0] - origin[0] ) * invdirx;
+			tmin = ( box[0][0] - origin[0] ) * invdirx;
+			tmax = ( box[1][0] - origin[0] ) * invdirx;
 
 		} else {
 
-			tmin = ( box.max[0] - origin[0] ) * invdirx;
-			tmax = ( box.min[0] - origin[0] ) * invdirx;
+			tmin = ( box[1][0] - origin[0] ) * invdirx;
+			tmax = ( box[0][0] - origin[0] ) * invdirx;
 
 		}
 
 		if ( invdiry >= 0 ) {
 
-			tymin = ( box.min[1] - origin[1] ) * invdiry;
-			tymax = ( box.max[1] - origin[1] ) * invdiry;
+			tymin = ( box[0][1] - origin[1] ) * invdiry;
+			tymax = ( box[1][1] - origin[1] ) * invdiry;
 
 		} else {
 
-			tymin = ( box.max[1] - origin[1] ) * invdiry;
-			tymax = ( box.min[1] - origin[1] ) * invdiry;
+			tymin = ( box[1][1] - origin[1] ) * invdiry;
+			tymax = ( box[0][1] - origin[1] ) * invdiry;
 
 		}
 
@@ -74,13 +58,13 @@ export default class Ray {
 
 		if ( invdirz >= 0 ) {
 
-			tzmin = ( box.min[2] - origin[2] ) * invdirz;
-			tzmax = ( box.max[2] - origin[2] ) * invdirz;
+			tzmin = ( box[0][2] - origin[2] ) * invdirz;
+			tzmax = ( box[1][2] - origin[2] ) * invdirz;
 
 		} else {
 
-			tzmin = ( box.max[2] - origin[2] ) * invdirz;
-			tzmax = ( box.min[2] - origin[2] ) * invdirz;
+			tzmin = ( box[1][2] - origin[2] ) * invdirz;
+			tzmax = ( box[0][2] - origin[2] ) * invdirz;
 
 		}
 
