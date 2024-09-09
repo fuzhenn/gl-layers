@@ -9,7 +9,7 @@ let workerId;
 let BITMAP_CANVAS = null;
 let BITMAP_CTX = null;
 const TEMP_RGB = [0, 0, 0];
-const DEFAULT_TILESZIE = [256, 256];
+const DEFAULT_TILESIZE= [256, 256];
 
 function checkBitMapCanvas() {
     try {
@@ -549,12 +549,12 @@ function heights2RGBImage(terrainData) {
     if (!BITMAP_CANVAS) {
         return;
     }
-    let ctx = BITMAP_CANVAS.getContext('2d', { willReadFrequently: true });
     const { width, height, data } = terrainData;
     if (!width || !height || !data) {
         return;
     }
     try {
+        let ctx = BITMAP_CANVAS.getContext('2d', { willReadFrequently: true });
         const imageData = ctx.createImageData(width, height);
         for (let i = 0, len = data.length; i < len; i++) {
             const height = data[i];
@@ -709,7 +709,7 @@ function createColorsTexture(data, colors, tileSize) {
         return null;
     }
     let { width, height } = data.image;
-    tileSize = tileSize || DEFAULT_TILESZIE;
+    tileSize = tileSize || DEFAULT_TILESIZE;
     if (tileSize[0] !== width || tileSize[1] !== height) {
         width = tileSize[0];
         height = tileSize[1];
