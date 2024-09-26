@@ -736,17 +736,21 @@ export default class Geo3DTilesLayer extends MaskLayerMixin(maptalks.Layer) {
 
     //@internal
     _isTileInMasks(node: TileNode, mapExtentBBOX: BBOX, clipMasks: ClipOutsideMask[]) {
-        if (!node.extent || !BBOXUtil || !mapExtentBBOX) {
+        if (!node.extent || !BBOXUtil) {
             return true;
         }
+        //always set TILENODE_BBOX values,Cannot be deleted casually
         const nodeExtent = node.extent;
         TILENODE_BBOX[0] = nodeExtent.xmin;
         TILENODE_BBOX[1] = nodeExtent.ymin;
         TILENODE_BBOX[2] = nodeExtent.xmax;
         TILENODE_BBOX[3] = nodeExtent.ymax;
-        const inCurrentView = BBOXUtil.bboxIntersect(TILENODE_BBOX, mapExtentBBOX as BBOX);
-        if (!inCurrentView) {
-            return false;
+        //filter by map extent
+        if (mapExtentBBOX) {
+            const inCurrentView = BBOXUtil.bboxIntersect(TILENODE_BBOX, mapExtentBBOX as BBOX);
+            if (!inCurrentView) {
+                return false;
+            }
         }
         if (clipMasks.length) {
             for (let i = 0, len = clipMasks.length; i < len; i++) {
