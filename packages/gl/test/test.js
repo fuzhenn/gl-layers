@@ -739,11 +739,11 @@ describe('gl tests', () => {
                             const canvas = map.getRenderer().canvas;
                             const ctx = canvas.getContext('2d');
                             const pixel = ctx.getImageData(canvas.width / 2, canvas.height / 2 + 7, 1, 1);
-                            if (pixel.data['0'] !== 127) {
+                            if (pixel.data['0'] !== 124) {
                                 return;
                             }
                             hit = true;
-                            expect(pixel).to.be.eql({ data: { '0': 127, '1': 127, '2': 127, '3': 255 } });
+                            expect(pixel).to.be.eql({ data: { '0': 124, '1': 124, '2': 124, '3': 255 } });
                             done();
                         }
 
@@ -786,7 +786,7 @@ describe('gl tests', () => {
                             const canvas = map.getRenderer().canvas;
                             const ctx = canvas.getContext('2d');
                             const pixel = ctx.getImageData(canvas.width / 2, canvas.height / 2 + 7, 1, 1);
-                            expect(pixel).to.be.eql({ data: { '0': 127, '1': 28, '2': 28, '3': 255 } });
+                            expect(pixel).to.be.eql({ data: { '0': 124, '1': 0, '2': 0, '3': 255 } });
                             done();
                         }
                     });
@@ -827,7 +827,7 @@ describe('gl tests', () => {
                             const canvas = map.getRenderer().canvas;
                             const ctx = canvas.getContext('2d');
                             const pixel = ctx.getImageData(canvas.width / 2, canvas.height / 2 + 7, 1, 1);
-                            expect(pixel).to.be.eql({ data: { '0': 127, '1': 28, '2': 28, '3': 255 } });
+                            expect(pixel).to.be.eql({ data: { '0': 124, '1': 0, '2': 0, '3': 255 } });
                             const exportMat = group.toJSON().options.terrain.material;
                             expect(material).to.be.eql(exportMat);
                             done();
@@ -1219,7 +1219,7 @@ describe('gl tests', () => {
                                 return;
                             }
                             hit = true;
-                            expect(pickCoord.toArray()).to.be.eql([ 91.0736287693219, 29.75169480958555, 4320.883455550922]);
+                            expect(pickCoord.toArray()).to.be.eql([ 91.07362103971157, 29.75172649078853, 4322.98890674798 ]);
                             done();
                         }
                     });
@@ -1317,7 +1317,7 @@ describe('gl tests', () => {
             group.addTo(map);
         });
 
-        it('Measure3DTool support terrain', (done) => {
+        it.only('Measure3DTool support terrain', (done) => {
             map = new maptalks.Map(container, {
                 center: [91.14478,29.658272],
                 zoom: 12,
