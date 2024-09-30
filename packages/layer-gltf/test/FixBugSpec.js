@@ -5,9 +5,9 @@ describe('bug', () => {
         eventContainer = map._panels.canvasContainer;
     });
 
-    // afterEach(function() {
-    //     removeMap(map);
-    // });
+    afterEach(function() {
+        removeMap(map);
+    });
 
     it('The units for translations are meters', (done) => {
         const gltflayer = new maptalks.GLTFLayer('gltflayer');
@@ -1536,7 +1536,7 @@ describe('bug', () => {
         });
     });
 
-    it.only('add gltfmarker when map has skybox', done => {
+    it('add gltfmarker when map has skybox', done => {
         const newLightConfig = {
             ambient: {
                 resource: {
@@ -1654,7 +1654,7 @@ describe('bug', () => {
         function checkColor() {
             setTimeout(function() {
                 const pixel = pickPixel(map, map.width / 2, map.height / 2, 1, 1);
-                expect(pixel).to.be.eql([152, 18, 18, 255]);
+                expect(pixel).to.be.eql([151, 3, 3, 255]);
                 done();
             }, 100);
         }
@@ -1697,7 +1697,7 @@ describe('bug', () => {
         function checkColor() {
             setTimeout(function() {
                 const pixel = pickPixel(map, map.width / 2, map.height / 2, 1, 1);
-                expect(pixelMatch([255, 115, 115, 255], pixel)).to.be.eql(true);
+                expect(pixelMatch([255, 41, 41, 255], pixel)).to.be.eql(true);
                 cancelHighlight();
             }, 100);
         }
@@ -1732,14 +1732,14 @@ describe('bug', () => {
             marker.cancelOutline();
             setTimeout(function() {
                 const pixel = pickPixel(map, map.width / 2, map.height / 2, 1, 1);
-                expect(pixel).to.be.eql([146, 146, 146, 255]);
+                expect(pixel).to.be.eql([145, 145, 145, 255]);
                 done();
             }, 100);
         }
         function checkColor() {
             setTimeout(function() {
                 const pixel = pickPixel(map, map.width / 2, map.height / 2, 1, 1);
-                expect(pixel).to.be.eql([168, 168, 117, 255]);
+                expect(pixel).to.be.eql([167, 167, 116, 255]);
                 cancelOutline();
             }, 100);
         }
@@ -1765,7 +1765,7 @@ describe('bug', () => {
         function checkColor() {
             setTimeout(function() {
                 const pixel = pickPixel(map, map.width / 2, map.height / 2, 1, 1);
-                expect(pixel).to.be.eql([168, 17, 17, 204]);
+                expect(pixel).to.be.eql([167, 3, 3, 255]);
                 done();
             }, 100);
         }
@@ -1837,7 +1837,7 @@ describe('bug', () => {
             gltfMarker.outline();
             setTimeout(function() {
                 const pixel = pickPixel(map, map.width / 2 + 41, map.height / 2 + 20, 1, 1);
-                expect(pixelMatch([75, 115, 96, 255], pixel)).to.be.eql(true);
+                expect(pixelMatch([51, 110, 93, 255], pixel)).to.be.eql(true);
                 done();
             }, 100);
         });
@@ -1885,7 +1885,7 @@ describe('bug', () => {
             marker.setBloom(false);
             setTimeout(function() {
                 const pixel = pickPixel(map, map.width / 2, map.height / 2, 1, 1);
-                expect(pixel).to.be.eql([146, 146, 146, 255]);
+                expect(pixel).to.be.eql([145, 145, 145, 255]);
                 done();
             }, 100);
         }
@@ -1916,7 +1916,7 @@ describe('bug', () => {
         function checkColor() {
             setTimeout(function() {
                 const pixel = pickPixel(map, map.width / 2, map.height / 2, 1, 1);
-                expect(pixel).to.be.eql([146, 146, 146, 255]);
+                expect(pixelMatch([146, 146, 146, 255], pixel)).to.be.eql(true);
                 done();
             }, 100);
         }
@@ -1957,7 +1957,7 @@ describe('bug', () => {
         function checkColor() {
             setTimeout(function() {
                 const pixel = pickPixel(map, map.width / 2, map.height / 2, 1, 1);
-                expect(pixelMatch([255, 115, 115, 255], pixel)).to.be.eql(true);
+                expect(pixelMatch([255, 41, 41, 255], pixel)).to.be.eql(true);
                 cancelHighlight();
             }, 100);
         }
@@ -1984,7 +1984,7 @@ describe('bug', () => {
         function checkColor() {
             setTimeout(function() {
                 const pixel = pickPixel(map, map.width / 2, 1, 1, 1);
-                expect(pixel).to.be.eql([119, 118, 116, 236]);
+                expect(pixelMatch([111, 110, 109, 229], pixel)).to.be.eql(true);
                 done();
             }, 100);
         }

@@ -24,7 +24,7 @@ module.exports = function (config) {
 
             'test/test.config.js',
             // 'test/**/*.js',
-            'test/FixBugSpec.js',
+            'test/TransformControlSpec.js',
             {
                 pattern: 'test/models/**/*',
                 included: false
