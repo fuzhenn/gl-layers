@@ -14,6 +14,14 @@ export default class RayCaster {
         this._to = to;
     }
 
+    setFromPoint(from) {
+        this._from = from;
+    }
+
+    setToPoint(to) {
+        this._to = to;
+    }
+
     test(meshes, map) {
         const results = [];
         const from = this._from;
