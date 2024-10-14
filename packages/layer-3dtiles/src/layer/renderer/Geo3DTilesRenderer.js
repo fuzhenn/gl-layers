@@ -568,7 +568,9 @@ export default class Geo3DTilesRenderer extends MaskRendererMixin(maptalks.rende
         // const emptyB3DM = gltf.B3DMLoader.createEmptyB3DM();
         // emptyB3DM.loadTime = 0;
         delete this.tilesLoading[node.id];
-        this._addErrorToCache(node, err);
+        if (!this.layer.options['onlyCacheNoContentTileWhenError'] || err && !maptalks.Util.isNotFoundHttpCode(err.status)) {
+            this._addErrorToCache(node, err);
+        }
         this.setToRedraw();
         /**
          * tileerror event, fired when tile loading has error.
@@ -595,13 +597,13 @@ export default class Geo3DTilesRenderer extends MaskRendererMixin(maptalks.rende
         const b3dmMeshes = this.painter.getCurrentB3DMMeshes();
 
         for (const p in b3dmMeshes) {
-            if (b3dmMeshes[p]) {
+            if (b3dmMeshes[p] && b3dmMeshes[p].isValid()) {
                 meshes.push(b3dmMeshes[p]);
             }
         }
         const i3dmMeshes = this.painter.getCurrentI3DMMeshes();
         for (const p in i3dmMeshes) {
-            if (i3dmMeshes[p]) {
+            if (i3dmMeshes[p] && i3dmMeshes[p].isValid()) {
                 meshes.push(i3dmMeshes[p]);
             }
         }
