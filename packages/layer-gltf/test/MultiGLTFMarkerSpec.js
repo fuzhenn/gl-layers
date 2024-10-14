@@ -306,7 +306,7 @@ describe('MultiGLTFMarker', () => {
         };
         const multigltfmarker = maptalks.MultiGLTFMarker.fromJSON(json);
         const resultJosn = multigltfmarker.toJSON();
-        expect(JSON.stringify(resultJosn)).to.be.eql(`{"data":[{"coordinates":{"x":-0.02,"y":-0.02},"translation":[0,0,0],"scale":[1,1,1],"color":[0.2,0.4,0.91,0.9]},{"coordinates":{"x":-0.02,"y":-0.01},"translation":[0,0,0],"scale":[1,1,1],"color":[0.2,0.4,0.91,0.9]},{"coordinates":{"x":-0.01,"y":-0.02},"translation":[0,0,0],"scale":[1,1,1],"color":[0.2,0.4,0.91,0.9]},{"coordinates":{"x":-0.01,"y":-0.01},"translation":[0,0,0],"scale":[1,1,1],"color":[0.2,0.4,0.91,0.9]}],"options":{"symbol":{"url":"models/cube-animation/cube.gltf","translation":[0,0,0],"rotation":[0,0,90],"scale":[1,1,1]},"properties":{"0":{"ID":"1","NAME":"name","TYPE":"type"}}}}`);
+        expect(JSON.stringify(resultJosn)).to.be.eql(`{"data":[{"coordinates":{"x":-0.02,"y":-0.02},"translation":[0,0,0],"scale":[1,1,1],"color":[0.2,0.4,0.91,0.9]},{"coordinates":{"x":-0.02,"y":-0.01},"translation":[0,0,0],"scale":[1,1,1],"color":[0.2,0.4,0.91,0.9]},{"coordinates":{"x":-0.01,"y":-0.02},"translation":[0,0,0],"scale":[1,1,1],"color":[0.2,0.4,0.91,0.9]},{"coordinates":{"x":-0.01,"y":-0.01},"translation":[0,0,0],"scale":[1,1,1],"color":[0.2,0.4,0.91,0.9]}],"options":{"symbol":{"url":"models/cube-animation/cube.gltf","translation":[0,0,0],"rotation":[0,0,90],"scale":[1,1,1]},"properties":{"0":{"ID":"1","NAME":"name","TYPE":"type"}}},"type":"MultiGLTFMarker"}`);
     });
 
     it('simple model', (done) => {//TODO 增加像素判断
