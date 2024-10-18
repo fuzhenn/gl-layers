@@ -16,19 +16,11 @@ export default class RayCaster {
     }
 
     setFromPoint(from) {
-        this._from = from;
+        this._from = Array.isArraY(from) ? new Coordinate(from) : from;
     }
 
     setToPoint(to) {
-        this._to = to;
-    }
-
-    setFromPoint(from) {
-        this._from = from;
-    }
-
-    setToPoint(to) {
-        this._to = to;
+        this._to = Array.isArraY(to) ? new Coordinate(to) : to;
     }
 
     test(meshes, map) {

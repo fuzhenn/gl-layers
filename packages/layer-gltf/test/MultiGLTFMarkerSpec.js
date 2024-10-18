@@ -57,18 +57,18 @@ describe('MultiGLTFMarker', () => {
         return data;
     }
 
-    // function initInstanceData3() {
-    //     const data = [];
-    //     const coordinate = center.add(0, 0);
-    //     for (let i = -1; i < 1; i++) {
-    //         for (let j = -1; j < 1; j++) {
-    //             data.push({
-    //                 coordinates: coordinate.add(i * 0.001, j * 0.001)
-    //             });
-    //         }
-    //     }
-    //     return data;
-    // }
+    function initInstanceData3() {
+        const data = [];
+        const coordinate = center.add(0, 0);
+        for (let i = -1; i < 1; i++) {
+            for (let j = -1; j < 1; j++) {
+                data.push({
+                    coordinates: coordinate.add(i * 0.001, j * 0.001)
+                });
+            }
+        }
+        return data;
+    }
 
     function initInstanceDataWithBloom() {
         const data = [];
@@ -579,44 +579,44 @@ describe('MultiGLTFMarker', () => {
         });
     });
 
-    // it('add multigltfmarker with shadow, and then update instance data', done => {
-    //     const config = JSON.parse(JSON.stringify(sceneConfig));
-    //     config.shadow.enable = true;
-    //     const gltflayer = new maptalks.GLTFLayer('gltf');
-    //     new maptalks.GroupGLLayer('group', [gltflayer],  { sceneConfig: config }).addTo(map);
-    //     const importData = initInstanceData3();
-    //     const multigltfmarker = new maptalks.MultiGLTFMarker(importData, {
-    //         symbol: {
-    //             url: url2,
-    //             scaleX: 80,
-    //             scaleY: 80,
-    //             scaleZ: 80,
-    //             shadow: true
-    //         }
-    //     }).addTo(gltflayer);
+    it('add multigltfmarker with shadow, and then update instance data', done => {
+        const config = JSON.parse(JSON.stringify(sceneConfig));
+        config.shadow.enable = true;
+        const gltflayer = new maptalks.GLTFLayer('gltf');
+        new maptalks.GroupGLLayer('group', [gltflayer],  { sceneConfig: config }).addTo(map);
+        const importData = initInstanceData3();
+        const multigltfmarker = new maptalks.MultiGLTFMarker(importData, {
+            symbol: {
+                url: url2,
+                scaleX: 80,
+                scaleY: 80,
+                scaleZ: 80,
+                shadow: true
+            }
+        }).addTo(gltflayer);
 
-    //     function updateCoordinates() {
-    //         const newCoord = new maptalks.Coordinate(0.0002, 0);
-    //         multigltfmarker.updateData(3, 'coordinates', newCoord);
-    //         const pixel = pickPixel(map, map.width / 2, 5, 1, 1);
-    //         expect(pixelMatch([255, 0, 0, 0], pixel)).to.be.eql(true);// shadow color
-    //         done();
-    //     }
+        function updateCoordinates() {
+            const newCoord = new maptalks.Coordinate(0.0002, 0);
+            multigltfmarker.updateData(3, 'coordinates', newCoord);
+            const pixel = pickPixel(map, map.width / 2, 5, 1, 1);
+            expect(pixelMatch([255, 0, 0, 0], pixel)).to.be.eql(true);// shadow color
+            done();
+        }
 
-    //     function testShadow() {
-    //         const pixel1 = pickPixel(map, map.width / 2, map.height / 2, 1, 1);
-    //         expect(hasColor(pixel1)).to.be.eql(true);
-    //         const pixel2 = pickPixel(map, map.width / 2, 10, 1, 1);
-    //         expect(hasColor(pixel2)).to.be.eql(true);
-    //         updateCoordinates();
-    //     }
-    //     multigltfmarker.once('load', () => {
-    //         map.setPitch(30);
-    //         setTimeout(function() {
-    //             testShadow();
-    //         }, 100);
-    //     });
-    // });
+        function testShadow() {
+            const pixel1 = pickPixel(map, map.width / 2, map.height / 2, 1, 1);
+            expect(hasColor(pixel1)).to.be.eql(true);
+            const pixel2 = pickPixel(map, map.width / 2, 10, 1, 1);
+            expect(hasColor(pixel2)).to.be.eql(true);
+            updateCoordinates();
+        }
+        multigltfmarker.once('load', () => {
+            map.setPitch(30);
+            setTimeout(function() {
+                testShadow();
+            }, 100);
+        });
+    });
 
     it('bloom data item in MultiGLTFMarkerarker(issue#451)', done => {
         const gltflayer = new maptalks.GLTFLayer('gltf');
