@@ -314,7 +314,6 @@ export default class Geo3DTilesRenderer extends MaskRendererMixin(maptalks.rende
                 boxMeshes.push(node._boxMesh);
             }
         }
-        this.tileCache.shrink();
 
         const services = this.layer.options.services;
         for (let i = 0; i < services.length; i++) {
@@ -341,6 +340,8 @@ export default class Geo3DTilesRenderer extends MaskRendererMixin(maptalks.rende
         if (count) {
             this.layer.fire('canvasisdirty', { renderCount: count });
         }
+        // 改为绘制结束后，再 shrink cache，以免当前帧需要绘制的瓦片被delete掉, maptalks/issues#766
+        this.tileCache.shrink();
     }
 
     onDrawTileStart() {}
@@ -568,7 +569,7 @@ export default class Geo3DTilesRenderer extends MaskRendererMixin(maptalks.rende
         // const emptyB3DM = gltf.B3DMLoader.createEmptyB3DM();
         // emptyB3DM.loadTime = 0;
         delete this.tilesLoading[node.id];
-        if (!this.layer.options['onlyCacheNoContentTileWhenError'] || err && !maptalks.Util.isNotFoundHttpCode(err.status)) {
+        if (!this.layer.options['onlyCacheNoContentTileWhenError'] || err && !maptalks.Util.isNoContentHttpCode(err.status)) {
             this._addErrorToCache(node, err);
         }
         this.setToRedraw();
@@ -597,13 +598,13 @@ export default class Geo3DTilesRenderer extends MaskRendererMixin(maptalks.rende
         const b3dmMeshes = this.painter.getCurrentB3DMMeshes();
 
         for (const p in b3dmMeshes) {
-            if (b3dmMeshes[p] && b3dmMeshes[p].isValid()) {
+            if (b3dmMeshes[p] && b3dmMeshes[p].isValid && b3dmMeshes[p].isValid()) {
                 meshes.push(b3dmMeshes[p]);
             }
         }
         const i3dmMeshes = this.painter.getCurrentI3DMMeshes();
         for (const p in i3dmMeshes) {
-            if (i3dmMeshes[p] && i3dmMeshes[p].isValid()) {
+            if (i3dmMeshes[p] && i3dmMeshes[p].isValid && i3dmMeshes[p].isValid()) {
                 meshes.push(i3dmMeshes[p]);
             }
         }
