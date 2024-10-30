@@ -1842,14 +1842,7 @@ export type Geo3DTilesServiceOptions = {
      * @english
      * Create normal attribute for models if it's missing
      */
-    createNormalIfMissed?: boolean,
-
-    /**
-     *custom i3s config 
-     */
-    i3sConfig?: {
-        textureFormat?: 'dds' | 'jpg'
-    }
+    createNormalIfMissed?: boolean
 };
 
 export type TileNode = {
