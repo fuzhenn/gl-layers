@@ -392,6 +392,7 @@ export default class Geo3DTilesLayer extends MaskLayerMixin(maptalks.Layer) {
             if (!root || !root.visible) {
                 continue;
             }
+            const service = root.service;
             // let firstContentLevel = Infinity;
             const queue: TileNode[] = [root];
             const maxExtent = this._getRootMaxExtent(i);
@@ -408,6 +409,8 @@ export default class Geo3DTilesLayer extends MaskLayerMixin(maptalks.Layer) {
                 //     debugger
                 // }
                 const visible = this._isVisible(node, maxExtent, projectionView, mapExtentBBOX, clipMasks);
+                //record service
+                node.service = service;
 
 
                 // // find ancestors
@@ -1839,7 +1842,14 @@ export type Geo3DTilesServiceOptions = {
      * @english
      * Create normal attribute for models if it's missing
      */
-    createNormalIfMissed?: boolean
+    createNormalIfMissed?: boolean,
+
+    /**
+     *custom i3s config 
+     */
+    i3sConfig?: {
+        textureFormat?: 'dds' | 'jpg'
+    }
 };
 
 export type TileNode = {
@@ -1877,7 +1887,8 @@ export type TileNode = {
     //@internal
     _tileRegion?: TileBoundingRegion,
     hasParentContent?: boolean,
-    extent?: maptalks.Extent
+    extent?: maptalks.Extent,
+    service?: Record<string, any>
 };
 
 export type RootTileNode = {
