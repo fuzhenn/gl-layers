@@ -401,7 +401,7 @@ export default class Geo3DTilesRenderer extends MaskRendererMixin(maptalks.rende
         if (isI3SMesh(url)) {
             const nodeCache = this._i3sNodeCache[tile._rootIdx];
             params.projection = nodeCache.projection;
-            params.i3sInfo = getI3SNodeInfo(url, tile, nodeCache, this.regl, this.layer.options['enableI3SCompressedGeometry'], this.layer.options['forceI3SCompressedGeometry']);
+            params.i3sInfo = getI3SNodeInfo(url, nodeCache, this.regl, this.layer.options['enableI3SCompressedGeometry'], this.layer.options['forceI3SCompressedGeometry']);
             if (!params.i3sInfo) {
                 this.onTileError({ status: 404 }, tile, url);
                 return;
