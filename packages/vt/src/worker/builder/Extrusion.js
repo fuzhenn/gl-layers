@@ -8,7 +8,9 @@ import { KEY_IDX, PROP_OMBB } from '../../common/Constant';
 export function buildExtrudeFaces(
     features, EXTENT,
     {
-        altitudeScale, altitudeProperty, defaultAltitude, heightProperty, minHeightProperty, defaultHeight
+        altitudeScale, altitudeProperty, defaultAltitude,
+        heightProperty, minHeightProperty,
+        defaultHeight, heightScale, altitudeBaseOnBottom
     },
     {
         center,
@@ -166,8 +168,16 @@ export function buildExtrudeFaces(
         const ombb = feature.properties[PROP_OMBB];
         const isMultiOmbb = Array.isArray(ombb && ombb[0] && ombb[0][0]);
         let ringOmbb = isMultiOmbb ? ombb[0] : ombb;
+        let altitudeAndHeight;
+        if (altitudeBaseOnBottom) {
+            //基于图形底部作为海拔参考值
+            altitudeAndHeight = PackUtil.getFeaAltitudeAndHeightBaseOnBottom(feature, altitudeScale, altitudeProperty, defaultAltitude, heightProperty, defaultHeight, heightScale);
+        } else {
+            //基于图形顶部作为海拔参考值
+            altitudeAndHeight = PackUtil.getFeaAltitudeAndHeight(feature, altitudeScale, altitudeProperty, defaultAltitude, heightProperty, defaultHeight, minHeightProperty);
+        }
+        const { altitude, height } = altitudeAndHeight;
 
-        const { altitude, height } = PackUtil.getFeaAltitudeAndHeight(feature, altitudeScale, altitudeProperty, defaultAltitude, heightProperty, defaultHeight, minHeightProperty);
         if (height < 0) {
             hasNegativeHeight = true;
         }
@@ -222,7 +232,12 @@ export function buildExtrudeFaces(
                 holes.currentIndex = index;
             }
             //a seg or a ring in line or polygon
-            fillPosArray(geoVertices, geoVertices.getLength(), ring, scale, altitude, false, positionType);
+            if (!altitudeBaseOnBottom) {
+                fillPosArray(geoVertices, geoVertices.getLength(), ring, scale, altitude, false, positionType);
+            } else {
+                fillPosArray(geoVertices, geoVertices.getLength(), ring, scale, altitude + height, false, positionType);
+            }
+
 
             if (i === l - 1) {
                 offset = fillData(start, offset, holes, height * scale, ringOmbb, needReverseTriangle); //need to multiply with scale as altitude is

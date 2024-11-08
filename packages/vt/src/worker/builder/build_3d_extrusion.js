@@ -31,6 +31,8 @@ export default function (features, dataConfig, extent, uvOrigin, textureSize, re
         top, side,
         textureYOrigin,
         topThickness,
+        altitudeBaseOnBottom,
+        heightScale
     } = dataConfig;
     //256是2的8次方，在glZoom + 8级别时，texture为1:1比例
     // const textureSize = PACK_TEX_SIZE;
@@ -42,7 +44,9 @@ export default function (features, dataConfig, extent, uvOrigin, textureSize, re
             defaultAltitude: defaultAltitude || 0,
             heightProperty,
             minHeightProperty,
-            defaultHeight: defaultHeight || 0
+            defaultHeight: defaultHeight || 0,
+            altitudeBaseOnBottom,
+            heightScale
         },
         {
             center,
@@ -132,7 +136,7 @@ export default function (features, dataConfig, extent, uvOrigin, textureSize, re
 
     const fnTypes = buildFnTypes(features, symbol, zoom, faces.featureIndexes);
     const vertexColors = buildVertexColorTypes(faces.verticeTypes, faces.featureIndexes, features, symbol, zoom);
-    const data =  {
+    const data = {
         data: {
             data: {
                 aVertexColorType: vertexColors.length <= 252 ? ArrayPool.createTypedArray(faces.verticeTypes, Uint8Array) : ArrayPool.createTypedArray(faces.verticeTypes, Uint16Array),

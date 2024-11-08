@@ -59,6 +59,7 @@ export function getHeightValue(properties, heightProp, defaultValue) {
     return height * 100;
 }
 
+
 export function getFeaAltitudeAndHeight(feature, altitudeScale, altitudeProperty, defaultAltitude, heightProperty, defaultHeight, minHeightProperty) {
     if (!altitudeScale && altitudeScale !== 0) {
         altitudeScale = 1;
@@ -73,6 +74,39 @@ export function getFeaAltitudeAndHeight(feature, altitudeScale, altitudeProperty
         height = altitudeValue - getHeightValue(feature.properties, minHeightProperty, defaultHeight);
     }
     height *= altitudeScale;
+    return {
+        altitude, height
+    };
+}
+
+/**
+ * 基于图形底部计算海拔和高度
+ * @param {*} feature 
+ * @param {*} altitudeScale 
+ * @param {*} altitudeProperty 
+ * @param {*} defaultAltitude 
+ * @param {*} heightProperty 
+ * @param {*} defaultHeight 
+ * @param {*} heightScale 
+ * @returns 
+ */
+export function getFeaAltitudeAndHeightBaseOnBottom(feature, altitudeScale, altitudeProperty, defaultAltitude, heightProperty, defaultHeight, heightScale) {
+    if (!altitudeScale && altitudeScale !== 0) {
+        altitudeScale = 1;
+    }
+    //高度的缩放和海拔的缩放这时是独立的,height和altitude没有任何关系
+    if (!heightScale && heightScale !== 0) {
+        heightScale = 1;
+    }
+    const altitudeValue = getHeightValue(feature.properties, altitudeProperty, defaultAltitude);
+    const altitude = altitudeValue * altitudeScale;
+
+    let height = (defaultHeight || 0) && defaultHeight * 100 || 0;
+    if (heightProperty) {
+        height = getHeightValue(feature.properties, heightProperty, defaultHeight);
+    }
+    height = Math.max(0, height);
+    height *= heightScale;
     return {
         altitude, height
     };
