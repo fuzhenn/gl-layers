@@ -8,7 +8,9 @@ export function buildWireframe(
     features, EXTENT, colorSymbol, opacity,
     {
         altitudeScale, altitudeProperty, defaultAltitude, heightProperty, minHeightProperty, defaultHeight,
-        bottom
+        bottom,
+        altitudeBaseOnBottom,
+        heightScale
     }
 ) {
     const drawBottom = bottom;
@@ -87,7 +89,16 @@ export function buildWireframe(
         }
 
         const colorStart = offset / 3 * 4;
-        const { altitude, height } = PackUtil.getFeaAltitudeAndHeight(feature, altitudeScale, altitudeProperty, defaultAltitude, heightProperty, defaultHeight, minHeightProperty);
+        let altitudeAndHeight;
+        if (altitudeBaseOnBottom) {
+            //基于图形底部作为海拔参考值
+            altitudeAndHeight = PackUtil.getFeaAltitudeAndHeightBaseOnBottom(feature, altitudeScale, altitudeProperty, defaultAltitude, heightProperty, defaultHeight, heightScale);
+        } else {
+            //基于图形顶部作为海拔参考值
+            altitudeAndHeight = PackUtil.getFeaAltitudeAndHeight(feature, altitudeScale, altitudeProperty, defaultAltitude, heightProperty, defaultHeight, minHeightProperty);
+        }
+        const { altitude, height } = altitudeAndHeight;
+
 
         maxAltitude = Math.max(Math.abs(altitude), maxAltitude);
         let start = offset;
@@ -99,7 +110,12 @@ export function buildWireframe(
             if (ring[0][0] === ring[ringLen - 1][0] && ring[0][1] === ring[ringLen - 1][1]) {
                 ring = ring.slice(0, ringLen - 1);
             }
-            offset = fillPosArray(vertices, start, ring, scale, altitude);
+            if (!altitudeBaseOnBottom) {
+                offset = fillPosArray(vertices, start, ring, scale, altitude);
+            } else {
+                offset = fillPosArray(vertices, start, ring, scale, altitude + height);
+            }
+
             offset = fillIndices(start, offset, height * scale); //need to multiply with scale as altitude is
             start = offset;
         }
