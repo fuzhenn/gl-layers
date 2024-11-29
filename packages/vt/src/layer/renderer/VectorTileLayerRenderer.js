@@ -4,8 +4,8 @@ import WorkerConnection from './worker/WorkerConnection';
 import { EMPTY_VECTOR_TILE } from '../core/Constant';
 import DebugPainter from './utils/DebugPainter';
 import TileStencilRenderer from './stencil/TileStencilRenderer';
-import { extend, pushIn, getCentiMeterScale, isNil } from '../../common/Util';
-import { default as convertToPainterFeatures, oldPropsKey }  from './utils/convert_to_painter_features';
+import { extend, pushIn, getCentiMeterScale, isNil, isFunction, isString } from '../../common/Util';
+import { default as convertToPainterFeatures, oldPropsKey } from './utils/convert_to_painter_features';
 import { isFunctionDefinition } from '@maptalks/function-type';
 import { FilterUtil } from '../../packer';
 import { meterToPoint } from '../plugins/Util';
@@ -562,8 +562,47 @@ class VectorTileLayerRenderer extends maptalks.renderer.TileLayerCanvasRenderer 
             this._requestingMVT[url].keys[tileInfo.id] = 1;
             const fetchOptions = this.layer.options['fetchOptions'];
             const referrer = window && window.location.href;
-            this._workerConn.loadTile({ tileInfo: { res: tileInfo.res, x: tileInfo.x, y: tileInfo.y, z: tileInfo.z, url: tileInfo.url, id: tileInfo.id, extent2d: tileInfo.extent2d },
-                glScale, zScale: this._zScale, centimeterToPoint, verticalCentimeterToPoint, fetchOptions, styleCounter: this._styleCounter, referrer, workerCacheIndex: this._workerCacheIndex }, this._onReceiveMVTData.bind(this, url));
+            const loadTileOpitons = {
+                tileInfo: {
+                    res: tileInfo.res,
+                    x: tileInfo.x,
+                    y: tileInfo.y,
+                    z: tileInfo.z,
+                    url: tileInfo.url,
+                    id: tileInfo.id,
+                    extent2d: tileInfo.extent2d,
+                },
+                glScale,
+                zScale: this._zScale,
+                centimeterToPoint,
+                verticalCentimeterToPoint,
+                fetchOptions,
+                styleCounter: this._styleCounter,
+                referrer,
+                workerCacheIndex: this._workerCacheIndex,
+                command: 'loadTile'
+            }
+            //user custom ,data can from indexedDB
+            if (this.loadTileArrayBuffer && isFunction(this.loadTileArrayBuffer)) {
+                this.loadTileArrayBuffer(tileInfo.url, tileInfo, (data) => {
+                    //success
+                    if (data && data instanceof ArrayBuffer) {
+                        loadTileOpitons.tileArrayBuffer = data;
+                    } else {
+                        //fail
+                        let error = data || 'loadTileArrayBuffer error';
+                        if (error instanceof Error) {
+                            error = error.message;
+                        } else if (!isString(error)) {
+                            error = 'loadTileArrayBuffer error';
+                        }
+                        loadTileOpitons.tileloadError = error;
+                    }
+                    this._workerConn.loadTile(loadTileOpitons, this._onReceiveMVTData.bind(this, url));
+                }, loadTileOpitons)
+            } else {
+                this._workerConn.loadTile(loadTileOpitons, this._onReceiveMVTData.bind(this, url));
+            }
         } else if (!cached.keys[tileInfo.id]) {
             cached.tiles.push(tileInfo);
             cached.keys[tileInfo.id] = 1;
@@ -1513,7 +1552,15 @@ class VectorTileLayerRenderer extends maptalks.renderer.TileLayerCanvasRenderer 
             }
             delete this._requestingMVT[tileInfo.url];
         }
-        super.abortTileLoading(tileImage, tileInfo);
+        if (this.loadTileArrayBuffer && isFunction(this.loadTileArrayBuffer)) {
+            this.loadTileArrayBuffer(tileInfo.url, tileInfo, () => {
+                super.abortTileLoading(tileImage, tileInfo);
+            }, {
+                command: 'abortTile'
+            })
+        } else {
+            super.abortTileLoading(tileImage, tileInfo);
+        }
     }
 
     resizeCanvas(canvasSize) {
@@ -1524,7 +1571,7 @@ class VectorTileLayerRenderer extends maptalks.renderer.TileLayerCanvasRenderer 
         }
         if (this.pickingFBO && (this.pickingFBO.width !== canvas.width || this.pickingFBO.height !== canvas.height)) {
             this.pickingFBO.resize(canvas.width, canvas.height);
-                this._getFramePlugins().forEach(plugin => {
+            this._getFramePlugins().forEach(plugin => {
                 if (!plugin) {
                     return;
                 }
@@ -1717,27 +1764,27 @@ class VectorTileLayerRenderer extends maptalks.renderer.TileLayerCanvasRenderer 
     _getDefaultRenderPlugin(type) {
         let renderPlugin;
         switch (type) {
-        case 'native-line':
-            renderPlugin = {
-                type: 'native-line',
-                dataConfig: { type: 'native-line', only2D: true }
-            };
-            break;
-        case 'native-point':
-            renderPlugin = {
-                type: 'native-point',
-                dataConfig: { type: 'native-point', only2D: true }
-            };
-            break;
-        case 'fill':
-            renderPlugin = {
-                type: 'fill',
-                dataConfig: { type: 'fill', only2D: true },
-                sceneConfig: { antialias: true }
-            };
-            break;
-        default:
-            renderPlugin = null;
+            case 'native-line':
+                renderPlugin = {
+                    type: 'native-line',
+                    dataConfig: { type: 'native-line', only2D: true }
+                };
+                break;
+            case 'native-point':
+                renderPlugin = {
+                    type: 'native-point',
+                    dataConfig: { type: 'native-point', only2D: true }
+                };
+                break;
+            case 'fill':
+                renderPlugin = {
+                    type: 'fill',
+                    dataConfig: { type: 'fill', only2D: true },
+                    sceneConfig: { antialias: true }
+                };
+                break;
+            default:
+                renderPlugin = null;
         }
         const symbol = getDefaultSymbol(type);
         const plugin = this._createRenderPlugin(renderPlugin);
@@ -2011,22 +2058,22 @@ export default VectorTileLayerRenderer;
 
 function getDefaultSymbol(type) {
     switch (type) {
-    case 'native-point':
-        return {
-            markerFill: '#f00',
-            markerSize: 6,
-            markerOpacity: 0.5
-        };
-    case 'native-line':
-        return {
-            lineColor: '#bbb',
-            lineOpacity: 0.5
-        };
-    case 'fill':
-        return {
-            polygonFill: '#76a6f0',
-            polygonOpacity: 0.8
-        };
+        case 'native-point':
+            return {
+                markerFill: '#f00',
+                markerSize: 6,
+                markerOpacity: 0.5
+            };
+        case 'native-line':
+            return {
+                lineColor: '#bbb',
+                lineOpacity: 0.5
+            };
+        case 'fill':
+            return {
+                polygonFill: '#76a6f0',
+                polygonOpacity: 0.8
+            };
     }
     return null;
 }

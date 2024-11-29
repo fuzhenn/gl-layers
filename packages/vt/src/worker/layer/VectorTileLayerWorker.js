@@ -29,6 +29,17 @@ export default class VectorTileLayerWorker extends LayerWorker {
                 this._readTile(url, err, data, cb);
             }, 1);
         }
+         //data from laodTileArray for custom
+         const { tileArrayBuffer, tileloadError } = context;
+         if (tileArrayBuffer || tileloadError) {
+             let err;
+             if (tileloadError) {
+                 err = new Error(tileloadError);
+             }
+             return setTimeout(() => {
+                 this._readTile(url, err, tileArrayBuffer, cb);
+             }, 1);
+         }
         fetchOptions.referrer = context.referrer;
         return Ajax.getArrayBuffer(url, fetchOptions, (err, response) => {
             if (!this._cache) {
