@@ -2,7 +2,7 @@ import { mat4 } from 'gl-matrix';
 import { defined, isNumber, isInterleaved, extend } from '../common/Util';
 import Skin from './Skin';
 import TRS from './TRS';
-import { getGLTFLoaderBundle } from '@maptalks/gl/dist/transcoders.js';
+import { getGLTFLoaderBundle } from '../common/GLTFBundle'
 import Geometry from '../Geometry';
 import { KEY_DISPOSED } from '../common/Constants.js';
 import GLTFResource from './GLTFResource';

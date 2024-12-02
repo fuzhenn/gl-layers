@@ -513,9 +513,6 @@ importers:
 
   packages/reshader.gl:
     dependencies:
-      '@maptalks/gltf-loader':
-        specifier: workspace:*
-        version: link:../gltf-loader
       '@maptalks/regl':
         specifier: ^3.4.0
         version: 3.4.0

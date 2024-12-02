@@ -1,5 +1,4 @@
-//@ts-expect-error ts无法识别gltf-loader的声明，待解决
-import { getGLTFLoaderBundle } from '@maptalks/gl/dist/transcoders.js';
+import { getGLTFLoaderBundle } from './GLTFBundle'
 import REGL, { Regl } from '@maptalks/regl';
 import { AttributeBufferData, AttributeType, NumberArray, TypedArray } from '../types/typings';
 
