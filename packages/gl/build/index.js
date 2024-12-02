@@ -1,9 +1,6 @@
 import createREGL from '@maptalks/regl';
 import * as reshader from '@maptalks/reshader.gl';
 
-import * as gltf from '@maptalks/gltf-loader';
-export { gltf };
-
 export {
     glMatrix,
     mat2, mat2d, mat3, mat4,
@@ -13,7 +10,10 @@ export {
 export { createREGL, reshader };
 
 export * from './gl/gl.es.js';
-import transcoders from '../src/transcoders';
+import transcoders, { registerGLTFLoaderBundle } from '../src/transcoders';
+
+import { gltfLoaderExport } from  './gltf-loader-bundle.js';
+registerGLTFLoaderBundle(gltfLoaderExport);
 export { transcoders };
 
 import * as maptalks from 'maptalks';

@@ -239,9 +239,6 @@ importers:
       '@maptalks/function-type':
         specifier: ^1.4.0
         version: 1.4.0
-      '@maptalks/gltf-loader':
-        specifier: workspace:*
-        version: link:../gltf-loader
       '@maptalks/tbn-packer':
         specifier: ^1.4.5
         version: 1.4.5
