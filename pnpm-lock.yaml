@@ -333,9 +333,6 @@ importers:
       '@maptalks/function-type':
         specifier: ^1.4.0
         version: 1.4.0
-      '@maptalks/gltf-loader':
-        specifier: workspace:*
-        version: link:../gltf-loader
       frustum-intersects:
         specifier: ^0.2.4
         version: 0.2.4
@@ -710,9 +707,6 @@ importers:
       '@maptalks/gltf-layer':
         specifier: workspace:*
         version: link:../layer-gltf
-      '@maptalks/gltf-loader':
-        specifier: workspace:*
-        version: link:../gltf-loader
     devDependencies:
       '@rollup/plugin-commonjs':
         specifier: ^25.0.7
