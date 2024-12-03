@@ -72,7 +72,7 @@ const pluginsWorker = production ? [
         },
         output: {
             beautify: false,
-            comments: '/^!/'
+            // comments: '/^!/'
         }
     })] : [];
 

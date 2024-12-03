@@ -470,9 +470,6 @@ importers:
       '@maptalks/3dtiles':
         specifier: workspace:*
         version: link:../layer-3dtiles
-      '@maptalks/analysis':
-        specifier: workspace:*
-        version: link:../analysis
       '@maptalks/gl':
         specifier: workspace:*
         version: link:../gl
