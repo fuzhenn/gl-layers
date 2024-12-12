@@ -4,7 +4,7 @@ import WorkerConnection from './worker/WorkerConnection';
 import { EMPTY_VECTOR_TILE } from '../core/Constant';
 import DebugPainter from './utils/DebugPainter';
 import TileStencilRenderer from './stencil/TileStencilRenderer';
-import { extend, pushIn, getCentiMeterScale, isNil, isFunction, isString } from '../../common/Util';
+import { extend, pushIn, getCentiMeterScale, isNil, isFunction } from '../../common/Util';
 import { default as convertToPainterFeatures, oldPropsKey } from './utils/convert_to_painter_features';
 import { isFunctionDefinition } from '@maptalks/function-type';
 import { meterToPoint } from '../plugins/Util';
