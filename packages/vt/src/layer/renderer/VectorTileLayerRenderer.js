@@ -1555,7 +1555,7 @@ class VectorTileLayerRenderer extends maptalks.renderer.TileLayerCanvasRenderer 
         }
         if (this.loadTileArrayBuffer && isFunction(this.loadTileArrayBuffer)) {
             this.loadTileArrayBuffer(tileInfo.url, tileInfo, () => {
-                super.abortTileLoading(tileImage, tileInfo);
+
             }, {
                 command: 'abortTile'
             })
