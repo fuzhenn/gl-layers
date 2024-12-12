@@ -1,4 +1,4 @@
-import { Ajax, GLTFLoader } from '@maptalks/gltf-loader';
+import { getGLTFLoaderBundle } from '@maptalks/gl/dist/transcoders.js';
 import { vec3, mat3, mat4 } from 'gl-matrix';
 import B3DMLoader from '../loaders/B3DMLoader';
 import I3DMLoader from '../loaders/I3DMLoader';
@@ -16,6 +16,7 @@ import { buildNormals } from '@maptalks/tbn-packer';
 import { project } from './Projection';
 import getTranscoders from '../loaders/transcoders.js';
 
+const { Ajax, GLTFLoader } = getGLTFLoaderBundle();
 
 const DEFAULT_MAX_TEXTURE_SIZE = 0;
 const Y_TO_Z = [1, 0, 0, 0, 0, 0, 1, 0, 0, -1, 0, 0, 0, 0, 0, 1];
@@ -1313,6 +1314,10 @@ function pushTransferables(target, src) {
 function ifSharingPosition(gltf) {
     if (!gltf || !gltf.meshes) {
         return false;
+    }
+    // 有 KHR_techniques_webgl 的模型可能在shader中有顶点计算逻辑，所以不能对顶点进行额外处理和计算
+    if (gltf.extensions && gltf.extensions['KHR_techniques_webgl']) {
+        return true;
     }
     const visitStamp = 'visited';
     let visitId = 1;

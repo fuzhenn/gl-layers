@@ -72,7 +72,7 @@ const pluginsWorker = production ? [
         },
         output: {
             beautify: false,
-            comments: '/^!/'
+            // comments: '/^!/'
         }
     })] : [];
 
@@ -95,7 +95,44 @@ function transformBackQuote() {
     };
 }
 
+const globalFunc = `
+var getGlobal = function () {
+  if (typeof globalThis !== 'undefined') { return globalThis; }
+  if (typeof self !== "undefined") { return self; }
+  if (typeof window !== "undefined") { return window; }
+  if (typeof global !== "undefined") { return global; }
+};`
+
+
 module.exports = [
+    {
+        input: "build/gltf-loader-index.js",
+        plugins: [
+            nodeResolve(),
+            commonjs(),
+            replace({
+                // 'this.exports = this.exports || {}': '',
+                "(function (exports) {": "export function gltfLoaderExport(exports) {"+ globalFunc + ";if (getGlobal()['maptalks_gltf_loader']) return;\n",
+                "})(this.exports = this.exports || {});": "getGlobal()['maptalks_gltf_loader'] = exports;}\ngltfLoaderExport({});",
+                preventAssignment: false,
+                delimiters: ["", ""],
+            }),
+        ]
+            .concat(pluginsWorker),
+            // .concat([transformBackQuote()]),
+        output: {
+            strict: false,
+            format: "iife",
+            name: "exports",
+            globals: ["exports"],
+            extend: true,
+            file: "build/gltf-loader-bundle.js"
+            // footer: ``
+        },
+        watch: {
+            include: ['../gltf-loader/dist/*.js']
+        }
+    },
     {
         input: 'src/layer/terrain/worker/index.js',
         external: ['maptalks'],
@@ -171,7 +208,8 @@ module.exports.push({
         'file': outputFile
     },
     watch: {
-        include: ['src/**/*.js', 'src/**/*.ts', 'src/**/*.glsl',  'src/**/*.vert',  'src/**/*.frag', '../reshader.gl/dist/*.es.js', 'build/worker.js']
+        include: ['src/**/*.js', 'src/**/*.ts', 'src/**/*.glsl',  'src/**/*.vert',  'src/**/*.frag',
+            '../reshader.gl/dist/*.es.js', 'build/worker.js', 'build/gltf-loader-bundle.js']
     }
 });
 

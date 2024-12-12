@@ -103,6 +103,28 @@ importers:
         specifier: ^4.17.2
         version: 4.17.2
 
+  packages/fusion.gl:
+    dependencies:
+      fast-deep-equal:
+        specifier: ^2.0.1
+        version: 2.0.1
+    devDependencies:
+      '@rollup/plugin-commonjs':
+        specifier: ^25.0.7
+        version: 25.0.7(rollup@4.17.2)
+      '@rollup/plugin-node-resolve':
+        specifier: ^15.2.3
+        version: 15.2.3(rollup@4.17.2)
+      '@rollup/plugin-terser':
+        specifier: 0.4.4
+        version: 0.4.4(rollup@4.17.2)
+      eslint:
+        specifier: ^8.57.0
+        version: 8.57.0
+      rollup:
+        specifier: ^4.17.2
+        version: 4.17.2
+
   packages/gl:
     dependencies:
       '@maptalks/fusiongl':
@@ -239,9 +261,6 @@ importers:
       '@maptalks/function-type':
         specifier: ^1.4.0
         version: 1.4.0
-      '@maptalks/gltf-loader':
-        specifier: workspace:*
-        version: link:../gltf-loader
       '@maptalks/tbn-packer':
         specifier: ^1.4.5
         version: 1.4.5
@@ -336,9 +355,6 @@ importers:
       '@maptalks/function-type':
         specifier: ^1.4.0
         version: 1.4.0
-      '@maptalks/gltf-loader':
-        specifier: workspace:*
-        version: link:../gltf-loader
       frustum-intersects:
         specifier: ^0.2.4
         version: 0.2.4
@@ -476,18 +492,12 @@ importers:
       '@maptalks/3dtiles':
         specifier: workspace:*
         version: link:../layer-3dtiles
-      '@maptalks/analysis':
-        specifier: workspace:*
-        version: link:../analysis
       '@maptalks/gl':
         specifier: workspace:*
         version: link:../gl
       '@maptalks/gltf-layer':
         specifier: workspace:*
         version: link:../layer-gltf
-      '@maptalks/msd-json-loader':
-        specifier: ^0.1.0
-        version: 0.1.0
       '@maptalks/transform-control':
         specifier: workspace:*
         version: link:../transform-control
@@ -519,9 +529,6 @@ importers:
 
   packages/reshader.gl:
     dependencies:
-      '@maptalks/gltf-loader':
-        specifier: workspace:*
-        version: link:../gltf-loader
       '@maptalks/regl':
         specifier: ^3.4.0
         version: 3.4.0
@@ -719,9 +726,6 @@ importers:
       '@maptalks/gltf-layer':
         specifier: workspace:*
         version: link:../layer-gltf
-      '@maptalks/gltf-loader':
-        specifier: workspace:*
-        version: link:../gltf-loader
     devDependencies:
       '@rollup/plugin-commonjs':
         specifier: ^25.0.7
@@ -742,8 +746,8 @@ importers:
         specifier: ^10.4.1
         version: 10.4.3(eslint@8.57.0)
       maptalks:
-        specifier: 1.0.0-rc.35
-        version: 1.0.0-rc.35
+        specifier: 1.0.0-rc.40
+        version: 1.0.0-rc.40
       pixelmatch:
         specifier: ^4.0.2
         version: 4.0.2
@@ -987,6 +991,7 @@ packages:
   '@humanwhocodes/config-array@0.11.14':
     resolution: {integrity: sha512-3T8LkOmg45BV5FICb15QQMsyUSWrQ8AygVfC7ZG32zOalnqrilm018ZVCw0eapXux8FtA33q8PSRSstjee3jSg==}
     engines: {node: '>=10.10.0'}
+    deprecated: Use @eslint/config-array instead
 
   '@humanwhocodes/module-importer@1.0.1':
     resolution: {integrity: sha512-bxveV4V8v5Yb4ncFTT3rPSgZBOpCkjfK0y4oVVVJwIuDVBRMDXrPyXRL988i5ap9m9bnyEEjWfm5WkBmtffLfA==}
@@ -994,6 +999,7 @@ packages:
 
   '@humanwhocodes/object-schema@2.0.3':
     resolution: {integrity: sha512-93zYdMES/c1D69yZiKDBj0V24vqNzB/koF26KPaagAfd3P/4gUlh3Dys5ogAK+Exi9QyzlD8x/08Zt7wIKcDcA==}
+    deprecated: Use @eslint/object-schema instead
 
   '@isaacs/cliui@8.0.2':
     resolution: {integrity: sha512-O8jcjabXaleOG9DQ0+ARXWZBTfnP4WNAqzuiJK7ll44AmxGKv/J2M4TPjxjY3znBCfvBXFzucm1twdyFybFqEA==}
@@ -1056,9 +1062,6 @@ packages:
 
   '@maptalks/martini@0.4.0':
     resolution: {integrity: sha512-h7yiE8FXaBhTncygKDOt24VNqvSwzK/nPVu7irr33jdp+1dmvKPWLyp40EUxecs9DOHMr/clbRD3sBJbtU9KnA==}
-
-  '@maptalks/msd-json-loader@0.1.0':
-    resolution: {integrity: sha512-PV1l9WlmndsaZzhFiiI7lhlRPT9+5XFx3YtGQqowInry5DcWVb27HukF51AAGYbO2W+KhUjV8Rj6fvEpxWYK+g==}
 
   '@maptalks/regl@3.4.0':
     resolution: {integrity: sha512-vir0oI5PXlLfxp1/B5TOOkmQfy7qeCwnx16uALViXfwo/ZJ79OLwePYENxwGLkbEV3HxETpdTm3dDU3Et9O4kw==}
@@ -2258,6 +2261,7 @@ packages:
   eslint@8.57.0:
     resolution: {integrity: sha512-dZ6+mexnaTIbSBZWgou51U6OmzIhYM2VcNdtiTtI7qPNZm35Akpr0f6vtw3w1Kmn5PYo+tZVfh13WrhpS6oLqQ==}
     engines: {node: ^12.22.0 || ^14.17.0 || >=16.0.0}
+    deprecated: This version is no longer supported. Please see https://eslint.org/version-support for other options.
     hasBin: true
 
   espree@9.6.1:
@@ -2906,9 +2910,6 @@ packages:
 
   magic-string@0.30.10:
     resolution: {integrity: sha512-iIRwTIf0QKV3UAnYK4PU8uiEc4SRh5jX0mwpIwETPpHdhVM4f53RSwS/vXvN1JhGX+Cs7B8qIq3d6AH49O5fAQ==}
-
-  maptalks@1.0.0-rc.35:
-    resolution: {integrity: sha512-RVFqe/+v7hGf6usS35vgHIygWBGQJPkhUwdYI3YMfGucbNsRK03W9Q611+WB2L7Wsal68nkPkauHKNV+ar/Z6w==}
 
   maptalks@1.0.0-rc.40:
     resolution: {integrity: sha512-XY6Y/ZxM0PvtJBtadMGgKNkOk1bz8f2wqbN/rOJyAF5OTIkrFtlZsNlZFLhl1PgvluKZLY5Mz79+mYPQRhpw6Q==}
@@ -4200,8 +4201,6 @@ snapshots:
       through2: 0.6.5
 
   '@maptalks/martini@0.4.0': {}
-
-  '@maptalks/msd-json-loader@0.1.0': {}
 
   '@maptalks/regl@3.4.0': {}
 
@@ -6844,18 +6843,6 @@ snapshots:
   magic-string@0.30.10:
     dependencies:
       '@jridgewell/sourcemap-codec': 1.4.15
-
-  maptalks@1.0.0-rc.35:
-    dependencies:
-      '@maptalks/feature-filter': 1.3.0
-      '@maptalks/function-type': 1.4.0
-      frustum-intersects: 0.1.0
-      lineclip: 1.1.5
-      rbush: 2.0.2
-      simplify-js: 1.2.4
-    optionalDependencies:
-      '@rollup/rollup-darwin-x64': 4.17.2
-      '@rollup/rollup-linux-x64-gnu': 4.17.2
 
   maptalks@1.0.0-rc.40:
     dependencies:

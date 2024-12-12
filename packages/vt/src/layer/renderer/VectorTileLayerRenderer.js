@@ -7,8 +7,10 @@ import TileStencilRenderer from './stencil/TileStencilRenderer';
 import { extend, pushIn, getCentiMeterScale, isNil, isFunction, isString } from '../../common/Util';
 import { default as convertToPainterFeatures, oldPropsKey } from './utils/convert_to_painter_features';
 import { isFunctionDefinition } from '@maptalks/function-type';
-import { FilterUtil } from '../../packer';
 import { meterToPoint } from '../plugins/Util';
+import { getVectorPacker } from '../../packer/inject';
+
+const { FilterUtil } = getVectorPacker();
 
 // const DEFAULT_PLUGIN_ORDERS = ['native-point', 'native-line', 'fill'];
 const EMPTY_ARRAY = [];
@@ -562,6 +564,8 @@ class VectorTileLayerRenderer extends maptalks.renderer.TileLayerCanvasRenderer 
             this._requestingMVT[url].keys[tileInfo.id] = 1;
             const fetchOptions = this.layer.options['fetchOptions'];
             const referrer = window && window.location.href;
+            const altitudePropertyName = this.layer.options['altitudePropertyName'];
+            const disableAltitudeWarning = this.layer.options['disableAltitudeWarning'];
             const loadTileOpitons = {
                 tileInfo: {
                     res: tileInfo.res,
@@ -573,6 +577,8 @@ class VectorTileLayerRenderer extends maptalks.renderer.TileLayerCanvasRenderer 
                     extent2d: tileInfo.extent2d,
                 },
                 glScale,
+                disableAltitudeWarning,
+                altitudePropertyName,
                 zScale: this._zScale,
                 centimeterToPoint,
                 verticalCentimeterToPoint,
@@ -584,21 +590,16 @@ class VectorTileLayerRenderer extends maptalks.renderer.TileLayerCanvasRenderer 
             }
             //user custom ,data can from indexedDB
             if (this.loadTileArrayBuffer && isFunction(this.loadTileArrayBuffer)) {
-                this.loadTileArrayBuffer(tileInfo.url, tileInfo, (data) => {
-                    //success
-                    if (data && data instanceof ArrayBuffer) {
+                this.loadTileArrayBuffer(tileInfo.url, tileInfo, (err, data) => {
+                    //fail
+                    if (err) {
+                        this._onReceiveMVTData(url, err)
+                    } else if (data && data instanceof ArrayBuffer) {
                         loadTileOpitons.tileArrayBuffer = data;
+                        this._workerConn.loadTile(loadTileOpitons, this._onReceiveMVTData.bind(this, url));
                     } else {
-                        //fail
-                        let error = data || 'loadTileArrayBuffer error';
-                        if (error instanceof Error) {
-                            error = error.message;
-                        } else if (!isString(error)) {
-                            error = 'loadTileArrayBuffer error';
-                        }
-                        loadTileOpitons.tileloadError = error;
+                        console.error(`loadTileArrayBuffer return data is not ArrayBuffer:`, data);
                     }
-                    this._workerConn.loadTile(loadTileOpitons, this._onReceiveMVTData.bind(this, url));
                 }, loadTileOpitons)
             } else {
                 this._workerConn.loadTile(loadTileOpitons, this._onReceiveMVTData.bind(this, url));
