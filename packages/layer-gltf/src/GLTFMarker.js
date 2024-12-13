@@ -1655,13 +1655,12 @@ export default class GLTFMarker extends Marker {
 
     _zoomTo(center, options, step) {
         const map = this.getMap();
-
         const pitch = options.pitch || map.getPitch();
         const bearing = options.bearing || map.getBearing();
         const duration = options.duration || 500;
         const easing = options.easing || 'linear';
         const zoom = this._getFitZoomByBoundingBox(options.heightOffset || 0) + (options.zoomOffset || 0);
-        if (options.animation) {
+        if (options.animation || options.animation === undefined) {
             map.animateTo({
                 center,
                 zoom,
