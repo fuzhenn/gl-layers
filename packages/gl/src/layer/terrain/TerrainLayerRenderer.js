@@ -615,7 +615,7 @@ class TerrainLayerRenderer extends MaskRendererMixin(maptalks.renderer.TileLayer
         if (enableDebug) {
             const debugMesh = tileImage.skinDebugMesh || new reshader.Mesh(this._skinGeometry);
             debugMesh.setUniform('tileSize', tileSize);
-            const debugTexture = tileImage.debugTexture || this._createDebugTexture(terrainTileInfo, tileSize);
+            const debugTexture = tileImage.debugTexture || this._createDebugTexture(terrainTileInfo, tileSize, tileImage.temp);
             tileImage.debugTexture = debugTexture;
             tileImage.skinDebugMesh = debugMesh;
             debugMesh.setUniform('opacity', 1);
@@ -644,11 +644,11 @@ class TerrainLayerRenderer extends MaskRendererMixin(maptalks.renderer.TileLayer
         tileImage.renderedZoom = map.getZoom();
     }
 
-    _createDebugTexture(tileInfo, tileSize) {
+    _createDebugTexture(tileInfo, tileSize, isTemp) {
         tileSize *= 2;
 
         const { x, y, z } = tileInfo;
-        const debugInfo = `terrain:${x}/${y}/${z}`;
+        const debugInfo = `terrain:${x}/${y}/${z}` + (isTemp ? '-temp' : '');
 
         const canvas = document.createElement('canvas');
         canvas.width = tileSize;
@@ -848,7 +848,8 @@ class TerrainLayerRenderer extends MaskRendererMixin(maptalks.renderer.TileLayer
 
     _getTerrainWidth() {
         const layerOptions = this.layer.options;
-        return isNil(layerOptions.terrainWidth) ? layerOptions.tileSize + 1 : layerOptions.terrainWidth;
+        const tileSize = this.layer.getTileSize().width;
+        return isNil(layerOptions.terrainWidth) ? (tileSize / 4) + 1 : layerOptions.terrainWidth;
     }
 
     _getParentTileRequest(tile, createIfNotExists) {
@@ -879,7 +880,6 @@ class TerrainLayerRenderer extends MaskRendererMixin(maptalks.renderer.TileLayer
         const sp = layer.getSpatialReference();
         const res = sp.getResolution(tile.z);
         let error = this.getMap().pointAtResToDistance(1, 1, res);
-
         const zoomOffset = layer.options['zoomOffset'] || 0;
         const maxAvailableZoom = layer.options['maxAvailableZoom'] && (layer.options['maxAvailableZoom'] - zoomOffset);
 
