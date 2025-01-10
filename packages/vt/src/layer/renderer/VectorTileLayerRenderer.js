@@ -1548,14 +1548,15 @@ class VectorTileLayerRenderer extends maptalks.renderer.TileLayerCanvasRenderer 
     }
 
     abortTileLoading(tileImage, tileInfo) {
+        const tileUrl = tileInfo ? getTileAbsoluteUrl(tileInfo) : '';
         if (tileInfo && tileInfo.url) {
             if (this._workerConn) {
-                this._workerConn.abortTile(getTileAbsoluteUrl(tileInfo));
+                this._workerConn.abortTile(tileUrl);
             }
             delete this._requestingMVT[tileInfo.url];
         }
         if (this.loadTileArrayBuffer && isFunction(this.loadTileArrayBuffer)) {
-            this.loadTileArrayBuffer(getTileAbsoluteUrl(tileInfo), tileInfo, () => {
+            this.loadTileArrayBuffer(tileUrl, tileInfo, () => {
 
             }, {
                 command: 'abortTile'
