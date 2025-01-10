@@ -591,7 +591,7 @@ class VectorTileLayerRenderer extends maptalks.renderer.TileLayerCanvasRenderer 
             }
             //user custom ,data can from indexedDB
             if (this.loadTileArrayBuffer && isFunction(this.loadTileArrayBuffer)) {
-                this.loadTileArrayBuffer(getTileAbsoluteUrl(tileInfo), tileInfo, (err, data) => {
+                this.loadTileArrayBuffer(loadTileOpitons.tileInfo.url, tileInfo, (err, data) => {
                     //fail
                     if (err) {
                         this._onReceiveMVTData(url, err)
@@ -1552,7 +1552,7 @@ class VectorTileLayerRenderer extends maptalks.renderer.TileLayerCanvasRenderer 
             if (this._workerConn) {
                 this._workerConn.abortTile(getTileAbsoluteUrl(tileInfo));
             }
-            delete this._requestingMVT[getTileAbsoluteUrl(tileInfo)];
+            delete this._requestingMVT[tileInfo.url];
         }
         if (this.loadTileArrayBuffer && isFunction(this.loadTileArrayBuffer)) {
             this.loadTileArrayBuffer(getTileAbsoluteUrl(tileInfo), tileInfo, () => {
