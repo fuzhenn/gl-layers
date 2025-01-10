@@ -572,7 +572,8 @@ class VectorTileLayerRenderer extends maptalks.renderer.TileLayerCanvasRenderer 
                     x: tileInfo.x,
                     y: tileInfo.y,
                     z: tileInfo.z,
-                    url: tileInfo.url,
+                    // url: tileInfo.url,
+                    url: getTileAbsoluteUrl(tileInfo),
                     id: tileInfo.id,
                     extent2d: tileInfo.extent2d,
                 },
@@ -590,7 +591,7 @@ class VectorTileLayerRenderer extends maptalks.renderer.TileLayerCanvasRenderer 
             }
             //user custom ,data can from indexedDB
             if (this.loadTileArrayBuffer && isFunction(this.loadTileArrayBuffer)) {
-                this.loadTileArrayBuffer(tileInfo.url, tileInfo, (err, data) => {
+                this.loadTileArrayBuffer(getTileAbsoluteUrl(tileInfo), tileInfo, (err, data) => {
                     //fail
                     if (err) {
                         this._onReceiveMVTData(url, err)
@@ -1549,12 +1550,12 @@ class VectorTileLayerRenderer extends maptalks.renderer.TileLayerCanvasRenderer 
     abortTileLoading(tileImage, tileInfo) {
         if (tileInfo && tileInfo.url) {
             if (this._workerConn) {
-                this._workerConn.abortTile(tileInfo.url);
+                this._workerConn.abortTile(getTileAbsoluteUrl(tileInfo));
             }
-            delete this._requestingMVT[tileInfo.url];
+            delete this._requestingMVT[getTileAbsoluteUrl(tileInfo)];
         }
         if (this.loadTileArrayBuffer && isFunction(this.loadTileArrayBuffer)) {
-            this.loadTileArrayBuffer(tileInfo.url, tileInfo, () => {
+            this.loadTileArrayBuffer(getTileAbsoluteUrl(tileInfo), tileInfo, () => {
 
             }, {
                 command: 'abortTile'
@@ -2207,4 +2208,12 @@ function findFeatures(image) {
 
     }
     return [];
+}
+
+function getTileAbsoluteUrl(tile) {
+    if (tile && tile.url) {
+        return maptalks.Util.getAbsoluteURL(tile.url);
+    }
+    console.error('tile has no url', tile);
+    return '';
 }
