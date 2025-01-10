@@ -2211,9 +2211,5 @@ function findFeatures(image) {
 }
 
 function getTileAbsoluteUrl(tile) {
-    if (tile && tile.url) {
-        return maptalks.Util.getAbsoluteURL(tile.url);
-    }
-    console.error('tile has no url', tile);
-    return '';
+    return maptalks.Util.getAbsoluteURL(tile.url);
 }
