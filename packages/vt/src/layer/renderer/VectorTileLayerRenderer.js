@@ -16,6 +16,7 @@ const { FilterUtil } = getVectorPacker();
 const EMPTY_ARRAY = [];
 const CLEAR_COLOR = [0, 0, 0, 0];
 const TILE_POINT = new maptalks.Point(0, 0);
+const MINMAX = [];
 
 const TERRAIN_CLEAR = {
     color: CLEAR_COLOR,
@@ -1904,6 +1905,11 @@ class VectorTileLayerRenderer extends maptalks.renderer.TileLayerCanvasRenderer 
     }
 
     consumeTile(tileImage, tileInfo) {
+        if (tileImage && !tileImage._empty) {
+            const [minAltitude, maxAltitude] = this._findTileAltitude(tileImage);
+            tileInfo.minAltitude = minAltitude;
+            tileInfo.maxAltitude = maxAltitude;
+        }
         this._retirePrevTile(tileInfo);
         super.consumeTile(tileImage, tileInfo);
         if (this.layer.options.features === 'transient' && tileImage.data) {
@@ -1933,6 +1939,37 @@ class VectorTileLayerRenderer extends maptalks.renderer.TileLayerCanvasRenderer 
             tileImage.features = [];
         }
         this._createOneTile(tileInfo, tileImage);
+    }
+
+    _findTileAltitude(tileImage) {
+        const data = tileImage.data;
+        let max = -Infinity;
+        let min = Infinity;
+        for (let i = 0; i < data.length; i++) {
+            if (!data[i]) {
+                continue;
+            }
+            const packs = data[i].data;
+            if (!packs) {
+                continue;
+            }
+            for (let ii = 0; ii < packs.length; ii++) {
+                const pack = packs[ii];
+                if (!pack) {
+                    continue;
+                }
+                const { maxAltitude, minAltitude } = pack.properties;
+                if (maxAltitude > max) {
+                    max = maxAltitude;
+                }
+                if (minAltitude < min) {
+                    min = minAltitude;
+                }
+            }
+        }
+        MINMAX[0] = min;
+        MINMAX[1] = max;
+        return MINMAX;
     }
 
     onTileError(tileImage, tileInfo) {
