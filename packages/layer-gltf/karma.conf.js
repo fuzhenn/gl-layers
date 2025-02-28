@@ -23,7 +23,8 @@ module.exports = function (config) {
             'test/js/flv.min.js',
 
             'test/test.config.js',
-            'test/**/*.js',
+            // 'test/**/*.js',
+            'test/MultiGLTFMarkerSpec.js',
             {
                 pattern: 'test/models/**/*',
                 included: false

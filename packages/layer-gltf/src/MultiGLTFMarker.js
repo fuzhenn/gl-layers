@@ -46,6 +46,20 @@ export default class MultiGLTFMarker extends GLTFMarker {
 
     //支持数组[x, y]和maptalks.Coordinate两种形式
     setCoordinates(coordinates) {
+        if (!Array.isArray(coordinates)) {
+            const curCenter = this.getCenter();
+            const delta = coordinates.sub(curCenter);
+            for (let i = 0; i < this._data.length; i++) {
+                if (this._data[i].coordinates instanceof Coordinate) {
+                    this._data[i].coordinates = this._data[i].coordinates.add(delta);
+                } else {
+                    this._data[i].coordinates[0] += delta.x;
+                    this._data[i].coordinates[1] += delta.y;
+                }
+            }
+            this.setCoordinates(this._data);
+            return this;
+        }
         if (Array.isArray(coordinates[0])) {
             this._coordinates = coordinates.map(coord => {
                 return new Coordinate(coord);
@@ -108,7 +122,7 @@ export default class MultiGLTFMarker extends GLTFMarker {
 
     updateAllData(name, value) {
         for (let i = 0; i < this._data.length; i++) {
-            this.updateData(i, name, value[i]);
+            this.updateData(i, name, value[i][name]);
         }
         return this;
     }
