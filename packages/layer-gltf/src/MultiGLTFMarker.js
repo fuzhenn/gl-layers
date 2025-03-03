@@ -57,7 +57,7 @@ export default class MultiGLTFMarker extends GLTFMarker {
                     this._data[i].coordinates[1] += delta.y;
                 }
             }
-            this.setCoordinates(this._data);
+            this._dirty = true;
             return this;
         }
         if (Array.isArray(coordinates[0])) {
@@ -122,7 +122,7 @@ export default class MultiGLTFMarker extends GLTFMarker {
 
     updateAllData(name, value) {
         for (let i = 0; i < this._data.length; i++) {
-            this.updateData(i, name, value[i][name]);
+            this.updateData(i, name, value[i]);
         }
         return this;
     }

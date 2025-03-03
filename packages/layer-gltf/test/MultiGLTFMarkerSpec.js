@@ -755,7 +755,7 @@ describe('MultiGLTFMarker', () => {
         });
     });
 
-    it.only('multigltfmarker draggable', done => {
+    it('multigltfmarker draggable', done => {
         const gltflayer = new maptalks.GLTFLayer('gltf');
         new maptalks.GroupGLLayer('group', [gltflayer],  { sceneConfig }).addTo(map);
         const importData = initInstanceDataInArray(100);
@@ -780,7 +780,7 @@ describe('MultiGLTFMarker', () => {
         function checkColor() {
             setTimeout(function() {
                 const pixel = pickPixel(map, map.width / 2, map.height / 2, 1, 1);
-                expect(pixelMatch([135, 4, 4, 255], pixel)).to.be.eql(true);
+                expect(pixelMatch([148, 148, 148, 255], pixel)).to.be.eql(true);
                 done();
             }, 100);
         }
