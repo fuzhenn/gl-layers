@@ -43,6 +43,14 @@
       "git add"
     ]
   },
-  "packageManager": "pnpm@9.1.2",
-  "license": "MIT"
+  "packageManager": "pnpm@10.4.1",
+  "license": "MIT",
+  "pnpm": {
+    "ignoredBuiltDependencies": [
+      "electron"
+    ],
+    "onlyBuiltDependencies": [
+      "electron"
+    ]
+  }
 }
