@@ -131,6 +131,10 @@ include(GLContext.prototype, {
         this._gl.uniformMatrix3fv(location, transpose, value);
     },
     uniformMatrix4fv(location, transpose, value) {
+        if (!location) {
+            console.warn('UniformLocation invalid, null value encountered in browser:', navigator.userAgent);
+            return;
+        }
         value = this._checkMatrix4fvNaN(value);
         if (this._ifUniformEquals(location, transpose, value)) {
             return;
