@@ -48,7 +48,7 @@ const GLTFMixin = Base =>
             this.scene.sortFunction = this.sortByCommandKey;
             const fetchOptions = sceneConfig.fetchOptions || {};
             fetchOptions.referrer = window && window.location.href;
-            this._gltfManager = new reshader.GLTFManager(regl, {
+            this._gltfManager = regl.gltfManager = regl.gltfManager || new reshader.GLTFManager(regl, {
                 fetchOptions,
                 urlModifier: (url) => {
                     const modifier = layer.getURLModifier();
@@ -515,7 +515,7 @@ const GLTFMixin = Base =>
                 setInstanceData('instance_vectorA', i, mat, 0);
                 setInstanceData('instance_vectorB', i, mat, 1);
                 setInstanceData('instance_vectorC', i, mat, 2);
-                instanceData['aPickingId'][i] = i;
+                instanceData['aPickingId'][i] = aPickingId[i];
             }
             vec3.set(position, cx, cy, cz);
             return position;
