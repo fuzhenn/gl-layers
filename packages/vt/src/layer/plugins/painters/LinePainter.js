@@ -104,7 +104,8 @@ class LinePainter extends BasicPainter {
         const uniforms = {
             tileResolution: geometry.properties.tileResolution,
             tileRatio: geometry.properties.tileRatio,
-            tileExtent: geometry.properties.tileExtent
+            tileExtent: geometry.properties.tileExtent,
+            fogFactor: this.layer.options.fogFactor || 0
         };
         this.setLineUniforms(symbol, uniforms);
 
