@@ -67,7 +67,7 @@ describe('vector 3d integration specs', () => {
                         const diffPath = dir + 'diff.png';
                         writeImageData(diffPath, result.diffImage, result.width, result.height);
                         const actualPath = dir + 'actual.png';
-                        writeImageData(actualPath, canvas.getContext('2d').getImageData(0, 0, canvas.width, canvas.height).data, canvas.width, canvas.height);
+                        writeImageData(actualPath, canvas.getContext('2d', { willReadFrequently: true }).getImageData(0, 0, canvas.width, canvas.height).data, canvas.width, canvas.height);
                     }
                     assert(result.diffCount === 0);
                     done();
@@ -151,12 +151,12 @@ const canvas = document.createElement('canvas');
 function writeImageData(path, arr, width, height) {
     canvas.width = width;
     canvas.height = height;
-    const imageData = canvas.getContext('2d').getImageData(0, 0, width, height);
+    const imageData = canvas.getContext('2d', { willReadFrequently: true }).getImageData(0, 0, width, height);
 
     for (let i = 0; i < arr.length; i++) {
         imageData.data[i] = arr[i];
     }
-    canvas.getContext('2d').putImageData(imageData, 0, 0);
+    canvas.getContext('2d', { willReadFrequently: true }).putImageData(imageData, 0, 0);
     const dataURL = canvas.toDataURL();
     const base64Data = dataURL.replace(/^data:image\/png;base64,/, '');
     fs.writeFileSync(path, base64Data, 'base64');

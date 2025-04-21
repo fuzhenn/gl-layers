@@ -2,7 +2,7 @@ const path = require('path');
 const fs = require('fs');
 const pixelmath = require('pixelmatch');
 const expectedCanvas = document.createElement('canvas'),
-    ctx = expectedCanvas.getContext('2d');
+    ctx = expectedCanvas.getContext('2d', { willReadFrequently: true });
 const image0 = new Image();
 
 const canvas = document.createElement('canvas');
@@ -59,12 +59,12 @@ module.exports = {
     writeImageData(path, arr, width, height) {
         canvas.width = width;
         canvas.height = height;
-        const imageData = canvas.getContext('2d').getImageData(0, 0, width, height);
+        const imageData = canvas.getContext('2d', { willReadFrequently: true }).getImageData(0, 0, width, height);
 
         for (let i = 0; i < arr.length; i++) {
             imageData.data[i] = arr[i];
         }
-        canvas.getContext('2d').putImageData(imageData, 0, 0);
+        canvas.getContext('2d', { willReadFrequently: true }).putImageData(imageData, 0, 0);
         const dataURL = canvas.toDataURL();
         const base64Data = dataURL.replace(/^data:image\/png;base64,/, '');
         fs.writeFileSync(path, base64Data, 'base64');
