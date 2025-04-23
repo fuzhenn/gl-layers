@@ -4,6 +4,7 @@ import { setUniformFromSymbol, wrap, fillArray } from '../../Util';
 import { DEFAULT_MARKER_WIDTH, DEFAULT_MARKER_HEIGHT, GLYPH_SIZE, DEFAULT_ICON_ALPHA_TEST } from '../Constant';
 import { createAtlasTexture, getDefaultMarkerSize } from './atlas_util';
 import { prepareFnTypeData, PREFIX } from './fn_type_util';
+import { prepareTextGeometry, initTextUniforms, initTextMeshDefines } from './create_text_painter';
 // import { getIconBox } from './get_icon_box';
 
 export const BOX_ELEMENT_COUNT = 6;
@@ -11,12 +12,23 @@ export const BOX_VERTEX_COUNT = 4; //每个box有四个顶点数据
 const U8 = new Uint16Array(1);
 const I8 = new Int8Array(1);
 
-export function createMarkerMesh(regl, geometry, transform, symbolDef, symbol, fnTypeConfig, enableCollision, visibleInCollision) {
+export function createMarkerMesh(
+    regl,
+    geometry,
+    transform,
+    symbolDef,
+    symbol,
+    fnTypeConfig,
+    enableCollision,
+    visibleInCollision,
+    enableUniquePlacement
+) {
     if (geometry.isDisposed() || geometry.data.aPosition.length === 0) {
         return null;
     }
-    const iconAtlas = geometry.properties.iconAtlas;
-    if (!iconAtlas && !geometry.properties.isEmpty) {
+    const hasIcon = !!geometry.properties.iconAtlas;
+    const hasText = !!geometry.properties.glyphAtlas;
+    if (!hasIcon && !hasText && !geometry.properties.isEmpty) {
         return null;
     }
     // const symbol = this.getSymbol();
@@ -54,21 +66,13 @@ export function createMarkerMesh(regl, geometry, transform, symbolDef, symbol, f
         geometry.properties.elements = geometry.elements;
         geometry.properties.visElemts = new geometry.elements.constructor(geometry.elements.length);
     }
+    if (hasText) {
+        prepareTextGeometry(geometry, symbolDef, fnTypeConfig.text, enableCollision, visibleInCollision, enableUniquePlacement);
+    }
+    initTextUniforms(uniforms, regl, geometry, symbolDef, symbol);
+    setMeshUniforms(uniforms, regl, geometry, symbol);
 
-
-    const [ defaultMarkerWidth, defaultMarkerHeight ] = getDefaultMarkerSize(geometry);
-    setUniformFromSymbol(uniforms, 'markerOpacity', symbol, 'markerOpacity', 1);
-    setUniformFromSymbol(uniforms, 'markerPerspectiveRatio', symbol, 'markerPerspectiveRatio', symbol.markerTextFit ? 0 : 1);
-    setUniformFromSymbol(uniforms, 'markerWidth', symbol, 'markerWidth', defaultMarkerWidth || DEFAULT_MARKER_WIDTH);
-    setUniformFromSymbol(uniforms, 'markerHeight', symbol, 'markerHeight', defaultMarkerHeight || DEFAULT_MARKER_HEIGHT);
-    setUniformFromSymbol(uniforms, 'markerDx', symbol, 'markerDx', 0);
-    setUniformFromSymbol(uniforms, 'markerDy', symbol, 'markerDy', 0);
-    setUniformFromSymbol(uniforms, 'markerRotation', symbol, 'markerRotation', 0, v => v * Math.PI / 180);
-    setUniformFromSymbol(uniforms, 'pitchWithMap', symbol, 'markerPitchAlignment', 0, v => v === 'map' ? 1 : 0);
-    setUniformFromSymbol(uniforms, 'rotateWithMap', symbol, 'markerRotationAlignment', 0, v => v === 'map' ? 1 : 0);
-
-    uniforms['iconTex'] = iconAtlas ? createAtlasTexture(regl, iconAtlas, false) : null;
-    uniforms['texSize'] = iconAtlas ? [iconAtlas.width, iconAtlas.height] : [0, 0];
+    geometry.properties.memorySize = geometry.getMemorySize();
     geometry.generateBuffers(regl, { excludeElementsInVAO: true });
     const material = new reshader.Material(uniforms);
     const mesh = new reshader.Mesh(geometry, material, {
@@ -82,6 +86,37 @@ export function createMarkerMesh(regl, geometry, transform, symbolDef, symbol, f
     if (enableCollision) {
         defines['ENABLE_COLLISION'] = 1;
     }
+
+    initMeshDefines(geometry, defines);
+    if (hasText) {
+        initTextMeshDefines(mesh, geometry);
+    }
+
+    mesh.setDefines(defines);
+    mesh.setUniform('alphaTest', DEFAULT_ICON_ALPHA_TEST);
+    mesh.setLocalTransform(transform);
+    mesh.properties.symbolIndex = geometry.properties.symbolIndex;
+    return mesh;
+}
+
+function setMeshUniforms(uniforms, regl, geometry, symbol) {
+    const [ defaultMarkerWidth, defaultMarkerHeight ] = getDefaultMarkerSize(geometry);
+    setUniformFromSymbol(uniforms, 'markerOpacity', symbol, 'markerOpacity', 1);
+    setUniformFromSymbol(uniforms, 'markerPerspectiveRatio', symbol, 'markerPerspectiveRatio', symbol.markerTextFit ? 0 : 1);
+    setUniformFromSymbol(uniforms, 'markerWidth', symbol, 'markerWidth', defaultMarkerWidth || DEFAULT_MARKER_WIDTH);
+    setUniformFromSymbol(uniforms, 'markerHeight', symbol, 'markerHeight', defaultMarkerHeight || DEFAULT_MARKER_HEIGHT);
+    setUniformFromSymbol(uniforms, 'markerDx', symbol, 'markerDx', 0);
+    setUniformFromSymbol(uniforms, 'markerDy', symbol, 'markerDy', 0);
+    setUniformFromSymbol(uniforms, 'markerRotation', symbol, 'markerRotation', 0, v => v * Math.PI / 180);
+    setUniformFromSymbol(uniforms, 'pitchWithMap', symbol, 'markerPitchAlignment', 0, v => v === 'map' ? 1 : 0);
+    setUniformFromSymbol(uniforms, 'rotateWithMap', symbol, 'markerRotationAlignment', 0, v => v === 'map' ? 1 : 0);
+
+    const iconAtlas = geometry.properties.iconAtlas;
+    uniforms['iconTex'] = iconAtlas ? createAtlasTexture(regl, iconAtlas, false) : null;
+    uniforms['iconTexSize'] = iconAtlas ? [iconAtlas.width, iconAtlas.height] : [0, 0];
+}
+
+function initMeshDefines(geometry, defines) {
     if (geometry.data.aMarkerWidth) {
         defines['HAS_MARKER_WIDTH'] = 1;
     }
@@ -112,11 +147,6 @@ export function createMarkerMesh(regl, geometry, transform, symbolDef, symbol, f
     if (geometry.data.aAltitude) {
         defines['HAS_ALTITUDE'] = 1;
     }
-    mesh.setDefines(defines);
-    mesh.setUniform('alphaTest', DEFAULT_ICON_ALPHA_TEST);
-    mesh.setLocalTransform(transform);
-    mesh.properties.symbolIndex = geometry.properties.symbolIndex;
-    return mesh;
 }
 
 export function prepareMarkerGeometry(iconGeometry, symbolDef, iconFnTypeConfig, layer) {

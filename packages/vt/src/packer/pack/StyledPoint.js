@@ -30,7 +30,7 @@ export default class StyledPoint {
             return this._shape;
         }
         const { textHorizontalAlignmentFn, textVerticalAlignmentFn, markerHorizontalAlignmentFn, markerVerticalAlignmentFn, textWrapWidthFn } = this._fnTypes;
-        let shape;
+        const shape = {};
         const symbol = this.symbol;
         const iconGlyph = this.getIconAndGlyph();
         const properties = this.feature.properties;
@@ -55,8 +55,8 @@ export default class StyledPoint {
                 textOffset = [symbol['textDx'] / fontScale || 0, symbol['textDy'] / fontScale || 0],
                 wrapWidth = textWrapWidthFn ? textWrapWidthFn(null, properties) : symbol['textWrapWidth'],
                 textWrapWidth = (wrapWidth || 10 * oneEm) / fontScale;
-            shape = {};
-            shape.horizontal = shapeText(
+            const textShape = {};
+            textShape.horizontal = shapeText(
                 text,
                 glyphs,
                 textWrapWidth, //默认为10个字符
@@ -70,11 +70,13 @@ export default class StyledPoint {
                 this.options.isVector3D
             );
             if (isAllowLetterSpacing && textAlongLine && keepUpright) {
-                shape.vertical = shapeText(text, glyphs, textWrapWidth, lineHeight,
+                textShape.vertical = shapeText(text, glyphs, textWrapWidth, lineHeight,
                     textAnchor, 'center', textLetterSpacing, textOffset, oneEm, WritingMode.vertical
                 );
             }
-        } else if (iconGlyph && iconGlyph.icon) {
+            shape.textShape = textShape;
+        }
+        if (iconGlyph && iconGlyph.icon) {
             if (!iconAtlas || !iconAtlas.positions[iconGlyph.icon.url]) {
                 //图片没有载入成功
                 return null;
@@ -82,10 +84,11 @@ export default class StyledPoint {
             const hAlignment = markerHorizontalAlignmentFn ? markerHorizontalAlignmentFn(null, properties) : symbol['markerHorizontalAlignment'];
             const vAlignment = markerVerticalAlignmentFn ? markerVerticalAlignmentFn(null, properties) : symbol['markerVerticalAlignment'];
             const markerAnchor = getAnchor(hAlignment, vAlignment);
-            shape = shapeIcon(iconAtlas.positions[iconGlyph.icon.url], markerAnchor, this.options.isVector3D);
+            const iconShape = shapeIcon(iconAtlas.positions[iconGlyph.icon.url], markerAnchor, this.options.isVector3D);
             if (!this.size) {
-                this.size = shape.image.displaySize;
+                this.size = iconShape.image.displaySize;
             }
+            shape.iconShape = iconShape;
         }
         this._shape = shape;
         return shape;

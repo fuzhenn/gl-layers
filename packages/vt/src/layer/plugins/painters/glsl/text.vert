@@ -131,7 +131,7 @@ void main() {
         float isRotateWithMap = rotateWithMap;
     #endif
 
-    vec2 shape = aShape / 10.0;
+    vec2 shape = aShape.xy / 10.0;
     if (isPitchWithMap == 1.0 && flipY == 0.0) {
         shape = shape * vec2(1.0, -1.0);
     }
@@ -154,7 +154,7 @@ void main() {
             0.0, // Prevents oversized near-field symbols in pitched/overzoomed tiles
             4.0);
     }
-    
+
     #ifdef HAS_ROTATION
         float rotation = -aRotation / 9362.0 - mapRotation * isRotateWithMap;
     #else
@@ -180,7 +180,7 @@ void main() {
     } else {
         cameraScale = projDistance / cameraToCenterDistance;
     }
-    
+
     if (isPitchWithMap == 0.0) {
         vec2 offset = shape * 2.0 / canvasSize;
         gl_Position.xy += offset * perspectiveRatio * projDistance;
@@ -191,7 +191,7 @@ void main() {
         } else {
             offsetScale = tileRatio / zoomScale * cameraScale * perspectiveRatio;
         }
-        
+
         vec2 offset = shape;
         //乘以cameraScale可以抵消相机近大远小的透视效果
         gl_Position = projViewModelMatrix * positionMatrix * vec4(position + vec3(offset, 0.0) * offsetScale, 1.0);

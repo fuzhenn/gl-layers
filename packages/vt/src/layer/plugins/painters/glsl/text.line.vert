@@ -47,7 +47,7 @@ uniform mat4 projViewModelMatrix;
 uniform float textPerspectiveRatio;
 uniform float mapPitch;
 
-uniform vec2 texSize;
+uniform vec2 textTexSize;
 uniform vec2 canvasSize;
 uniform float tileRatio; //EXTENT / tileSize
 
@@ -176,7 +176,7 @@ void main() {
             vGammaScale = mix(1.0, cameraScale, textPerspectiveRatio);
         }
         vGammaScale = clamp(vGammaScale, 0.0, 1.0);
-        vTexCoord = texCoord / texSize;
+        vTexCoord = texCoord / textTexSize;
         vSize = myTextSize;
         #ifdef ENABLE_COLLISION
             vOpacity = aOpacity / 255.0;

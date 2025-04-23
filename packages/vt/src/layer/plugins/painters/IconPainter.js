@@ -8,12 +8,9 @@ import frag from './glsl/marker.frag';
 import pickingVert from './glsl/marker.vert';
 import { getIconBox } from './util/get_icon_box';
 import { isNil, isIconText, getUniqueIds } from '../Util';
-import { createTextMesh, createTextShader, GAMMA_SCALE, isLabelCollides, getLabelEntryKey, getTextFnTypeConfig } from './util/create_text_painter';
+import { GAMMA_SCALE, isLabelCollides, getLabelEntryKey, getTextFnTypeConfig } from './util/create_text_painter';
 import CollisionGroup from './CollisionGroup';
 
-import textVert from './glsl/text.vert';
-import textFrag from './glsl/text.frag';
-import textPickingVert from './glsl/text.vert';
 import { updateOneGeometryFnTypeAttrib } from './util/fn_type_util';
 import { GLYPH_SIZE, ICON_SIZE } from './Constant';
 import { createMarkerMesh, getMarkerFnTypeConfig, prepareMarkerGeometry, prepareLabelIndex, updateMarkerFitSize, BOX_VERTEX_COUNT, BOX_ELEMENT_COUNT } from './util/create_marker_painter';
@@ -123,30 +120,22 @@ class IconPainter extends CollisionPainter {
         return super.createGeometry(glData, features);
     }
 
-    postCreateGeometry(geo, geometries) {
+    postCreateGeometry(geo) {
         const { geometry, symbolIndex } = geo;
         const symbolDef = this.getSymbolDef(symbolIndex);
         const fnTypeConfig = this.getFnTypeConfig(symbolIndex);
-        if (this._isMarkerGeo(geometry)) {
-            if (!geometry.properties.iconAtlas) {
-                geometry.properties.isEmpty = true;
-            } else {
-                this.drawDebugAtlas(geometry.properties.iconAtlas);
-            }
+        if (!geometry.properties.iconAtlas) {
+            geometry.properties.isEmpty = true;
+        } else {
+            this.drawDebugAtlas(geometry.properties.iconAtlas);
             prepareMarkerGeometry(geometry, symbolDef, fnTypeConfig.icon, this.layer);
-        } else if (this._isTextGeo(geometry)) {
-            if (isIconText(symbolDef)) {
-                const len = geometries.length;
-                const lastOne = geometries[len - 1];
-                if (lastOne) {
-                    const { geometry: iconGeometry, symbolIndex: iconSymbolIndex } = lastOne;
-                    if (iconGeometry && iconSymbolIndex.index === symbolIndex.index) {
-                        const map = this.getMap();
-                        const markerTextFit = symbolDef['markerTextFit'];
-                        iconGeometry.properties.textGeo = geometry;
-                        prepareLabelIndex.call(this, map, iconGeometry, geometry, markerTextFit);
-                    }
-                }
+        }
+
+        if (geometry.properties.glyphAtlas) {
+            const markerTextFit = symbolDef['markerTextFit'];
+            if (markerTextFit) {
+                const map = this.getMap();
+                prepareLabelIndex.call(this, map, geometry, geometry, markerTextFit);
             }
         }
     }
@@ -207,27 +196,16 @@ class IconPainter extends CollisionPainter {
         const symbol = this.getSymbol(symbolIndex);
         const fnTypeConfig = this.getFnTypeConfig(symbolIndex);
         const meshes = [];
-        if (this._isMarkerGeo(geometry)) {
-            const mesh = createMarkerMesh(this.regl, geometry, transform, symbolDef, symbol, fnTypeConfig.icon, layer.options['collision'], !enableCollision, this.isEnableUniquePlacement());
-            if (mesh) {
-                mesh.positionMatrix = this.getAltitudeOffsetMatrix();
-                delete mesh.geometry.properties.glyphAtlas;
-                meshes.push(mesh);
-            }
-        } else if (this._isTextGeo(geometry)) {
-            const mesh = createTextMesh.call(this, this.regl, geometry, transform, symbolDef, symbol, fnTypeConfig.text, layer.options['collision'], !enableCollision, this.isEnableUniquePlacement());
-            if (mesh.length) {
-                mesh.forEach(m => {
-                    m.positionMatrix = this.getAltitudeOffsetMatrix();
-                    delete m.geometry.properties.iconAtlas;
-                });
-                meshes.push(...mesh);
-            }
+        const enableUniquePlacement = this.isEnableUniquePlacement();
+        const mesh = createMarkerMesh(this.regl, geometry, transform, symbolDef, symbol, fnTypeConfig, layer.options['collision'], !enableCollision, enableUniquePlacement);
+
+        if (mesh) {
+            mesh.positionMatrix = this.getAltitudeOffsetMatrix();
+            // delete mesh.geometry.properties.glyphAtlas;
+            meshes.push(mesh);
         }
         if (geometry.properties.markerPlacement === 'line') {
             this._rebuildCollideIds(geometry, context);
-        }
-        if (geometry.properties.markerPlacement === 'line') {
             meshes.forEach(m => m.properties.isLinePlacement = true);
         }
         this.prepareCollideIndex(geometry);
@@ -371,22 +349,6 @@ class IconPainter extends CollisionPainter {
         this._updateIconCollision(context.timestamp);
         this._meshesToCheck = [];
         this._endCollision();
-    }
-
-    callCurrentTileShader(uniforms, context) {
-        this.shader.filter = context.sceneFilter ? [this._iconFilter0, context.sceneFilter] : this._iconFilter0;
-        this.callRenderer(this.shader, uniforms, context);
-
-        this._textShader.filter = context.sceneFilter ? [this._textFilter0, context.sceneFilter] : this._textFilter0;
-        this.callRenderer(this._textShader, uniforms, context);
-    }
-
-    callBackgroundTileShader(uniforms, context) {
-        this.shader.filter = context.sceneFilter ? [this._iconFilter1, context.sceneFilter] : this._iconFilter1;
-        this.callRenderer(this.shader, uniforms, context);
-
-        this._textShader.filter = context.sceneFilter ? [this._textFilter1, context.sceneFilter] : this._textFilter1;
-        this.callRenderer(this._textShader, uniforms, context);
     }
 
     isMeshIterable(mesh) {
@@ -758,17 +720,6 @@ class IconPainter extends CollisionPainter {
         });
         this.shader.version = 300;
 
-        const { uniforms, extraCommandProps } = createTextShader.call(this, canvas, this.sceneConfig);
-        //icon的text在intel gpu下不会引起崩溃，可以关闭模板
-        // extraCommandProps.stencil.enable = false;
-        const defines = this._textDefines || {};
-        this._textShader = new reshader.MeshShader({
-            vert: textVert, frag: textFrag,
-            uniforms,
-            extraCommandProps,
-            defines
-        });
-
         if (this.pickingFBO) {
             const markerPicking = new reshader.FBORayPicking(
                 this.renderer,
@@ -795,25 +746,7 @@ class IconPainter extends CollisionPainter {
                 this.pickingFBO,
                 this.getMap()
             );
-            markerPicking.filter = mesh => {
-                return !!mesh.geometry.properties.iconAtlas;
-            };
-
-            const textPicking = new reshader.FBORayPicking(
-                this.renderer,
-                {
-                    vert: '#define PICKING_MODE 1\n' + textPickingVert,
-                    uniforms,
-                    extraCommandProps
-                },
-                this.pickingFBO,
-                this.getMap()
-            );
-            textPicking.filter = mesh => {
-                return !!mesh.geometry.properties.glyphAtlas;
-            };
-
-            this.picking = [markerPicking, textPicking];
+            this.picking = [markerPicking];
         }
     }
 

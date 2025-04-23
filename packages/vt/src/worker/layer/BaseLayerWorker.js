@@ -549,26 +549,21 @@ export default class BaseLayerWorker {
             options = extend(options, {
                 requestor: this.fetchIconGlyphs.bind(this),
                 //把 altitude 转为瓦片坐标
-                altitudeToTileScale: zScale * extent / this.options['tileSize'] / glScale
+                altitudeToTileScale: zScale * extent / this.options['tileSize'] / glScale,
+                pluginType: pluginConfig.renderPlugin.type
             });
             // 如果同时定义了 marker 属性和text属性，textPlacement， textSpacing会被markerPlacement，markerSpacing代替
-            const symbols = PointPack.splitPointSymbol(symbol);
-            const fnTypes = VectorPack.genFnTypes(symbols[0]);
-            if (PointPack.needMerge(symbols[0], fnTypes, zoom)) {
-                features = PointPack.mergeLineFeatures(features, symbols[0], fnTypes, zoom);
+            // const symbols = PointPack.splitPointSymbol(symbol);
+            const fnTypes = VectorPack.genFnTypes(symbol);
+            if (PointPack.needMerge(symbol, fnTypes, zoom)) {
+                features = PointPack.mergeLineFeatures(features, symbol, fnTypes, zoom);
             }
-            return Promise.all(symbols.map((symbol, index) => {
-                if (index === 0) {
-                    options.fnTypes = fnTypes;
-                } else {
-                    delete options.fnTypes;
-                }
-                return new PointPack(features, symbol, options).load(tileRatio);
-            }));
+            return parseSymbolAndGenPromises(features, symbol, options, PointPack, tileRatio);
+            // return new PointPack(features, symbol, options).load(tileRatio);
         } else if (type === 'native-point') {
             const altitudeToTileScale = zScale * extent / this.options['tileSize'] / glScale;
             options.altitudeToTileScale = altitudeToTileScale;
-            return parseSymbolAndGenPromises(features, symbol, options, NativePointPack, extent / tileSize);
+            return parseSymbolAndGenPromises(features, symbol, options, NativePointPack, tileRatio);
         } else if (type === 'line') {
             options = extend(options, {
                 requestor: this.fetchIconGlyphs.bind(this),
