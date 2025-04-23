@@ -70,6 +70,7 @@ class IconPainter extends CollisionPainter {
         this._textFilter0 = TEXT_FILTER.bind(this);
         this._textFilter1 = TEXT_FILTER_N.bind(this);
         this._meshesToCheck = [];
+        this._emptyTexture = regl.texture(2);
     }
 
     needToRefreshTerrainTileOnZooming() {
@@ -197,12 +198,16 @@ class IconPainter extends CollisionPainter {
         const fnTypeConfig = this.getFnTypeConfig(symbolIndex);
         const meshes = [];
         const enableUniquePlacement = this.isEnableUniquePlacement();
-        const mesh = createMarkerMesh(this.regl, geometry, transform, symbolDef, symbol, fnTypeConfig, layer.options['collision'], !enableCollision, enableUniquePlacement);
+        const markerMeshes = createMarkerMesh.call(this, this.regl, geometry, transform, symbolDef, symbol, fnTypeConfig, layer.options['collision'], !enableCollision, enableUniquePlacement);
 
-        if (mesh) {
-            mesh.positionMatrix = this.getAltitudeOffsetMatrix();
+        if (markerMeshes.length) {
+            const positionMatrix = this.getAltitudeOffsetMatrix();
+            markerMeshes[0].positionMatrix = positionMatrix;
+            if (markerMeshes[1]) {
+                markerMeshes[1].positionMatrix = positionMatrix;
+            }
             // delete mesh.geometry.properties.glyphAtlas;
-            meshes.push(mesh);
+            meshes.push(...markerMeshes);
         }
         if (geometry.properties.markerPlacement === 'line') {
             this._rebuildCollideIds(geometry, context);
@@ -799,6 +804,14 @@ class IconPainter extends CollisionPainter {
     _isTextGeo(geo) {
         const { symbolIndex } = geo.properties;
         return symbolIndex.type === 1;
+    }
+
+    delete() {
+        if (this._emptyTexture) {
+            this._emptyTexture.destroy();
+            this._emptyTexture = null;
+        }
+        return super.delete();
     }
 }
 

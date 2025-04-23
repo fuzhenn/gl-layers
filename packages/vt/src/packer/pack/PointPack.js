@@ -263,7 +263,11 @@ export default class PointPack extends VectorPack {
     }
 
     _getTextFnTypeFormats() {
-        const { textFillFn, textSizeFn, textHaloFillFn, textHaloRadiusFn, textHaloOpacityFn } = this._fnTypes;
+        const { textFillFn, textSizeFn,
+            textHaloFillFn, textHaloRadiusFn,
+            textDxFn, textDyFn,
+            textHaloOpacityFn
+        } = this._fnTypes;
         const formats = [];
         if (textFillFn) {
             formats.push({
@@ -300,20 +304,20 @@ export default class PointPack extends VectorPack {
                 name: 'aTextHaloOpacity'
             });
         }
-        // if (textDxFn) {
-        //     formats.push({
-        //         type: Int8Array,
-        //         width: 1,
-        //         name: 'aTextDx'
-        //     });
-        // }
-        // if (textDyFn) {
-        //     formats.push({
-        //         type: Int8Array,
-        //         width: 1,
-        //         name: 'aTextDy'
-        //     });
-        // }
+        if (textDxFn) {
+            formats.push({
+                type: Int8Array,
+                width: 1,
+                name: 'aTextDx'
+            });
+        }
+        if (textDyFn) {
+            formats.push({
+                type: Int8Array,
+                width: 1,
+                name: 'aTextDy'
+            });
+        }
         return formats;
     }
 

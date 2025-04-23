@@ -79,8 +79,6 @@ uniform float markerPerspectiveRatio;
 
 uniform float glyphSize;
 uniform vec2 iconSize;
-uniform vec2 iconTexSize;
-uniform vec2 textTexSize;
 uniform vec2 canvasSize;
 uniform float mapPitch;
 uniform float mapRotation;
@@ -95,10 +93,11 @@ uniform float isRenderingTerrain;
 #include <vt_position_vert>
 
 #ifndef PICKING_MODE
+    varying float vIsText;
     varying vec2 vTexCoord;
     varying float vOpacity;
     varying float vGammaScale;
-    varying float vSize;
+    varying float vTextSize;
 
     #ifdef HAS_TEXT_FILL
         attribute vec4 aTextFill;
@@ -194,17 +193,19 @@ void main() {
     float angleCos = cos(rotation);
 
     mat2 shapeMatrix = mat2(angleCos, -1.0 * angleSin, angleSin, angleCos);
+
     vec2 shape = (aShape / 10.0);
     if (isPitchWithMap == 1.0 && flipY == 0.0) {
         shape *= vec2(1.0, -1.0);
     }
 
     float isText = aTexCoord.z;
+    vIsText = isText;
     #ifdef HAS_PAD_OFFSET
         // aPadOffsetX - 1.0 是为了解决1个像素偏移的问题, fuzhenn/maptalks-designer#638
         shape = (shape / iconSize * vec2(myMarkerWidth, myMarkerHeight) + vec2(aPadOffsetX - 1.0, aPadOffsetY)) * layerScale;
     #else
-        if (isText == 1.0) {
+        if (isText > 0.5) {
             shape = shape / glyphSize * myTextSize;
         } else {
             shape = shape / iconSize * vec2(myMarkerWidth, myMarkerHeight) * layerScale;
@@ -224,7 +225,7 @@ void main() {
     if (isPitchWithMap == 0.0) {
         vec2 offset = shape * 2.0 / canvasSize;
         gl_Position.xy += offset * perspectiveRatio * projDistance;
-    } else if (isText == 1.0) {
+    } else if (isText > 0.5) {
         float offsetScale;
         if (isRenderingTerrain == 1.0) {
             offsetScale = tileRatio / zoomScale;
@@ -243,12 +244,6 @@ void main() {
     gl_Position.xy += vec2(myMarkerDx, -myMarkerDy) * 2.0 / canvasSize * projDistance;
 
     #ifndef PICKING_MODE
-        vec2 texSize;
-        if (isText == 1.0) {
-            texSize = textTexSize;
-        } else {
-            texSize = iconTexSize;
-        }
         if (isPitchWithMap == 0.0) {
             //当textPerspective:
             //值为1.0时: vGammaScale用cameraScale动态计算
@@ -259,8 +254,9 @@ void main() {
         }
         vGammaScale = clamp(vGammaScale, 0.0, 1.0);
 
-        vTexCoord = aTexCoord.xy / texSize;
+        vTexCoord = aTexCoord.xy;
 
+        vTextSize = myTextSize;
         #ifdef ENABLE_COLLISION
             vOpacity = aOpacity / 255.0;
         #else

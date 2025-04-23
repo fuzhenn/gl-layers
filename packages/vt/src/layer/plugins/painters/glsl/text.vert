@@ -57,7 +57,7 @@ uniform mat4 positionMatrix;
 uniform mat4 projViewModelMatrix;
 uniform float textPerspectiveRatio;
 
-uniform vec2 texSize;
+uniform vec2 glyphTexSize;
 uniform vec2 canvasSize;
 uniform float glyphSize;
 uniform float mapPitch;
@@ -72,7 +72,7 @@ uniform float isRenderingTerrain;
 #ifndef PICKING_MODE
     varying vec2 vTexCoord;
     varying float vGammaScale;
-    varying float vSize;
+    varying float vTextSize;
     varying float vOpacity;
 
     #ifdef HAS_TEXT_FILL
@@ -131,12 +131,6 @@ void main() {
         float isRotateWithMap = rotateWithMap;
     #endif
 
-    vec2 shape = aShape.xy / 10.0;
-    if (isPitchWithMap == 1.0 && flipY == 0.0) {
-        shape = shape * vec2(1.0, -1.0);
-    }
-    vec2 texCoord = aTexCoord;
-
     gl_Position = projViewModelMatrix * positionMatrix * vec4(position, 1.0);
     float projDistance = gl_Position.w;
 
@@ -172,7 +166,14 @@ void main() {
     float angleCos = cos(rotation);
 
     mat2 shapeMatrix = mat2(angleCos, -1.0 * angleSin, angleSin, angleCos);
+
+    vec2 shape = aShape.xy / 10.0;
+    if (isPitchWithMap == 1.0 && flipY == 0.0) {
+        shape = shape * vec2(1.0, -1.0);
+    }
+    vec2 texCoord = aTexCoord;
     shape = shapeMatrix * (shape / glyphSize * myTextSize);
+
 
     float cameraScale;
     if (isRenderingTerrain == 1.0) {
@@ -208,10 +209,10 @@ void main() {
         } else {
             vGammaScale = cameraScale + mapPitch / 4.0;
         }
-        vTexCoord = texCoord / texSize;
+        vTexCoord = texCoord / glyphTexSize;
         vGammaScale = clamp(vGammaScale, 0.0, 1.0);
 
-        vSize = myTextSize;
+        vTextSize = myTextSize;
         #ifdef ENABLE_COLLISION
             vOpacity = aOpacity / 255.0;
         #else

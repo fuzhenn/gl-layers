@@ -1,6 +1,6 @@
 import { reshader } from '@maptalks/gl';
 import { interpolated, piecewiseConstant, isFunctionDefinition } from '@maptalks/function-type';
-import { setUniformFromSymbol, wrap, fillArray } from '../../Util';
+import { extend, setUniformFromSymbol, wrap, fillArray } from '../../Util';
 import { DEFAULT_MARKER_WIDTH, DEFAULT_MARKER_HEIGHT, GLYPH_SIZE, DEFAULT_ICON_ALPHA_TEST } from '../Constant';
 import { createAtlasTexture, getDefaultMarkerSize } from './atlas_util';
 import { prepareFnTypeData, PREFIX } from './fn_type_util';
@@ -27,17 +27,12 @@ export function createMarkerMesh(
         return null;
     }
     const hasIcon = !!geometry.properties.iconAtlas;
-    const hasText = !!geometry.properties.glyphAtlas;
+    const glyphAtlas = geometry.properties.glyphAtlas;
+    const hasText = !!glyphAtlas;
     if (!hasIcon && !hasText && !geometry.properties.isEmpty) {
         return null;
     }
-    // const symbol = this.getSymbol();
-    // geometry.properties.symbol = symbol;
-    const uniforms = {
-        flipY: 0,
-        tileResolution: geometry.properties.tileResolution,
-        tileRatio: geometry.properties.tileRatio
-    };
+
 
     //!geometry.properties.aShape 以避免重复创建collision数据
     if (!geometry.properties.aShape) {
@@ -67,36 +62,69 @@ export function createMarkerMesh(
         geometry.properties.visElemts = new geometry.elements.constructor(geometry.elements.length);
     }
     if (hasText) {
-        prepareTextGeometry(geometry, symbolDef, fnTypeConfig.text, enableCollision, visibleInCollision, enableUniquePlacement);
+        prepareTextGeometry.call(this, geometry, symbolDef, fnTypeConfig.text, enableCollision, visibleInCollision, enableUniquePlacement);
     }
-    initTextUniforms(uniforms, regl, geometry, symbolDef, symbol);
-    setMeshUniforms(uniforms, regl, geometry, symbol);
 
     geometry.properties.memorySize = geometry.getMemorySize();
     geometry.generateBuffers(regl, { excludeElementsInVAO: true });
-    const material = new reshader.Material(uniforms);
-    const mesh = new reshader.Mesh(geometry, material, {
+
+    // const symbol = this.getSymbol();
+    // geometry.properties.symbol = symbol;
+    const uniforms = {
+        flipY: 0,
+        tileResolution: geometry.properties.tileResolution,
+        tileRatio: geometry.properties.tileRatio
+    };
+    initTextUniforms(uniforms, regl, geometry, symbolDef, symbol);
+    setMeshUniforms.call(this, uniforms, regl, geometry, symbol);
+    uniforms.isHalo = 0;
+
+    const meshes = [];
+    const meshConfig = {
         // 必须关闭VAO，否则对vao中elements的更新会导致halo绘制出错
         disableVAO: true,
         transparent: true,
         castShadow: false,
         picking: true
-    });
+    };
+    let haloMesh;
+    if (hasText) {
+        const uniforms1 = extend({}, uniforms);
+        uniforms1.isHalo = 1;
+        const material = new reshader.Material(uniforms1);
+        haloMesh = new reshader.Mesh(geometry, material, meshConfig);
+        haloMesh.properties.isHalo = 1;
+        haloMesh.setUniform('alphaTest', DEFAULT_ICON_ALPHA_TEST);
+        haloMesh.setLocalTransform(transform);
+        // meshes.push(haloMesh);
+    }
+
+    const material = new reshader.Material(uniforms);
+    const mesh = new reshader.Mesh(geometry, material, meshConfig);
     const defines = {};
     if (enableCollision) {
         defines['ENABLE_COLLISION'] = 1;
     }
 
     initMeshDefines(geometry, defines);
+    if (haloMesh) {
+        const haloDefines = extend({}, defines);
+        initTextMeshDefines(defines, haloMesh);
+        haloMesh.setDefines(haloDefines);
+    }
     if (hasText) {
-        initTextMeshDefines(mesh, geometry);
+        initTextMeshDefines(defines, mesh);
     }
 
     mesh.setDefines(defines);
     mesh.setUniform('alphaTest', DEFAULT_ICON_ALPHA_TEST);
     mesh.setLocalTransform(transform);
     mesh.properties.symbolIndex = geometry.properties.symbolIndex;
-    return mesh;
+    if (haloMesh) {
+        mesh.properties.haloMesh = haloMesh;
+    }
+    meshes.push(mesh);
+    return meshes;
 }
 
 function setMeshUniforms(uniforms, regl, geometry, symbol) {
@@ -112,7 +140,7 @@ function setMeshUniforms(uniforms, regl, geometry, symbol) {
     setUniformFromSymbol(uniforms, 'rotateWithMap', symbol, 'markerRotationAlignment', 0, v => v === 'map' ? 1 : 0);
 
     const iconAtlas = geometry.properties.iconAtlas;
-    uniforms['iconTex'] = iconAtlas ? createAtlasTexture(regl, iconAtlas, false) : null;
+    uniforms['iconTex'] = iconAtlas ? createAtlasTexture(regl, iconAtlas, false) : this._emptyTexture;
     uniforms['iconTexSize'] = iconAtlas ? [iconAtlas.width, iconAtlas.height] : [0, 0];
 }
 

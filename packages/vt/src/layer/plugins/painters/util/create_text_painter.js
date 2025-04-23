@@ -17,6 +17,10 @@ import { getLabelContent } from './get_label_content';
 import { createAtlasTexture } from './atlas_util';
 import { INVALID_PROJECTED_ANCHOR } from '../../../../common/Constant';
 
+import text_render_frag from '../glsl/text_render.frag';
+
+reshader.ShaderLib.register('text_render_frag', text_render_frag);
+
 const GAMMA_SCALE = 1;
 const BOX_ELEMENT_COUNT = 6;
 
@@ -92,13 +96,16 @@ export function createTextMesh(regl, geometry, transform, symbolDef, symbol, fnT
 
     if (uniforms['isHalo']) {
         //TODO 需要在IconPainter中初始化halo的mesh
-        const textMesh = createHaloTextMesh.call(this, geometry, symbol, uniforms.texture, glyphAtlas, enableCollision, transform);
+        const textMesh = createHaloTextMesh.call(this, geometry, symbol, uniforms.glyphTex, glyphAtlas, enableCollision, transform);
         textMesh.properties.haloMesh = mesh;
         meshes.push(textMesh);
     }
 
     meshes.forEach(m => {
-        initTextMeshDefines(m, geometry);
+        const defines = m.defines || {};
+        initTextMeshDefines(defines, m);
+        m.setDefines(defines);
+        m.properties.symbolIndex = geometry.properties.symbolIndex;
     });
 
     return meshes;
@@ -120,8 +127,8 @@ export function createHaloTextMesh(
         flipY: 0,
         tileResolution: geometry.properties.tileResolution,
         tileRatio: geometry.properties.tileRatio,
-        texture: glyphTexture,
-        texSize: [glyphAtlas.width, glyphAtlas.height],
+        glyphTex: glyphTexture,
+        glyphTexSize: [glyphAtlas.width, glyphAtlas.height],
         isHalo: 0
     };
     setMeshUniforms(geometry, uniforms1, symbol);
@@ -213,15 +220,15 @@ export function initTextUniforms(uniforms, regl, geometry, symbol) {
         flipY: 0,
         tileResolution: geometry.properties.tileResolution,
         tileRatio: geometry.properties.tileRatio,
-        texture: glyphTexture,
-        textTexSize: [glyphAtlas && glyphAtlas.width || 0, glyphAtlas && glyphAtlas.height || 0]
+        glyphTex: glyphTexture,
+        glyphTexSize: [glyphAtlas && glyphAtlas.width || 0, glyphAtlas && glyphAtlas.height || 0]
     });
     setMeshUniforms(geometry, uniforms, symbol);
     return uniforms;
 }
 
-export function initTextMeshDefines(mesh, geometry) {
-    const defines = mesh.defines || {};
+export function initTextMeshDefines(defines, mesh) {
+    const geometry = mesh.geometry;
     if (geometry.data.aTextFill) {
         defines['HAS_TEXT_FILL'] = 1;
     }
@@ -261,8 +268,6 @@ export function initTextMeshDefines(mesh, geometry) {
     if (geometry.properties.aOffset && geometry.properties.aShape && geometry.properties.aOffset.length !== geometry.properties.aShape.length) {
         defines['HAS_OFFSET_Z'] = 1;
     }
-    mesh.setDefines(defines);
-    mesh.properties.symbolIndex = geometry.properties.symbolIndex;
 }
 
 function prepareGeometry(geometry, enableCollision, visibleInCollision) {
