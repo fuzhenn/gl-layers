@@ -755,7 +755,7 @@ describe('setMask', () => {
         gltflayer.setMask([mask2, mask1]);
     });
 
-    it('translate mask(#854)', done => {
+    it('setCoordinates for mask(#854)', done => {
         const gltflayer = new maptalks.GLTFLayer('gltf');
         const marker = new maptalks.GLTFGeometry(center, {
             symbol: {
@@ -783,8 +783,10 @@ describe('setMask', () => {
         gltflayer.setMask([mask]);
 
         function translateMask() {
-            const newCoord = center.copy().add(0.0004, 0);//右移0.0004
-            mask.translateTo(newCoord);
+            coords.forEach((coord) => {
+                coord[0] += 0.0004;
+            });
+            mask.setCoordinates(coords);
             setTimeout(() => {
                 const pixel1 = pickPixel(map, map.width / 2, map.height / 2, 1, 1);
                 expect(pixelMatch([9, 14, 15, 255], pixel1)).to.be.eql(true);

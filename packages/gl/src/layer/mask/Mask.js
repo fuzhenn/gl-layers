@@ -1,6 +1,6 @@
-import { Coordinate, Polygon, Point, Extent } from "maptalks";
+import { Coordinate, Polygon, Point } from "maptalks";
 import * as reshader from '@maptalks/reshader.gl';
-import { mat4, quat, vec3, vec4 } from '@maptalks/reshader.gl';
+import { mat4, quat} from '@maptalks/reshader.gl';
 import { earcut } from '@maptalks/reshader.gl';
 import { coordinateToWorld, normalizeColor, isNumber } from "../util/util";
 
@@ -14,7 +14,6 @@ const DEFAULT_SYMBOL = {
 };
 const TRIANGLE_POINT_A = new Coordinate(0, 0), TRIANGLE_POINT_B = new Coordinate(0, 0), TRIANGLE = [];
 const TEMP_COORD = new Coordinate(0, 0), TEMP_POINT0 = new Point(0, 0), TEMP_POINT1 = new Point(0, 0), TEMP_POINT2 = new Point(0, 0);
-const EMPTY_VEC3 = [], EMPTY_VEC4 = [], EMPTY_MAT4 = [];
 export default class Mask extends Polygon {
     getMode() {
         return this._mode;
@@ -42,7 +41,43 @@ export default class Mask extends Polygon {
         return this._mesh;
     }
 
+    setCoordinates(coordinates) {
+        super.setCoordinates(coordinates);
+        const layer = this.getLayer();
+        if (layer) {
+            delete layer['_maskProjViewMatrix'];
+            delete layer['_maskExtentInWorld'];
+        }
+        if (!this._mesh) {
+            return this;
+        }
+        const pos = this._createPOSITION();
+        const geometry = this._mesh.geometry;
+        geometry.updateData('POSITION', pos);
+        this._setLocalTransform(this._mesh);
+    }
+
     _createGeometry(regl) {
+        const geojson = this.toGeoJSON();
+        const data = earcut.flatten(geojson.geometry.coordinates);
+        const dimension = data.dimensions;
+        const pos = this._createPOSITION();
+        const triangles = earcut(pos, data.holes, 3);
+        const geometry = new reshader.Geometry({
+            POSITION: pos,
+            TEXCOORD: this._createTexcoords(data.vertices, dimension)
+        },
+            triangles,
+            0,
+            {
+                positionAttribute: 'POSITION',
+                uv0Attribute: 'TEXCOORD'
+            });
+        geometry.generateBuffers(regl);
+        return geometry;
+    }
+
+    _createPOSITION() {
         const map = this.getMap();
         const geojson = this.toGeoJSON();
         const data = earcut.flatten(geojson.geometry.coordinates);
@@ -64,19 +99,7 @@ export default class Mask extends Polygon {
             pos.push(data.vertices[i * dimension + 1] - centerPos[1]);
             pos.push(heightOffset);
         }
-        const triangles = earcut(pos, data.holes, 3);
-        const geometry = new reshader.Geometry({
-            POSITION: pos,
-            TEXCOORD: this._createTexcoords(data.vertices, dimension)
-        },
-            triangles,
-            0,
-            {
-                positionAttribute: 'POSITION',
-                uv0Attribute: 'TEXCOORD'
-            });
-        geometry.generateBuffers(regl);
-        return geometry;
+        return pos;
     }
 
     _createTexcoords(vertices, dimension) {
@@ -126,52 +149,6 @@ export default class Mask extends Polygon {
         mesh.localTransform = mMatrix;
     }
 
-    translateTo(coordinate) {
-        const layer = this.getLayer();
-        if (!this._mesh || !layer) {
-            return;
-        }
-        const map = this.getMap();
-        const point = coordinateToWorld(map, coordinate);
-        const centerPos = coordinateToWorld(map, this.getCenter());
-        const offset = vec3.sub(EMPTY_VEC3, point, centerPos);
-        this._offset = offset;
-        if (!this._mesh['_originalTransform']) {
-            this._mesh['_originalTransform'] = mat4.copy(this._mesh['_originalTransform'] || [], this._mesh.localTransform);
-        }
-        this._mesh.localTransform = mat4.translate(this._mesh.localTransform, this._mesh['_originalTransform'], offset);
-        if (layer._originalExtent) {
-            layer._maskExtentInWorld = vec4.add(EMPTY_VEC4, layer._originalExtent, vec4.set(EMPTY_VEC4, offset[0], offset[1], offset[0], offset[1]));  
-        }
-        const ext = layer._maskExtentInWorld;
-        const coord1 = map.pointAtResToCoordinate(new Point(ext[0], ext[1]), map.getGLRes());
-        const coord2 = map.pointAtResToCoordinate(new Point(ext[2], ext[3]), map.getGLRes());
-        const extent = new Extent(coord1.x, coord1.y, coord2.x, coord2.y);
-        this._offsetExtent = extent;
-        layer._maskProjViewMatrix = this._updateProjViewMatrix(extent);
-    }
-
-    getOffset() {
-        return this._offset;
-    }
-
-    getExtent() {
-        if (this._offsetExtent) {
-            return this._offsetExtent;
-        }
-        return super.getExtent();
-    }
-
-    _updateProjViewMatrix(extent) {
-        const map = this.getMap();
-        const preView = map.getView();
-        const zoom = map.getFitZoom(extent);
-        const center = extent.getCenter();
-        map.setView({ center, zoom, pitch: 0, bearing: 0 });
-        const pvMatrix = mat4.copy(EMPTY_MAT4, map.projViewMatrix);
-        map.setView(preView);
-        return pvMatrix;
-    }
 
     _dispose() {
         if (!this._mesh) {

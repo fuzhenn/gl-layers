@@ -1,5 +1,5 @@
 import { Coordinate, Extent } from "maptalks";
-import { mat4, vec3, vec4 } from '@maptalks/reshader.gl';
+import { mat4, vec3 } from '@maptalks/reshader.gl';
 import Mask from "./Mask";
 import { extend } from "../util/util";
 import { MixinConstructor } from "maptalks";
@@ -58,8 +58,6 @@ export default function <T extends MixinConstructor>(Base: T) {
         _maskProjViewMatrix: number[];
         //@internal
         _maskExtentInWorld: [number, number, number, number];
-        //@internal
-        _originalExtent: vec4;
 
         removeMask(masks: undefined | null | any) {
             if (!this['_maskList']) {
@@ -209,7 +207,6 @@ export default function <T extends MixinConstructor>(Base: T) {
                 const { projViewMatrix, extentInWorld } = this.updateMask(extent);
                 this._maskProjViewMatrix = projViewMatrix;
                 this._maskExtentInWorld = extentInWorld;
-                this._originalExtent = vec4.copy([0, 0, 0, 0], extentInWorld);
             }
             if (renderer) {
                 renderer.setMask(this._maskExtentInWorld, this._maskProjViewMatrix, ratio, minHeight);
