@@ -44,7 +44,7 @@ const options: GroupGLLayerOptions = {
 };
 
 //
-const emptyMethod = () => {};
+const emptyMethod = () => { return; };
 const EMPTY_COORD0 = new maptalks.Coordinate(0, 0);
 const TEMP_VEC3: vec3 = [0, 0, 0];
 const coord0: [number, number, number] = [0, 0, 0], coord1: [number, number, number] = [0, 0, 0];
@@ -785,7 +785,7 @@ export default class GroupGLLayer extends maptalks.Layer {
 (GroupGLLayer as any).registerRenderer('gl', Renderer);
 (GroupGLLayer as any).registerRenderer('canvas', null);
 
-function empty() {}
+function empty() { return }
 
 function sortLayersByZIndex(a: maptalks.Layer, b: maptalks.Layer) {
     const c = a.getZIndex() - b.getZIndex();
