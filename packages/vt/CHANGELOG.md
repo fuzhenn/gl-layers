@@ -1,5 +1,19 @@
 # @maptalks/vt
 
+## 0.104.0
+
+### Minor Changes
+
+- fix maptalks/issues#836
+  fix aPickingId in gltf-lit
+  add setCoordinates in Mask
+  add fogFactor in LineStringLayer
+
+### Patch Changes
+
+- Updated dependencies
+  - @maptalks/gl@0.105.0
+
 ## 0.103.5
 
 ### Patch Changes

@@ -1,5 +1,14 @@
 # @maptalks/fusiongl
 
+## 0.9.2
+
+### Patch Changes
+
+- fix maptalks/issues#836
+  fix aPickingId in gltf-lit
+  add setCoordinates in Mask
+  add fogFactor in LineStringLayer
+
 ## 0.9.1
 
 ### Patch Changes

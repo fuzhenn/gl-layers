@@ -1,5 +1,14 @@
 # @maptalks/gltf-layer
 
+## 0.103.3
+
+### Patch Changes
+
+- fix maptalks/issues#836
+  fix aPickingId in gltf-lit
+  add setCoordinates in Mask
+  add fogFactor in LineStringLayer
+
 ## 0.103.2
 
 ### Patch Changes
