@@ -818,7 +818,9 @@ class IconPainter extends CollisionPainter {
 
     delete() {
         if (this._emptyTexture) {
-            this._emptyTexture.destroy();
+            if (!reshader.Util.isTextureDestroyed(this._emptyTexture)) {
+                this._emptyTexture.destroy();
+            }
             this._emptyTexture = null;
         }
         return super.delete();

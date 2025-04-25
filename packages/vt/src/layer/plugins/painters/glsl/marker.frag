@@ -26,7 +26,6 @@ void main() {
     if (vIsText > 0.5) {
         fragColor = renderText(vTexCoord / glyphTexSize);
     } else {
-        // fragColor = renderText(vTexCoord / glyphTexSize);
         fragColor = texture2D(iconTex, vTexCoord / iconTexSize) * markerOpacity;
     }
 

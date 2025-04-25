@@ -220,7 +220,7 @@ export function initTextUniforms(uniforms, regl, geometry, symbol) {
         flipY: 0,
         tileResolution: geometry.properties.tileResolution,
         tileRatio: geometry.properties.tileRatio,
-        glyphTex: glyphTexture,
+        glyphTex: glyphTexture || this._emptyTexture,
         glyphTexSize: [glyphAtlas && glyphAtlas.width || 0, glyphAtlas && glyphAtlas.height || 0]
     });
     setMeshUniforms(geometry, uniforms, symbol);

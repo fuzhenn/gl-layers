@@ -75,7 +75,7 @@ export function createMarkerMesh(
         tileResolution: geometry.properties.tileResolution,
         tileRatio: geometry.properties.tileRatio
     };
-    initTextUniforms(uniforms, regl, geometry, symbolDef, symbol);
+    initTextUniforms.call(this, uniforms, regl, geometry, symbolDef, symbol);
     setMeshUniforms.call(this, uniforms, regl, geometry, symbol);
     uniforms.isHalo = 0;
 
