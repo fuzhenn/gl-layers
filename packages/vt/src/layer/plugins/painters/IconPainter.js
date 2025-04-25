@@ -125,7 +125,7 @@ class IconPainter extends CollisionPainter {
         const { geometry, symbolIndex } = geo;
         const symbolDef = this.getSymbolDef(symbolIndex);
         const fnTypeConfig = this.getFnTypeConfig(symbolIndex);
-        if (!geometry.properties.iconAtlas) {
+        if (!geometry.properties.iconAtlas && !geometry.properties.glyphAtlas) {
             geometry.properties.isEmpty = true;
         } else {
             this.drawDebugAtlas(geometry.properties.iconAtlas);
@@ -149,11 +149,10 @@ class IconPainter extends CollisionPainter {
         // aPickingIds 中存放的 KEY_IDX 的值
         // Vector3DLayer 中，feature有多个symbol时，会有多个数据的 feature.id 相同，但KEY_IDX不同的情况存在
         // 但 feature.id 可能不存在（比如mapbox的vt在线服务），aPickingId一定存在，所以遍历用的id数组优先选用 collideIds，没有的话就选用aPickingId
-        const { collideIds, elements, aCount } = geo.properties;
+        const { collideIds, elements, aCount, aType } = geo.properties;
         if (!collideIds) {
             return;
         }
-        const ids = collideIds;
         const collideBoxIndex = {};
         if (!elements) {
             // an empty icon
@@ -163,7 +162,8 @@ class IconPainter extends CollisionPainter {
 
         let index = 0;
         let idx = elements[0];
-        let start = 0, current = ids[idx];
+        let start = 0, current = collideIds[idx];
+        let type = aType[0];
         let charCount = 1;
         if (aCount) {
             charCount = aCount[elements[start]];
@@ -171,14 +171,18 @@ class IconPainter extends CollisionPainter {
         for (let ii = 0; ii <= elements.length; ii += BOX_ELEMENT_COUNT) {
             idx = elements[ii];
             //pickingId发生变化，新的feature出现
-            if (ids[idx] !== current || ii === elements.length) {
-                collideBoxIndex[current] = [
+            if (collideIds[idx] !== current || type !== aType[idx] || ii === elements.length) {
+                if (!collideBoxIndex[current]) {
+                    collideBoxIndex[current] = [];
+                }
+                collideBoxIndex[current].push([
                     start,
                     ii,
                     (ii - start) / (charCount * BOX_ELEMENT_COUNT),
                     index++
-                ];
-                current = ids[idx];
+                ]);
+                current = collideIds[idx];
+                type = aType[idx];
                 start = ii;
                 if (aCount) {
                     charCount = aCount[elements[start]];
@@ -452,8 +456,8 @@ class IconPainter extends CollisionPainter {
         const map = this.getMap();
         // TODO  meshes[0]可能是不合法的数据
         const { collideBoxIndex } = mesh.meshes[0].geometry.properties;
-        const boxInfo = collideBoxIndex && collideBoxIndex[collideId];
-        if (!boxInfo) {
+        const boxInfos = collideBoxIndex && collideBoxIndex[collideId];
+        if (!boxInfos || !boxInfos.length) {
             return false;
         }
         const matrix = mat4.multiply(PROJ_MATRIX, map.projViewMatrix, mesh.meshes[0].localTransform);
@@ -467,41 +471,44 @@ class IconPainter extends CollisionPainter {
                 continue;
             }
             const { collideBoxIndex } = meshes[j].geometry.properties;
-            const boxInfo = collideBoxIndex[collideId];
-            if (!boxInfo) {
+            const boxInfos = collideBoxIndex[collideId];
+            if (!boxInfos) {
                 continue;
             }
-            count++;
+            count += boxInfos.length;
         }
         if (!count) {
             return false;
         }
         meshBoxes = this._getMeshBoxes(count);
         let index = 0;
-        for (let j = 0; j < meshes.length; j++) {
-            const mesh = meshes[j];
+        for (let i = 0; i < meshes.length; i++) {
+            const mesh = meshes[i];
             if (!this.isMeshIterable(mesh)) {
                 continue;
             }
             updated = true;
-            const geoProps = meshes[j].geometry.properties;
+            const geoProps = mesh.geometry.properties;
             const { elements, aCount, collideBoxIndex } = geoProps;
-            const boxInfo = collideBoxIndex[collideId];
-            if (!boxInfo) {
+            const boxInfos = collideBoxIndex[collideId];
+            if (!boxInfos) {
                 continue;
             }
-            const [start, end, boxCount] = boxInfo;
-            let charCount = 1;
-            if (aCount) {
-                charCount = aCount[elements[start]];
+            for (let j = 0; j < boxInfos.length; j++) {
+                const [start, end, boxCount] = boxInfos[j];
+                let charCount = 1;
+                if (aCount) {
+                    charCount = aCount[elements[start]];
+                }
+                const startIndex = start + 0 * charCount * BOX_ELEMENT_COUNT;
+                meshBoxes[index].mesh = mesh;
+                meshBoxes[index].start = startIndex;
+                meshBoxes[index].end = end;//startIndex + charCount * BOX_ELEMENT_COUNT;
+                meshBoxes[index].boxCount = geoProps.glyphAtlas ? charCount : boxCount;
+                meshBoxes[index].allElements = elements;
+                index++;
             }
-            const startIndex = start + 0 * charCount * BOX_ELEMENT_COUNT;
-            meshBoxes[index].mesh = meshes[j];
-            meshBoxes[index].start = startIndex;
-            meshBoxes[index].end = end;//startIndex + charCount * BOX_ELEMENT_COUNT;
-            meshBoxes[index].boxCount = geoProps.glyphAtlas ? charCount : boxCount;
-            meshBoxes[index].allElements = elements;
-            index++;
+
         }
 
         if (!updated) {
@@ -539,16 +546,18 @@ class IconPainter extends CollisionPainter {
                 continue;
             }
             const { collideBoxIndex, elements, visElemts } = geometry.properties;
-            const boxInfo = collideBoxIndex[pickingId];
-            if (!boxInfo) {
+            const boxInfos = collideBoxIndex[pickingId];
+            if (!boxInfos || !boxInfos.length) {
                 continue;
             }
-            const [start, end] = boxInfo;
-            let count = visElemts.count;
-            for (let i = start; i < end; i++) {
-                visElemts[count++] = elements[i];
+            for (let j = 0; j < boxInfos.length; j++) {
+                const [start, end] = boxInfos[j];
+                let count = visElemts.count;
+                for (let i = start; i < end; i++) {
+                    visElemts[count++] = elements[i];
+                }
+                visElemts.count = count;
             }
-            visElemts.count = count;
         }
     }
 
@@ -566,7 +575,7 @@ class IconPainter extends CollisionPainter {
     }
 
     isBoxCollides(mesh, elements, boxCount, start, end, matrix) {
-        if (this._isTextGeo(mesh.geometry)) {
+        if (this._isTextGeo(mesh, elements, start)) {
             return isLabelCollides.call(this, 0, mesh, elements, boxCount, start, end, matrix);
         }
         if (mesh.geometry.properties.isEmpty) {
@@ -801,9 +810,10 @@ class IconPainter extends CollisionPainter {
         return symbolIndex.type === 0;
     }
 
-    _isTextGeo(geo) {
-        const { symbolIndex } = geo.properties;
-        return symbolIndex.type === 1;
+    _isTextGeo(mesh, elements, start) {
+        const { aType } = mesh.geometry.properties;
+        const index = elements[start];
+        return aType[index] === 1;
     }
 
     delete() {

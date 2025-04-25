@@ -183,7 +183,15 @@ export function prepareMarkerGeometry(iconGeometry, symbolDef, iconFnTypeConfig,
 }
 
 function prepareIconGeometry(iconGeometry) {
-    const { aMarkerWidth, aMarkerHeight, aMarkerDx, aMarkerDy, aPitchAlign, aRotationAlign, aRotation, aOverlap } = iconGeometry.data;
+    const { aTexCoord, aMarkerWidth, aMarkerHeight, aMarkerDx, aMarkerDy, aPitchAlign, aRotationAlign, aRotation, aOverlap, aCount } = iconGeometry.data;
+    iconGeometry.properties.aCount = aCount;
+    delete iconGeometry.data.aCount;
+    // aType = 顶点的类型：0 为 marker， 1 为 text
+    const aType = new Uint8Array(aCount.length);
+    for (let i = 0; i < aTexCoord.length; i++) {
+        aType[i] = aTexCoord[i * 3 + 2];
+    }
+    iconGeometry.properties.aType = aType;
     if (aMarkerWidth) {
         //for collision
         const keyName = (PREFIX + 'aMarkerWidth').trim();
