@@ -52,13 +52,13 @@ void main() {
     // }
 
     if (fragColor.a < 0.05) {
-        // discard;
+        discard;
     }
 
     glFragColor = fragColor;
 
     if (glFragColor.a < alphaTest) {
-        // discard;
+        discard;
     }
     glFragColor = highlight_blendColor(glFragColor);
     // glFragColor = vec4(vIsText, 0.0, 0.0, 1.0);

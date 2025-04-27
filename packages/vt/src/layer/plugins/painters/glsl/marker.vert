@@ -213,7 +213,7 @@ void main() {
             float padOffsetX = 0.0;
             float padOffsetY = 0.0;
         #endif
-        shape = (shape / iconSize * vec2(myMarkerWidth, myMarkerHeight) + vec2(padOffsetX - 1.0, padOffsetY)) * layerScale;
+        shape = (shape / iconSize * vec2(myMarkerWidth, myMarkerHeight) + vec2(padOffsetX, padOffsetY)) * layerScale;
     }
 
 
