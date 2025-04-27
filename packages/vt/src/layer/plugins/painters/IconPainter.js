@@ -125,20 +125,24 @@ class IconPainter extends CollisionPainter {
         const { geometry, symbolIndex } = geo;
         const symbolDef = this.getSymbolDef(symbolIndex);
         const fnTypeConfig = this.getFnTypeConfig(symbolIndex);
-        if (!geometry.properties.iconAtlas && !geometry.properties.glyphAtlas) {
+        const { iconAtlas, glyphAtlas } = geometry.properties;
+        if (!iconAtlas && !glyphAtlas) {
             geometry.properties.isEmpty = true;
         } else {
-            this.drawDebugAtlas(geometry.properties.iconAtlas);
-            prepareMarkerGeometry(geometry, symbolDef, fnTypeConfig.icon, this.layer);
-        }
-
-        if (geometry.properties.glyphAtlas) {
-            const markerTextFit = symbolDef['markerTextFit'];
-            if (markerTextFit) {
-                const map = this.getMap();
-                prepareLabelIndex.call(this, map, geometry, geometry, markerTextFit);
+            if (iconAtlas) {
+                this.drawDebugAtlas(iconAtlas);
+                prepareMarkerGeometry(geometry, symbolDef, fnTypeConfig.icon, this.layer);
+            }
+            if (glyphAtlas) {
+                const markerTextFit = symbolDef['markerTextFit'];
+                if (markerTextFit) {
+                    const map = this.getMap();
+                    prepareLabelIndex.call(this, map, geometry, markerTextFit);
+                }
             }
         }
+
+
     }
 
     prepareCollideIndex(geo) {

@@ -43,7 +43,7 @@ vec4 renderText(vec2 texCoord) {
     #endif
     float fontScale = vTextSize / 24.0;
 
-    lowp vec4 color = myTextFill;
+    vec4 color = myTextFill;
     highp float gamma = EDGE_GAMMA / (fontScale * gammaScale);
     lowp float buff = 185.0 / 256.0;//(256.0 - 64.0) / 256.0;
     if (isHalo == 1.0) {

@@ -201,17 +201,21 @@ void main() {
 
     float isText = aTexCoord.z;
     vIsText = isText;
-    #ifdef HAS_PAD_OFFSET
-        // aPadOffsetX - 1.0 是为了解决1个像素偏移的问题, fuzhenn/maptalks-designer#638
-        shape = (shape / iconSize * vec2(myMarkerWidth, myMarkerHeight) + vec2(aPadOffsetX - 1.0, aPadOffsetY)) * layerScale;
-    #else
-        if (isText > 0.5) {
-            shape = shape / glyphSize * myTextSize;
-        } else {
-            shape = shape / iconSize * vec2(myMarkerWidth, myMarkerHeight) * layerScale;
-        }
+    if (isText > 0.5) {
+        shape = shape / glyphSize * myTextSize;
+    } else {
 
-    #endif
+        #ifdef HAS_PAD_OFFSET
+            // aPadOffsetX - 1.0 是为了解决1个像素偏移的问题, fuzhenn/maptalks-designer#638
+            float padOffsetX = aPadOffsetX - 1.0;
+            float padOffsetY = aPadOffsetY;
+        #else
+            float padOffsetX = 0.0;
+            float padOffsetY = 0.0;
+        #endif
+        shape = (shape / iconSize * vec2(myMarkerWidth, myMarkerHeight) + vec2(padOffsetX - 1.0, padOffsetY)) * layerScale;
+    }
+
 
     shape = shapeMatrix * shape;
 

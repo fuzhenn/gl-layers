@@ -192,6 +192,7 @@ function prepareIconGeometry(iconGeometry) {
         aType[i] = aTexCoord[i * 3 + 2];
     }
     iconGeometry.properties.aType = aType;
+
     if (aMarkerWidth) {
         //for collision
         const keyName = (PREFIX + 'aMarkerWidth').trim();
@@ -406,12 +407,19 @@ export function getMarkerFnTypeConfig(map, symbolDef) {
     ];
 }
 
-export function prepareLabelIndex(map, iconGeometry, textGeometry, markerTextFit) {
-    if (!textGeometry || !markerTextFit || markerTextFit === 'none') {
+export function prepareLabelIndex(map, iconGeometry, markerTextFit) {
+    if (!iconGeometry || !markerTextFit || markerTextFit === 'none') {
         return;
     }
 
-    const labelIndex = buildLabelIndex(iconGeometry, textGeometry, markerTextFit);
+    const { iconAtlas, glyphAtlas } = iconGeometry.properties;
+    if (!iconAtlas || !glyphAtlas) {
+        return;
+    }
+
+    prepareElements(iconGeometry);
+
+    const labelIndex = buildLabelIndex(iconGeometry, markerTextFit);
     if (!iconGeometry.getElements().length) {
         return;
     }
@@ -420,45 +428,60 @@ export function prepareLabelIndex(map, iconGeometry, textGeometry, markerTextFit
     }
     iconGeometry.properties.labelIndex = labelIndex;
     const hasTextFit = labelIndex.length && markerTextFit && markerTextFit !== 'none';
-    if (hasTextFit && textGeometry) {
-        const labelShape = buildLabelShape(iconGeometry, textGeometry);
+    if (hasTextFit) {
+        const labelShape = buildLabelShape(iconGeometry);
         if (labelShape.length) {
             iconGeometry.properties.labelShape = labelShape;
-            fillTextFitData.call(this, map, iconGeometry, textGeometry);
+            fillTextFitData.call(this, map, iconGeometry);
         }
     }
 }
 
+function prepareElements(iconGeometry) {
+    if (iconGeometry.properties.iconElements) {
+        return;
+    }
+    const iconElements = [];
+    const textElements = [];
+    const elements = iconGeometry.elements;
+    const aType = iconGeometry.properties.aType;
+
+    for (let i = 0; i < elements.length; i++) {
+        const index = elements[i];
+        if (aType[index] === 0) {
+            iconElements.push(index);
+        } else {
+            textElements.push(index);
+        }
+    }
+    iconGeometry.properties.iconElements = new elements.constructor(iconElements);
+    iconGeometry.properties.textElements = new elements.constructor(textElements);
+}
+
 // labelIndex中存的是icon对应的label在textGeometry.element中的start和end
-function buildLabelIndex(iconGeometry, textGeometry, markerTextFit) {
+function buildLabelIndex(iconGeometry, markerTextFit) {
     let markerTextFitFn = iconGeometry.properties.textFitFn;
     if (isFunctionDefinition(markerTextFit)) {
         markerTextFitFn = iconGeometry.properties.textFitFn = piecewiseConstant(markerTextFit);
     }
     const isTextFit = markerTextFit !== 'none';
     const labelIndex = [];
-    const iconElements = iconGeometry.getElements();
-    const iconIds = iconGeometry.data.aPickingId;
+    const iconElements = iconGeometry.properties.iconElements;
+    const aPickingId = iconGeometry.data.aPickingId;
 
-    let textElements, textIds, textCounts;
-    if (textGeometry) {
-        textElements = textGeometry.getElements();
-        textIds = textGeometry.data.aPickingId;
-        textCounts = textGeometry.data.aCount;
-    }
+    const textElements = iconGeometry.properties.textElements;
+    const textIds = iconGeometry.data.aPickingId;
+    const textCounts = iconGeometry.properties.aCount;
 
     const features = iconGeometry.properties.features;
 
     let currentLabel;
-    if (textGeometry) {
-        let textId = textElements[0];
-        currentLabel = {
-            pickingId: textIds[textId],
-            start: 0,
-            end: textCounts[textId] * BOX_ELEMENT_COUNT
-        };
-    }
-
+    let textId = textElements[0];
+    currentLabel = {
+        pickingId: textIds[textId],
+        start: 0,
+        end: textCounts[textId] * BOX_ELEMENT_COUNT
+    };
     let labelVisitEnd = false;
     let hasLabel = false;
     let count = 0;
@@ -466,7 +489,7 @@ function buildLabelIndex(iconGeometry, textGeometry, markerTextFit) {
     //遍历所有的icon，当icon和aPickingId和text的相同时，则认为是同一个icon + text，并记录它的序号
     for (let i = 0; i < iconElements.length; i += BOX_ELEMENT_COUNT) {
         const idx = iconElements[i];
-        const pickingId = iconIds[idx];
+        const pickingId = aPickingId[idx];
         if (!labelVisitEnd && currentLabel) {
             //label的pickingId比icon的小，说明当前文字没有icon，则往前找到下一个label pickingId比当前icon大的label
             while (currentLabel.pickingId < pickingId && currentLabel.end < textElements.length) {
@@ -534,10 +557,10 @@ function buildLabelIndex(iconGeometry, textGeometry, markerTextFit) {
     return labelIndex;
 }
 
-function buildLabelShape(iconGeometry, textGeometry) {
+function buildLabelShape(iconGeometry) {
     const labelShape = [];
     const labelIndex = iconGeometry.properties.labelIndex;
-    const { aShape } = textGeometry.data;
+    const { aShape } = iconGeometry.data;
     let hasValue = false;
     for (let i = 0; i < labelIndex.length; i++) {
         const [start, end] = labelIndex[i];
@@ -546,7 +569,7 @@ function buildLabelShape(iconGeometry, textGeometry) {
         } else {
             hasValue = true;
             let minx = Infinity, miny = Infinity, maxx = -Infinity, maxy = -Infinity;
-            const elements = textGeometry.elements;
+            const elements = iconGeometry.properties.textElements;
             for (let ii = start; ii < end; ii++) {
                 const idx = elements[ii];
                 const x = aShape[idx * 2];
@@ -589,7 +612,7 @@ function fillTextFitData(map, iconGeometry) {
             markerTextFitFn = iconGeometry.properties.textFitFn = interpolated(symbolDef['markerTextFit']);
         }
         const { features } = iconGeometry.properties;
-        const elements = iconGeometry.properties.elements || iconGeometry.elements;
+        const elements = iconGeometry.properties.iconElements;
         const { aPickingId } = iconGeometry.data;
         const fitWidthIcons = [];
         const fitHeightIcons = [];
@@ -685,7 +708,7 @@ function fillTextFitData(map, iconGeometry) {
         }
     }
 
-    const textSymbolDef = this.getSymbolDef(iconGeometry.properties.textGeo.properties.symbolIndex);
+    const textSymbolDef = this.getSymbolDef(iconGeometry.properties.symbolIndex);
     const textFitFn = interpolated(textSymbolDef['textSize']);
 
     updateMarkerFitSize.call(this, map, iconGeometry);
@@ -697,8 +720,8 @@ function fillTextFitData(map, iconGeometry) {
 
 const DEFAULT_PADDING = [0, 0, 0, 0];
 export function updateMarkerFitSize(map, iconGeometry) {
-    const textGeometry = iconGeometry.properties.textGeo;
-    if (!textGeometry) {
+    const textGeometry = iconGeometry;
+    if (!textGeometry.properties.textElements.length) {
         return;
     }
     const textProps = textGeometry.properties;
@@ -709,7 +732,7 @@ export function updateMarkerFitSize(map, iconGeometry) {
     // const { symbolDef: markerSymbol } = props;
     // const { symbolDef } = textProps;
     const markerSymbol = this.getSymbolDef(iconGeometry.properties.symbolIndex);
-    const symbolDef = this.getSymbolDef(textGeometry.properties.symbolIndex);
+    const symbolDef = markerSymbol;
 
     const textSizeDef = symbolDef['textSize'];
     let textSizeFn;
@@ -734,7 +757,7 @@ export function updateMarkerFitSize(map, iconGeometry) {
     const { fitIcons, fitWidthIcons, fitHeightIcons } = props;
     const { aMarkerWidth, aMarkerHeight, labelShape } = props;
 
-    const elements = props.elements || iconGeometry.elements;
+    const elements = iconGeometry.properties.iconElements;
     const { features, aPickingId } = props;
     const fn = (idx, iconIndex, hasWidth, hasHeight) => {
         const minx = labelShape[iconIndex * 4];
