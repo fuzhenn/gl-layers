@@ -552,14 +552,25 @@ export default class BaseLayerWorker {
                 altitudeToTileScale: zScale * extent / this.options['tileSize'] / glScale,
                 pluginType: pluginConfig.renderPlugin.type
             });
-            // 如果同时定义了 marker 属性和text属性，textPlacement， textSpacing会被markerPlacement，markerSpacing代替
-            // const symbols = PointPack.splitPointSymbol(symbol);
-            const fnTypes = VectorPack.genFnTypes(symbol);
-            if (PointPack.needMerge(symbol, fnTypes, zoom)) {
-                features = PointPack.mergeLineFeatures(features, symbol, fnTypes, zoom);
+            let symbols = symbol;
+            if (!Array.isArray(symbol)) {
+                symbols = [symbol];
             }
-            return parseSymbolAndGenPromises(features, symbol, options, PointPack, tileRatio);
-            // return new PointPack(features, symbol, options).load(tileRatio);
+            symbols = symbols.map((symbol, index) => {
+                if (symbol) {
+                    symbol.index = { index };
+                    symbol.isIconText = ifIsIconText(symbol);
+                }
+                return symbol;
+            }).filter(symbol => !!symbol);
+            return Promise.all(symbols.map((symbol) => {
+                const fnTypes = VectorPack.genFnTypes(symbol);
+                let packFeatures = features;
+                if (PointPack.needMerge(symbol, fnTypes, zoom)) {
+                    packFeatures = PointPack.mergeLineFeatures(features, symbol, fnTypes, zoom);
+                }
+                return new PointPack(packFeatures, symbol, options).load(tileRatio);
+            }));
         } else if (type === 'native-point') {
             const altitudeToTileScale = zScale * extent / this.options['tileSize'] / glScale;
             options.altitudeToTileScale = altitudeToTileScale;
@@ -1045,4 +1056,10 @@ function getFnTypeProps(symbol, props, i) {
 
     }
     return props[i];
+}
+
+function ifIsIconText(symbol) {
+    // 如果symbol中没有marker，只有text时，则iconText为true
+    // isIconText 主要用在 getAnchors 和各种判断是否是沿线文字的判断逻辑中
+    return symbol.markerType || symbol.markerFile;
 }

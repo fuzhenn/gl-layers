@@ -9,8 +9,6 @@ uniform sampler2D iconTex;
 uniform lowp float markerOpacity;
 uniform lowp float blendSrcIsOne;
 uniform float layerOpacity;
-uniform vec2 iconTexSize;
-uniform vec2 glyphTexSize;
 
 #include <highlight_frag>
 
@@ -24,9 +22,9 @@ void main() {
     vec4 fragColor;
     // 如果条件写为 vIsText == 1.0 会因为精度问题导致判断错误
     if (vIsText > 0.5) {
-        fragColor = renderText(vTexCoord / glyphTexSize);
+        fragColor = renderText(vTexCoord);
     } else {
-        fragColor = texture2D(iconTex, vTexCoord / iconTexSize) * markerOpacity;
+        fragColor = texture2D(iconTex, vTexCoord) * markerOpacity;
     }
 
     fragColor = fragColor * vOpacity * layerOpacity;

@@ -59,7 +59,7 @@ uniform float textPitchFilter;
 #ifndef PICKING_MODE
     varying vec2 vTexCoord;
     varying float vGammaScale;
-    varying float vSize;
+    varying float vTextSize;
     varying float vOpacity;
 
 
@@ -177,7 +177,7 @@ void main() {
         }
         vGammaScale = clamp(vGammaScale, 0.0, 1.0);
         vTexCoord = texCoord / glyphTexSize;
-        vSize = myTextSize;
+        vTextSize = myTextSize;
         #ifdef ENABLE_COLLISION
             vOpacity = aOpacity / 255.0;
         #else

@@ -196,7 +196,7 @@ class IconPainter extends CollisionPainter {
         geo.properties.collideBoxIndex = collideBoxIndex;
     }
 
-    createMesh(geo, transform, params, context) {
+    createMesh(geo, transform) {
         const enableCollision = this.isEnableCollision();
         const layer = this.layer;
         const { geometry, symbolIndex } = geo;
@@ -218,80 +218,65 @@ class IconPainter extends CollisionPainter {
             meshes.push(...markerMeshes);
         }
         if (geometry.properties.markerPlacement === 'line') {
-            this._rebuildCollideIds(geometry, context);
+            this._rebuildCollideIds(geometry);
             meshes.forEach(m => m.properties.isLinePlacement = true);
         }
         this.prepareCollideIndex(geometry);
         return meshes;
     }
 
-    _rebuildCollideIds(geometry, context) {
+    _rebuildCollideIds(geometry) {
         const isVectorTile = this.layer instanceof maptalks.TileLayer;
         // icon是沿线分布时，因为所有沿线生成的icon的aPickingId都是一样的，每个icon无法独立判断碰撞检测
         // 因此需要为每个icon和相应的text生成独立的collideId
-        const { collideIds } = geometry.properties;
+        const { collideIds, glyphAtlas, iconAtlas } = geometry.properties;
         const newCollideIds = new Uint16Array(collideIds.length);
-        if (this._isMarkerGeo(geometry)) {
-            let id = 0;
-            for (let i = 0; i < collideIds.length; i += BOX_VERTEX_COUNT) {
-                newCollideIds.fill(id++, i, i + BOX_VERTEX_COUNT);
+        const hasIcon = !!iconAtlas;
+        const hasText = !!glyphAtlas;
+        if (hasIcon) {
+            const { collideIds, aType } = geometry.properties;
+            if (!glyphAtlas) {
+                // only icon
+                let id = 0;
+                for (let i = 0; i < collideIds.length; i += BOX_VERTEX_COUNT) {
+                    newCollideIds.fill(id++, i, i + BOX_VERTEX_COUNT);
+                }
+            } else {
+                // icon和text都存在，则每次遇到text后的icon时，填充id值
+                let id = 0;
+                let preType = aType[0];
+                let startIndex = 0;
+                for (let i = 1; i < collideIds.length; i++) {
+                    if (aType[i] === 0 && preType === 1) {
+                        newCollideIds.fill(id++, startIndex, i);
+                        startIndex = i;
+                    }
+                    preType = 0;
+                }
+                if (startIndex < collideIds.length) {
+                    newCollideIds.fill(id++, startIndex, collideIds.length);
+                }
             }
             geometry.properties.collideIds = newCollideIds;
             geometry.properties.uniqueCollideIds = getUniqueIds(newCollideIds, !isVectorTile);
-            context.markerCollideMap = {
-                old: collideIds,
-                new: newCollideIds
-            };
-        } else if (this._isTextGeo(geometry)) {
+        } else if (hasText) {
+            // only text
             const { collideIds, aCount } = geometry.properties;
             if (!aCount) {
                 // text geometry 的 textSize 为0 或者 textOpacity为0
                 return;
             }
-            if (context.markerCollideMap) {
-                // counter是，pickingId不变时，icon的序号
-                const { markerCollideMap } = context;
-                let maxId = markerCollideMap.new[markerCollideMap.new.length - 1];
-                let counter = 0;
-                let current = collideIds[0];
-                let currentOldIndex = context.markerCollideMap.old.indexOf(current);
-                let currentCount = aCount[0];
-                for (let i = 0; i < collideIds.length;) {
-                    // 1. 获取当前的pickingId
-                    const cid = collideIds[i];
-                    if (current !== cid) {
-                        current = cid;
-                        // 2. 获取pickingId在icon.oldCollideIds的起始序号
-                        currentOldIndex = context.markerCollideMap.old.indexOf(current);
-                        counter = 0;
-                    }
-                    // 3. 获取text对应的icon的collide值 = 2得到的起始序号 + icon序号 * BOX_VERTEX_COUNT
-                    // currentOldIndex 为 -1时，说明文字没有对应的icon数据，它的id则从 maxId 开始计数。
-                    const id = currentOldIndex === -1 ? ++maxId : context.markerCollideMap.new[currentOldIndex + counter * BOX_VERTEX_COUNT];
-                    const next =  i + currentCount * BOX_VERTEX_COUNT;
-                    collideIds.fill(id, i, next);
-                    i += currentCount * BOX_VERTEX_COUNT;
-                    counter++;
-                    if (next < collideIds.length) {
-                        currentCount = aCount[next];
-                    }
+            let id = 0;
+            let currentCount = aCount[0];
+            for (let i = 0; i < collideIds.length;) {
+                const next =  i + currentCount * BOX_VERTEX_COUNT;
+                collideIds.fill(id++, i, next);
+                i += currentCount * BOX_VERTEX_COUNT;
+                if (next < collideIds.length) {
+                    currentCount = aCount[next];
                 }
-                geometry.properties.uniqueCollideIds = getUniqueIds(collideIds, !isVectorTile);
-            } else {
-                // 只定义了 text 属性
-                let id = 0;
-                let currentCount = aCount[0];
-                for (let i = 0; i < collideIds.length;) {
-                    const next =  i + currentCount * BOX_VERTEX_COUNT;
-                    collideIds.fill(id++, i, next);
-                    i += currentCount * BOX_VERTEX_COUNT;
-                    if (next < collideIds.length) {
-                        currentCount = aCount[next];
-                    }
-                }
-                geometry.properties.uniqueCollideIds = getUniqueIds(collideIds, !isVectorTile);
             }
-
+            geometry.properties.uniqueCollideIds = getUniqueIds(collideIds, !isVectorTile);
         }
     }
 
@@ -807,11 +792,6 @@ class IconPainter extends CollisionPainter {
         }
         const { elements } = mesh.geometry.properties;
         return getLabelEntryKey(mesh, elements[idx]);
-    }
-
-    _isMarkerGeo(geo) {
-        const { symbolIndex } = geo.properties;
-        return symbolIndex.type === 0;
     }
 
     _isTextGeo(mesh, elements, start) {

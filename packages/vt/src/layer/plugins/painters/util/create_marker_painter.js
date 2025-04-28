@@ -75,8 +75,8 @@ export function createMarkerMesh(
         tileResolution: geometry.properties.tileResolution,
         tileRatio: geometry.properties.tileRatio
     };
-    initTextUniforms.call(this, uniforms, regl, geometry, symbolDef, symbol);
     setMeshUniforms.call(this, uniforms, regl, geometry, symbol);
+    initTextUniforms.call(this, uniforms, regl, geometry, symbolDef, symbol);
     uniforms.isHalo = 0;
 
     const meshes = [];
@@ -721,10 +721,11 @@ function fillTextFitData(map, iconGeometry) {
 const DEFAULT_PADDING = [0, 0, 0, 0];
 export function updateMarkerFitSize(map, iconGeometry) {
     const textGeometry = iconGeometry;
-    if (!textGeometry.properties.textElements.length) {
+    const textProps = textGeometry.properties;
+    if (!textProps.glyphAtlas || !textProps.textElements || !textProps.textElements.length) {
         return;
     }
-    const textProps = textGeometry.properties;
+
     const props = iconGeometry.properties;
     if (props.isFitConstant || !props.labelShape || !props.labelShape.length) {
         return;

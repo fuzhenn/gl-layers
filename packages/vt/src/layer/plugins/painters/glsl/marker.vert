@@ -80,6 +80,8 @@ uniform float markerPerspectiveRatio;
 uniform float glyphSize;
 uniform vec2 iconSize;
 uniform vec2 canvasSize;
+uniform vec2 iconTexSize;
+uniform vec2 glyphTexSize;
 uniform float mapPitch;
 uniform float mapRotation;
 
@@ -92,8 +94,8 @@ uniform float isRenderingTerrain;
 
 #include <vt_position_vert>
 
+varying float vIsText;
 #ifndef PICKING_MODE
-    varying float vIsText;
     varying vec2 vTexCoord;
     varying float vOpacity;
     varying float vGammaScale;
@@ -180,13 +182,18 @@ void main() {
         float rotation = -markerRotation - mapRotation * isRotateWithMap;
     #endif
 
+    float isText = aTexCoord.z;
+
     if (isPitchWithMap == 1.0) {
-        // rotation += mapRotation;
         #ifdef REVERSE_MAP_ROTATION_ON_PITCH
             // PointLayer 的  mapRotation 计算方式
             rotation += mapRotation;
         #else
-            rotation -= mapRotation;
+            if (isText > 0.5) {
+                rotation -= mapRotation;
+            } else {
+                rotation += mapRotation;
+            }
         #endif
     }
     float angleSin = sin(rotation);
@@ -198,8 +205,6 @@ void main() {
     if (isPitchWithMap == 1.0 && flipY == 0.0) {
         shape *= vec2(1.0, -1.0);
     }
-
-    float isText = aTexCoord.z;
     vIsText = isText;
     if (isText > 0.5) {
         shape = shape / glyphSize * myTextSize;
@@ -258,7 +263,11 @@ void main() {
         }
         vGammaScale = clamp(vGammaScale, 0.0, 1.0);
 
-        vTexCoord = aTexCoord.xy;
+        if (isText > 0.5) {
+            vTexCoord = aTexCoord.xy / glyphTexSize;
+        } else {
+            vTexCoord = aTexCoord.xy / iconTexSize;
+        }
 
         vTextSize = myTextSize;
         #ifdef ENABLE_COLLISION

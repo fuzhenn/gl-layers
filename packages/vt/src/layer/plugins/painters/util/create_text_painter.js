@@ -17,7 +17,7 @@ import { getLabelContent } from './get_label_content';
 import { createAtlasTexture } from './atlas_util';
 import { INVALID_PROJECTED_ANCHOR } from '../../../../common/Constant';
 
-import text_render_frag from '../glsl/text_render.frag';
+import text_render_frag from '../includes/text_render.frag';
 
 reshader.ShaderLib.register('text_render_frag', text_render_frag);
 
@@ -653,7 +653,7 @@ export function isLabelCollides(hasCollides, mesh, elements, boxCount, start, en
     const symbol = this.getSymbol(geoProps.symbolIndex);
     const isLinePlacement = geoProps.textPlacement === 'line' && !isIconText(symbol);
     const { aTextSize, aTextHaloRadius, aShape } = geoProps;
-    let textSize = (aTextSize ? aTextSize[elements[start]] : mesh.properties.textSize);
+    let textSize = (aTextSize ? aTextSize[elements[start]] : symbol.textSize);
     if (textSize === null || textSize === undefined) {
         textSize = DEFAULT_UNIFORMS['textSize'];
     }
