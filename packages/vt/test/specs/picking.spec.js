@@ -20,7 +20,8 @@ const DEFAULT_VIEW = {
     center: [0, 0],
     zoom: 6,
     pitch: 0,
-    bearing: 0
+    bearing: 0,
+    devicePixelRatio: 1
 };
 const ICON_PATH = 'file://' + path.resolve(__dirname, '../integration/resources/plane-min.png');
 describe('picking specs', () => {
@@ -42,6 +43,9 @@ describe('picking specs', () => {
     });
 
     const runner = (options, coord, expected, ignoreSymbol, done) => {
+        if (options.view) {
+            options.view.devicePixelRatio = 1;
+        }
         map = new maptalks.Map(container, options.view || DEFAULT_VIEW);
         options.tileStackDepth = 0;
         options.loadingLimit = 0;
@@ -1522,7 +1526,8 @@ describe('picking specs', () => {
         loadingLimit: 0,
         view: {
             center: [0.5, 0.5],
-            zoom: 8
+            zoom: 8,
+            devicePixelRatio: 1
         }
     };
 
@@ -1587,7 +1592,8 @@ describe('picking specs', () => {
     it('should return geographic coordinates in pick', done => {
         map = new maptalks.Map(container, {
             center: [0, 0],
-            zoom: 5
+            zoom: 5,
+            devicePixelRatio: 1
         });
         const layer = new VectorTileLayer('vt', {
             urlTemplate: 'http://localhost:4398/vt/{z}/{x}/{y}.mvt',
@@ -1613,7 +1619,8 @@ describe('picking specs', () => {
     it('should enable stencil in VectorTileLayer FillPainter pick, maptalks/issues#832', done => {
         map = new maptalks.Map(container, {
             center: [121.52861644,31.23331691],
-            zoom: 19
+            zoom: 19,
+            devicePixelRatio: 1
         });
         const layer = new VectorTileLayer('vt', {
             urlTemplate: 'http://localhost:4398/832/{z}/{x}/{y}.mvt',

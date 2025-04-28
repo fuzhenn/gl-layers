@@ -45,6 +45,7 @@ describe('vector 3d integration specs', () => {
             const count = style.renderingCount || 1;
             container.style.width = (style.containerWidth || 128) + 'px';
             container.style.height = (style.containerHeight || 128) + 'px';
+            options.devicePixelRatio = 1;
             map = new maptalks.Map(container, options);
             const layer = new Layer('vector', style.data, style.options);
             let counter = 0;
