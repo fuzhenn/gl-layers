@@ -689,12 +689,11 @@ class Vector3DLayerRenderer extends maptalks.renderer.CanvasRenderer {
             markerWidthType: Uint16Array,
             markerHeightType: Uint16Array
         };
-        const textOptions = extend({}, markerOptions);
         markerOptions.allowEmptyPack = 1;
 
-        const symbols = PointPack.splitPointSymbol(this._markerSymbol);
-        return symbols.map((symbol, idx) => {
-            return new PointPack(idx === 0 ? markerFeatures : textFeatures, symbol, idx === 0 ? markerOptions : textOptions).load();
+        // const symbols = PointPack.splitPointSymbol(this._markerSymbol);
+        return [this._markerSymbol].map((symbol, idx) => {
+            return new PointPack(idx === 0 ? markerFeatures : textFeatures, symbol, markerOptions).load();
         });
     }
 

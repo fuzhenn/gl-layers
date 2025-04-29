@@ -8,7 +8,7 @@ import {
     extend
 } from '../../Util';
 import { DEFAULT_ICON_ALPHA_TEST } from '../Constant';
-import { prepareFnTypeData, PREFIX } from './fn_type_util';
+import { prepareFnTypeData, PREFIX, isFnTypeSymbol } from './fn_type_util';
 import { isFunctionDefinition, interpolated, piecewiseConstant } from '@maptalks/function-type';
 import Color from 'color';
 import { getAnchor, getLabelBox } from './get_label_box';
@@ -103,7 +103,7 @@ export function createTextMesh(regl, geometry, transform, symbolDef, symbol, fnT
 
     meshes.forEach(m => {
         const defines = m.defines || {};
-        initTextMeshDefines(defines, m);
+        initTextMeshDefines.call(this, defines, m);
         m.setDefines(defines);
         m.properties.symbolIndex = geometry.properties.symbolIndex;
     });
@@ -185,6 +185,7 @@ export function prepareTextGeometry(
             const keyName = (PREFIX + 'aTextDy').trim();
             geometry.properties.aTextDy = geometry.properties[keyName] || new aTextDy.constructor(aTextDy);
         }
+
         if (aPitchAlign) {
             //for collision
             const keyName = (PREFIX + 'aPitchAlign').trim();
@@ -247,10 +248,11 @@ export function initTextMeshDefines(defines, mesh) {
     // if (geometry.data.aTextHaloOpacity && mesh.material.uniforms.isHalo) {
     //     defines['HAS_TEXT_HALO_OPACITY'] = 1;
     // }
-    if (geometry.data.aTextDx) {
+    const symbolDef = this.getSymbolDef(geometry.properties.symbolIndex);
+    if (isFnTypeSymbol(symbolDef.textDx)) {
         defines['HAS_TEXT_DX'] = 1;
     }
-    if (geometry.data.aTextDy) {
+    if (isFnTypeSymbol(symbolDef.textDy)) {
         defines['HAS_TEXT_DY'] = 1;
     }
     if (geometry.data.aPitchAlign) {

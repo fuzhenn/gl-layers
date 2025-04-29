@@ -97,12 +97,15 @@ class IconPainter extends CollisionPainter {
     }
 
     createFnTypeConfig(map, symbolDef) {
-        const icon = getMarkerFnTypeConfig.call(this, map, symbolDef);
-        const text = getTextFnTypeConfig.call(this, map, symbolDef);
-        return {
-            icon,
-            text
-        };
+        const iconConfigs = getMarkerFnTypeConfig.call(this, map, symbolDef);
+        const textConfigs = getTextFnTypeConfig.call(this, map, symbolDef);
+        // textDx 和 textDy 的逻辑已经合并在 icon 的 aDxDy 中，需要删除
+        for (let i = textConfigs.length - 1; i >= 0; i--) {
+            if (textConfigs[i].attrName === 'aTextDx' || textConfigs[i].attrName === 'aTextDy') {
+                textConfigs.splice(i, 1);
+            }
+        }
+        return iconConfigs.concat(textConfigs);
     }
 
     startFrame(...args) {
@@ -132,7 +135,7 @@ class IconPainter extends CollisionPainter {
             this._prepareRequiredProps(geometry);
             if (iconAtlas) {
                 this.drawDebugAtlas(iconAtlas);
-                prepareMarkerGeometry(geometry, symbolDef, fnTypeConfig.icon, this.layer);
+                prepareMarkerGeometry(geometry, symbolDef, fnTypeConfig, this.layer);
             }
             if (glyphAtlas) {
                 const markerTextFit = symbolDef['markerTextFit'];
@@ -324,8 +327,7 @@ class IconPainter extends CollisionPainter {
             const { symbolIndex } = geometry.properties;
             const symbolDef = this.getSymbolDef(symbolIndex);
             const fnTypeConfig = this.getFnTypeConfig(symbolIndex);
-
-            updateOneGeometryFnTypeAttrib(this.regl, this.layer, symbolDef, symbolIndex.type === 0 ? fnTypeConfig.icon : fnTypeConfig.text, meshes[i], z);
+            updateOneGeometryFnTypeAttrib(this.regl, this.layer, symbolDef, fnTypeConfig, meshes[i], z);
             const { aMarkerWidth, aMarkerHeight, aPadOffset } = geometry.properties;
             if (aMarkerWidth && aMarkerWidth.dirty) {
                 geometry.updateData('aMarkerWidth', aMarkerWidth);

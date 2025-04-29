@@ -3,7 +3,7 @@ import { interpolated, piecewiseConstant, isFunctionDefinition } from '@maptalks
 import { extend, setUniformFromSymbol, wrap, fillArray } from '../../Util';
 import { DEFAULT_MARKER_WIDTH, DEFAULT_MARKER_HEIGHT, GLYPH_SIZE, DEFAULT_ICON_ALPHA_TEST } from '../Constant';
 import { createAtlasTexture, getDefaultMarkerSize } from './atlas_util';
-import { prepareFnTypeData, PREFIX } from './fn_type_util';
+import { prepareFnTypeData, PREFIX, isFnTypeSymbol } from './fn_type_util';
 import { prepareTextGeometry, initTextUniforms, initTextMeshDefines } from './create_text_painter';
 // import { getIconBox } from './get_icon_box';
 
@@ -62,8 +62,10 @@ export function createMarkerMesh(
         geometry.properties.visElemts = new geometry.elements.constructor(geometry.elements.length);
     }
     if (hasText) {
-        prepareTextGeometry.call(this, geometry, symbolDef, fnTypeConfig.text, enableCollision, visibleInCollision, enableUniquePlacement);
+        prepareTextGeometry.call(this, geometry, symbolDef, fnTypeConfig, enableCollision, visibleInCollision, enableUniquePlacement);
     }
+
+    prepareDxDy.call(this, geometry);
 
     geometry.properties.memorySize = geometry.getMemorySize();
     geometry.generateBuffers(regl, { excludeElementsInVAO: true });
@@ -106,14 +108,14 @@ export function createMarkerMesh(
         defines['ENABLE_COLLISION'] = 1;
     }
 
-    initMeshDefines(geometry, defines);
+    initMeshDefines.call(this, geometry, defines);
     if (haloMesh) {
         const haloDefines = extend({}, defines);
-        initTextMeshDefines(defines, haloMesh);
+        initTextMeshDefines.call(this, defines, haloMesh);
         haloMesh.setDefines(haloDefines);
     }
     if (hasText) {
-        initTextMeshDefines(defines, mesh);
+        initTextMeshDefines.call(this, defines, mesh);
     }
 
     mesh.setDefines(defines);
@@ -125,6 +127,43 @@ export function createMarkerMesh(
     }
     meshes.push(mesh);
     return meshes;
+}
+
+function prepareDxDy(geometry) {
+    const { aMarkerDx, aMarkerDy, aTextDx, aTextDy } = geometry.data;
+    const dxdy = (aTextDx || aTextDy || aMarkerDx || aMarkerDy);
+    if (dxdy) {
+        const aDxDy = new dxdy.constructor(dxdy.length * 4);
+        for (let i = 0; i < aDxDy.length; i += 4) {
+            const idx = i / 4;
+            if (aMarkerDx) {
+                aDxDy[i] = aMarkerDx[idx];
+            }
+            if (aMarkerDy) {
+                aDxDy[i + 1] = aMarkerDy[idx];
+            }
+            if (aTextDx) {
+                aDxDy[i + 2] = aTextDx[idx];
+            }
+            if (aTextDy) {
+                aDxDy[i + 3] = aTextDy[idx];
+            }
+        }
+        geometry.data.aDxDy = aDxDy;
+        geometry.properties.aDxDy = aDxDy.slice();
+        if (aMarkerDx) {
+            geometry.properties.aMarkerDx = aMarkerDx;
+        }
+        if (aMarkerDy) {
+            geometry.properties.aMarkerDy = aMarkerDy;
+        }
+        if (aTextDx) {
+            geometry.properties.aTextDx = aTextDx;
+        }
+        if (aTextDy) {
+            geometry.properties.aTextDy = aTextDy;
+        }
+    }
 }
 
 function setMeshUniforms(uniforms, regl, geometry, symbol) {
@@ -154,11 +193,12 @@ function initMeshDefines(geometry, defines) {
     if (geometry.data.aColorOpacity) {
         defines['HAS_OPACITY'] = 1;
     }
-    if (geometry.data.aMarkerDx) {
-        defines['HAS_MARKER_DX'] = 1;
+    const symbolDef = this.getSymbolDef(geometry.properties.symbolIndex);
+    if (isFnTypeSymbol(symbolDef.markerDx)) {
+        defines['HAS_TEXT_DX'] = 1;
     }
-    if (geometry.data.aMarkerDy) {
-        defines['HAS_MARKER_DY'] = 1;
+    if (isFnTypeSymbol(symbolDef.markerDy)) {
+        defines['HAS_TEXT_DY'] = 1;
     }
     if (geometry.data.aPitchAlign) {
         defines['HAS_PITCH_ALIGN'] = 1;
@@ -239,6 +279,8 @@ export function getMarkerFnTypeConfig(map, symbolDef) {
     const markerRotationFn = interpolated(symbolDef['markerRotation']);
     const markerAllowOverlapFn = piecewiseConstant(symbolDef['markerAllowOverlapFn']);
     const markerIgnorePlacementFn = piecewiseConstant(symbolDef['markerIgnorePlacement']);
+    const textDxFn = interpolated(symbolDef['textDx']);
+    const textDyFn = interpolated(symbolDef['textDy']);
     const u8 = new Int16Array(1);
     const u16 = new Uint16Array(1);
     return [
@@ -285,35 +327,86 @@ export function getMarkerFnTypeConfig(map, symbolDef) {
                 return u8[0];
             }
         },
+        // markerDx, markerDy, textDx, textDy 集中在 aDxDy中是因为attributes数量会超过限制
         {
-            attrName: 'aMarkerDx',
+            attrName: 'aDxDy',
             symbolName: 'markerDx',
-            type: Uint8Array,
-            width: 1,
+            type: Int8Array,
+            width: 4,
+            index: 0,
             define: 'HAS_MARKER_DX',
-            evaluate: (properties, geometry) => {
+            evaluate: (properties, geometry, arr, index) => {
                 let x = markerDxFn(map.getZoom(), properties);
                 if (isFunctionDefinition(x)) {
                     x = this.evaluateInFnTypeConfig(x, geometry, map, properties);
                 }
-
+                const { aMarkerDx } = geometry.properties;
+                if (aMarkerDx) {
+                    aMarkerDx[index / 4] = x;
+                }
                 // const x = markerDxFn(map.getZoom(), properties);
                 u8[0] = x;
                 return u8[0];
             }
         },
         {
-            attrName: 'aMarkerDy',
+            attrName: 'aDxDy',
             symbolName: 'markerDy',
-            type: Uint8Array,
-            width: 1,
+            type: Int8Array,
+            width: 4,
+            index: 1,
             define: 'HAS_MARKER_DY',
-            evaluate: (properties, geometry) => {
+            evaluate: (properties, geometry, arr, index) => {
                 let x = markerDyFn(map.getZoom(), properties);
                 if (isFunctionDefinition(x)) {
                     x = this.evaluateInFnTypeConfig(x, geometry, map, properties);
                 }
-
+                const { aMarkerDy } = geometry.properties;
+                if (aMarkerDy) {
+                    aMarkerDy[Math.floor(index / 4)] = x;
+                }
+                u8[0] = x;
+                return u8[0];
+            }
+        },
+        {
+            attrName: 'aDxDy',
+            symbolName: 'textDx',
+            type: Int8Array,
+            width: 4,
+            index: 2,
+            define: 'HAS_TEXT_DX',
+            evaluate: (properties, geometry, arr, index) => {
+                let x = textDxFn(map.getZoom(), properties);
+                if (isFunctionDefinition(x)) {
+                    x = this.evaluateInFnTypeConfig(x, geometry, map, properties);
+                }
+                const { aTextDx } = geometry.properties;
+                if (aTextDx) {
+                    aTextDx[Math.floor(index / 4)] = x;
+                }
+                // const x = markerDxFn(map.getZoom(), properties);
+                u8[0] = x;
+                return u8[0];
+            }
+        },
+        {
+            attrName: 'aDxDy',
+            symbolName: 'textDy',
+            type: Int8Array,
+            width: 4,
+            index: 3,
+            define: 'HAS_TEXT_DY',
+            evaluate: (properties, geometry, arr, index) => {
+                let x = textDyFn(map.getZoom(), properties);
+                if (isFunctionDefinition(x)) {
+                    x = this.evaluateInFnTypeConfig(x, geometry, map, properties);
+                }
+                const { aTextDy } = geometry.properties;
+                if (aTextDy) {
+                    aTextDy[Math.floor(index / 4)] = x;
+                }
+                // const x = markerDxFn(map.getZoom(), properties);
                 u8[0] = x;
                 return u8[0];
             }

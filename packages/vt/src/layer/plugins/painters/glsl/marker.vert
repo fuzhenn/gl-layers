@@ -26,14 +26,19 @@ attribute vec3 aTexCoord;
     uniform float textSize;
 #endif
 
-#ifdef HAS_TEXT_DX
-    attribute float aTextDx;
-#else
+#if defined(HAS_TEXT_DX) || defined(HAS_TEXT_DY) || defined(HAS_MARKER_DX) || defined(HAS_MARKER_DY)
+    attribute vec4 aDxDy;
+#endif
+#ifndef HAS_MARKER_DX
+    uniform float markerDx;
+#endif
+#ifndef HAS_MARKER_DY
+    uniform float markerDy;
+#endif
+#ifndef HAS_TEXT_DX
     uniform float textDx;
 #endif
-#ifdef HAS_TEXT_DY
-    attribute float aTextDy;
-#else
+#ifndef HAS_TEXT_DY
     uniform float textDy;
 #endif
 
@@ -47,16 +52,7 @@ attribute vec3 aTexCoord;
 #else
     uniform float markerHeight;
 #endif
-#ifdef HAS_MARKER_DX
-    attribute float aMarkerDx;
-#else
-    uniform float markerDx;
-#endif
-#ifdef HAS_MARKER_DY
-    attribute float aMarkerDy;
-#else
-    uniform float markerDy;
-#endif
+
 #if defined(HAS_PITCH_ALIGN)
     attribute float aPitchAlign;
 #else
@@ -144,12 +140,12 @@ void main() {
         float myTextSize = textSize * layerScale;
     #endif
     #ifdef HAS_TEXT_DX
-        float myTextDx = aTextDx;
+        float myTextDx = aDxDy.z;
     #else
         float myTextDx = textDx;
     #endif
     #ifdef HAS_TEXT_DY
-        float myTextDy = aTextDy;
+        float myTextDy = aDxDy.w;
     #else
         float myTextDy = textDy;
     #endif
@@ -164,12 +160,12 @@ void main() {
         float myMarkerHeight = markerHeight;
     #endif
     #ifdef HAS_MARKER_DX
-        float myMarkerDx = aMarkerDx;
+        float myMarkerDx = aDxDy.x;
     #else
         float myMarkerDx = markerDx;
     #endif
     #ifdef HAS_MARKER_DY
-        float myMarkerDy = aMarkerDy;
+        float myMarkerDy = aDxDy.y;
     #else
         float myMarkerDy = markerDy;
     #endif

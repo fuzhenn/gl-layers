@@ -410,8 +410,19 @@ export default class PointPack extends VectorPack {
             markerOpacityFn
         } = this._fnTypes;
 
-        let textFill, textSize, textHaloFill, textHaloRadius, textHaloOpacity, textDx, textDy;
-        let markerWidth, markerHeight, markerDx, markerDy;
+        let textFill = [0, 0, 0, 0];
+        let textSize = DEFAULT_UNIFORMS['textSize'];
+        let textHaloFill = [0, 0, 0, 0];
+        let textHaloRadius = 0;
+        let textHaloOpacity = 0;
+        let textDx = 0;
+        let textDy = 0;
+
+        let markerWidth = 0;
+        let markerHeight = 0;
+        let markerDx = 0;
+        let markerDy = 0;
+
         let pitchAlign, rotateAlign, rotation;
         let allowOverlap, ignorePlacement;
         let textQuads;
@@ -424,7 +435,7 @@ export default class PointPack extends VectorPack {
                 if (isFunctionDefinition(textFill)) {
                     this.dynamicAttrs['aTextFill'] = 1;
                     // 说明是identity返回的仍然是个fn-type，fn-type-util.js中会计算刷新，这里不用计算
-                    textFill = [0, 0, 0, 0];
+
                 } else {
                     textFill = normalizeColor([], textFill);
                 }
@@ -440,7 +451,7 @@ export default class PointPack extends VectorPack {
                 if (isFunctionDefinition(textHaloFill)) {
                     this.dynamicAttrs['aTextHaloFill'] = 1;
                     // 说明是identity返回的仍然是个fn-type，fn-type-util.js中会计算刷新，这里不用计算
-                    textHaloFill = [0, 0, 0, 0];
+                    // textHaloFill = [0, 0, 0, 0];
                 } else {
                     textHaloFill = normalizeColor([], textHaloFill);
                 }
@@ -509,12 +520,12 @@ export default class PointPack extends VectorPack {
         // if (isFunctionDefinition(textHaloOpacity)) {
         //     this.dynamicAttrs['aTextHaloOpacity'] = 1;
         // }
-        if (isFunctionDefinition(textDx)) {
-            this.dynamicAttrs['aTextDx'] = 1;
-        }
-        if (isFunctionDefinition(textDy)) {
-            this.dynamicAttrs['aTextDy'] = 1;
-        }
+        // if (isFunctionDefinition(textDx)) {
+        //     this.dynamicAttrs['aDxDy'] = 1;
+        // }
+        // if (isFunctionDefinition(textDy)) {
+        //     this.dynamicAttrs['aDxDy'] = 1;
+        // }
         if (isFunctionDefinition(markerWidth)) {
             this.dynamicAttrs['aMarkerWidth'] = 1;
         }
@@ -522,10 +533,10 @@ export default class PointPack extends VectorPack {
             this.dynamicAttrs['aMarkerHeight'] = 1;
         }
         if (isFunctionDefinition(markerDx) || isFunctionDefinition(textDx)) {
-            this.dynamicAttrs['aMarkerDx'] = 1;
+            this.dynamicAttrs['aDxDy'] = 1;
         }
         if (isFunctionDefinition(markerDy) || isFunctionDefinition(textDx)) {
-            this.dynamicAttrs['aMarkerDy'] = 1;
+            this.dynamicAttrs['aDxDy'] = 1;
         }
         if (isFunctionDefinition(pitchAlign)) {
             this.dynamicAttrs['aPitchAlign'] = 1;
