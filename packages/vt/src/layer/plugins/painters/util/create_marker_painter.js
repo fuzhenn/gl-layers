@@ -169,7 +169,7 @@ function initMeshDefines(geometry, defines) {
     if (geometry.data.aRotation) {
         defines['HAS_ROTATION'] = 1;
     }
-    if (geometry.data.aPadOffsetX) {
+    if (geometry.data.aPadOffset) {
         defines['HAS_PAD_OFFSET'] = 1;
     }
     if (geometry.data.aAltitude) {
@@ -183,15 +183,7 @@ export function prepareMarkerGeometry(iconGeometry, symbolDef, iconFnTypeConfig,
 }
 
 function prepareIconGeometry(iconGeometry) {
-    const { aTexCoord, aMarkerWidth, aMarkerHeight, aMarkerDx, aMarkerDy, aPitchAlign, aRotationAlign, aRotation, aOverlap, aCount } = iconGeometry.data;
-    iconGeometry.properties.aCount = aCount;
-    delete iconGeometry.data.aCount;
-    // aType = 顶点的类型：0 为 marker， 1 为 text
-    const aType = new Uint8Array(aCount.length);
-    for (let i = 0; i < aTexCoord.length; i++) {
-        aType[i] = aTexCoord[i * 3 + 2];
-    }
-    iconGeometry.properties.aType = aType;
+    const { aMarkerWidth, aMarkerHeight, aMarkerDx, aMarkerDy, aPitchAlign, aRotationAlign, aRotation, aOverlap } = iconGeometry.data;
 
     if (aMarkerWidth) {
         //for collision
@@ -785,13 +777,11 @@ export function updateMarkerFitSize(map, iconGeometry) {
             fitPadding = fn(zoom, properties);
         }
         fitPadding = fitPadding || DEFAULT_PADDING;
-        let aPadOffsetX, aPadOffsetY;
+        let aPadOffset;
         if (fitPadding[0] !== fitPadding[2] || fitPadding[1] !== fitPadding[3]) {
-            aPadOffsetX = props.aPadOffsetX;
-            aPadOffsetY = props.aPadOffsetY;
-            if (!aPadOffsetX) {
-                aPadOffsetX = props.aPadOffsetX = new Int8Array(aMarkerWidth.length);
-                aPadOffsetY = props.aPadOffsetY = new Int8Array(aMarkerWidth.length);
+            aPadOffset = props.aPadOffset;
+            if (!aPadOffset) {
+                aPadOffset = props.aPadOffset = new Int8Array(aMarkerWidth.length * 2);
             }
         }
         // delete properties['$layer'];
@@ -804,12 +794,14 @@ export function updateMarkerFitSize(map, iconGeometry) {
                 fillArray(aMarkerWidth, U8[0], idx, idx + BOX_VERTEX_COUNT);
                 aMarkerWidth.dirty = true;
             }
-            if (aPadOffsetX) {
+            if (aPadOffset) {
                 const offset = (fitPadding[1] + fitPadding[3]) / 2 - fitPadding[3];
                 I8[0] = offset;
-                if (aPadOffsetX[idx] !== I8[0]) {
-                    fillArray(aPadOffsetX, offset, idx, idx + BOX_VERTEX_COUNT);
-                    aPadOffsetX.dirty = true;
+                if (aPadOffset[idx * 2] !== I8[0]) {
+                    for (let i = idx; i < idx + BOX_VERTEX_COUNT; i++) {
+                        aPadOffset[idx * 2] = offset;
+                    }
+                    aPadOffset.dirty = true;
                 }
             }
         }
@@ -820,12 +812,14 @@ export function updateMarkerFitSize(map, iconGeometry) {
                 fillArray(aMarkerHeight, U8[0], idx, idx + BOX_VERTEX_COUNT);
                 aMarkerHeight.dirty = true;
             }
-            if (aPadOffsetY) {
+            if (aPadOffset) {
                 const offset = fitPadding[0] - (fitPadding[0] + fitPadding[2]) / 2;
                 I8[0] = offset;
-                if (aPadOffsetY[idx] !== I8[0]) {
-                    fillArray(aPadOffsetY, offset, idx, idx + BOX_VERTEX_COUNT);
-                    aPadOffsetY.dirty = true;
+                if (aPadOffset[idx * 2 + 1] !== I8[0]) {
+                    for (let i = idx; i < idx + BOX_VERTEX_COUNT; i++) {
+                        aPadOffset[idx * 2 + 1] = offset;
+                    }
+                    aPadOffset.dirty = true;
                 }
             }
         }
@@ -862,9 +856,8 @@ export function updateMarkerFitSize(map, iconGeometry) {
             }
         }
     }
-    const { aPadOffsetX, aPadOffsetY } = props;
-    if (aPadOffsetX) {
-        iconGeometry.data.aPadOffsetX = aPadOffsetX;
-        iconGeometry.data.aPadOffsetY = aPadOffsetY;
+    const { aPadOffset } = props;
+    if (aPadOffset) {
+        iconGeometry.data.aPadOffset = aPadOffset;
     }
 }

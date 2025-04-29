@@ -26,6 +26,17 @@ attribute vec3 aTexCoord;
     uniform float textSize;
 #endif
 
+#ifdef HAS_TEXT_DX
+    attribute float aTextDx;
+#else
+    uniform float textDx;
+#endif
+#ifdef HAS_TEXT_DY
+    attribute float aTextDy;
+#else
+    uniform float textDy;
+#endif
+
 #ifdef HAS_MARKER_WIDTH
     attribute float aMarkerWidth;
 #else
@@ -63,12 +74,12 @@ uniform float flipY;
     attribute float aRotation;
 #else
     uniform float markerRotation;
+    uniform float textRotation;
 #endif
 
 
 #ifdef HAS_PAD_OFFSET
-attribute float aPadOffsetX;
-attribute float aPadOffsetY;
+attribute vec2 aPadOffset;
 #endif
 
 uniform float cameraToCenterDistance;
@@ -132,6 +143,16 @@ void main() {
     #else
         float myTextSize = textSize * layerScale;
     #endif
+    #ifdef HAS_TEXT_DX
+        float myTextDx = aTextDx;
+    #else
+        float myTextDx = textDx;
+    #endif
+    #ifdef HAS_TEXT_DY
+        float myTextDy = aTextDy;
+    #else
+        float myTextDy = textDy;
+    #endif
     #ifdef HAS_MARKER_WIDTH
         float myMarkerWidth = aMarkerWidth;
     #else
@@ -176,13 +197,19 @@ void main() {
             0.0, // Prevents oversized near-field symbols in pitched/overzoomed tiles
             4.0);
     }
+    float isText = aTexCoord.z;
     #ifdef HAS_ROTATION
         float rotation = -aRotation / 9362.0 - mapRotation * isRotateWithMap;
     #else
-        float rotation = -markerRotation - mapRotation * isRotateWithMap;
+        float rotation;
+        if (isText > 0.5) {
+            rotation = -textRotation - mapRotation * isRotateWithMap;
+        } else {
+            rotation = -markerRotation - mapRotation * isRotateWithMap;
+        }
     #endif
 
-    float isText = aTexCoord.z;
+
 
     if (isPitchWithMap == 1.0) {
         #ifdef REVERSE_MAP_ROTATION_ON_PITCH
@@ -211,9 +238,9 @@ void main() {
     } else {
 
         #ifdef HAS_PAD_OFFSET
-            // aPadOffsetX - 1.0 是为了解决1个像素偏移的问题, fuzhenn/maptalks-designer#638
-            float padOffsetX = aPadOffsetX - 1.0;
-            float padOffsetY = aPadOffsetY;
+            // aPadOffset.x - 1.0 是为了解决1个像素偏移的问题, fuzhenn/maptalks-designer#638
+            float padOffsetX = aPadOffset.x - 1.0;
+            float padOffsetY = aPadOffset.y;
         #else
             float padOffsetX = 0.0;
             float padOffsetY = 0.0;
@@ -250,7 +277,11 @@ void main() {
         gl_Position = projViewModelMatrix * positionMatrix * vec4(position + vec3(offset, 0.0) * tileRatio / zoomScale * cameraScale * perspectiveRatio, 1.0);
     }
 
-    gl_Position.xy += vec2(myMarkerDx, -myMarkerDy) * 2.0 / canvasSize * projDistance;
+    if (isText > 0.5) {
+        gl_Position.xy += vec2(myTextDx, -myTextDy) * 2.0 / canvasSize * projDistance;
+    } else {
+        gl_Position.xy += vec2(myMarkerDx, -myMarkerDy) * 2.0 / canvasSize * projDistance;;
+    }
 
     #ifndef PICKING_MODE
         if (isPitchWithMap == 0.0) {

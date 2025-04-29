@@ -204,11 +204,11 @@ export const TEXT_SYMBOL = {
         default: null,
         property: '_symbol_textHaloFill'
     },
-    textHaloOpacity: {
-        type: 'identity',
-        default: 1,
-        property: '_symbol_textHaloOpacity'
-    },
+    // textHaloOpacity: {
+    //     type: 'identity',
+    //     default: 1,
+    //     property: '_symbol_textHaloOpacity'
+    // },
     textDx: {
         type: 'identity',
         default: 0,

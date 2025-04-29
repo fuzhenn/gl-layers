@@ -129,6 +129,7 @@ class IconPainter extends CollisionPainter {
         if (!iconAtlas && !glyphAtlas) {
             geometry.properties.isEmpty = true;
         } else {
+            this._prepareRequiredProps(geometry);
             if (iconAtlas) {
                 this.drawDebugAtlas(iconAtlas);
                 prepareMarkerGeometry(geometry, symbolDef, fnTypeConfig.icon, this.layer);
@@ -144,6 +145,19 @@ class IconPainter extends CollisionPainter {
 
 
     }
+
+    _prepareRequiredProps(geometry) {
+        const { aTexCoord, aCount } = geometry.data;
+        geometry.properties.aCount = aCount;
+        delete geometry.data.aCount;
+        // aType = 顶点的类型：0 为 marker， 1 为 text
+        const aType = new Uint8Array(aCount.length);
+        for (let i = 0; i < aTexCoord.length; i++) {
+            aType[i] = aTexCoord[i * 3 + 2];
+        }
+        geometry.properties.aType = aType;
+    }
+
 
     prepareCollideIndex(geo) {
         // if (!this.layer.options['collision']) {
@@ -312,7 +326,7 @@ class IconPainter extends CollisionPainter {
             const fnTypeConfig = this.getFnTypeConfig(symbolIndex);
 
             updateOneGeometryFnTypeAttrib(this.regl, this.layer, symbolDef, symbolIndex.type === 0 ? fnTypeConfig.icon : fnTypeConfig.text, meshes[i], z);
-            const { aMarkerWidth, aMarkerHeight, aPadOffsetX, aPadOffsetY } = geometry.properties;
+            const { aMarkerWidth, aMarkerHeight, aPadOffset } = geometry.properties;
             if (aMarkerWidth && aMarkerWidth.dirty) {
                 geometry.updateData('aMarkerWidth', aMarkerWidth);
                 aMarkerWidth.dirty = false;
@@ -321,13 +335,9 @@ class IconPainter extends CollisionPainter {
                 geometry.updateData('aMarkerHeight', aMarkerHeight);
                 aMarkerHeight.dirty = false;
             }
-            if (aPadOffsetX && aPadOffsetX.dirty) {
-                geometry.updateData('aPadOffsetX', aPadOffsetX);
-                aPadOffsetX.dirty = false;
-            }
-            if (aPadOffsetY && aPadOffsetY.dirty) {
-                geometry.updateData('aPadOffsetY', aPadOffsetY);
-                aPadOffsetY.dirty = false;
+            if (aPadOffset && aPadOffset.dirty) {
+                geometry.updateData('aPadOffset', aPadOffset);
+                aPadOffset.dirty = false;
             }
         }
         super.addMesh(...arguments);

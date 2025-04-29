@@ -244,9 +244,9 @@ export function initTextMeshDefines(defines, mesh) {
     if (geometry.data.aTextHaloRadius && mesh.material.uniforms.isHalo) {
         defines['HAS_TEXT_HALO_RADIUS'] = 1;
     }
-    if (geometry.data.aTextHaloOpacity && mesh.material.uniforms.isHalo) {
-        defines['HAS_TEXT_HALO_OPACITY'] = 1;
-    }
+    // if (geometry.data.aTextHaloOpacity && mesh.material.uniforms.isHalo) {
+    //     defines['HAS_TEXT_HALO_OPACITY'] = 1;
+    // }
     if (geometry.data.aTextDx) {
         defines['HAS_TEXT_DX'] = 1;
     }
@@ -441,7 +441,7 @@ export function getTextFnTypeConfig(map, symbolDef) {
     const textSizeFn = interpolated(symbolDef['textSize']);
     const textHaloFillFn = interpolated(symbolDef['textHaloFill']);
     const textHaloRadiusFn = interpolated(symbolDef['textHaloRadius']);
-    const textHaloOpacityFn = interpolated(symbolDef['textHaloOpacity']);
+    // const textHaloOpacityFn = interpolated(symbolDef['textHaloOpacity']);
     const textDxFn = interpolated(symbolDef['textDx']);
     const textDyFn = interpolated(symbolDef['textDy']);
     const textOpacityFn = interpolated(symbolDef['textOpacity']);
@@ -520,18 +520,18 @@ export function getTextFnTypeConfig(map, symbolDef) {
                 return u8[0];
             }
         },
-        {
-            attrName: 'aTextHaloOpacity',
-            symbolName: 'textHaloOpacity',
-            define: 'HAS_TEXT_HALO_OPACITY',
-            type: Uint8Array,
-            width: 1,
-            evaluate: properties => {
-                const radius = textHaloOpacityFn(map.getZoom(), properties);
-                u8[0] = radius;
-                return u8[0];
-            }
-        },
+        // {
+        //     attrName: 'aTextHaloOpacity',
+        //     symbolName: 'textHaloOpacity',
+        //     define: 'HAS_TEXT_HALO_OPACITY',
+        //     type: Uint8Array,
+        //     width: 1,
+        //     evaluate: properties => {
+        //         const radius = textHaloOpacityFn(map.getZoom(), properties);
+        //         u8[0] = radius;
+        //         return u8[0];
+        //     }
+        // },
         {
             attrName: 'aTextDx',
             symbolName: 'textDx',
