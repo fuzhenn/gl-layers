@@ -100,8 +100,16 @@ class IconPainter extends CollisionPainter {
         const iconConfigs = getMarkerFnTypeConfig.call(this, map, symbolDef);
         const textConfigs = getTextFnTypeConfig.call(this, map, symbolDef);
         // textDx 和 textDy 的逻辑已经合并在 icon 的 aDxDy 中，需要删除
+        // text 的 aPitchAlign, aRotationAlign, aColorOpacity, aOverlap 都和marker保持一致，这里也不做处理
         for (let i = textConfigs.length - 1; i >= 0; i--) {
-            if (textConfigs[i].attrName === 'aTextDx' || textConfigs[i].attrName === 'aTextDy') {
+            const attrName = textConfigs[i].attrName;
+            if (attrName === 'aTextDx' ||
+                attrName === 'aTextDy' ||
+                attrName === 'aPitchAlign' ||
+                attrName === 'aRotationAlign' ||
+                attrName === 'aColorOpacity' ||
+                attrName === 'aOverlap'
+            ) {
                 textConfigs.splice(i, 1);
             }
         }

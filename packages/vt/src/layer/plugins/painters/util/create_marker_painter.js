@@ -117,13 +117,12 @@ export function createMarkerMesh(
     if (hasText) {
         initTextMeshDefines.call(this, defines, mesh);
     }
-
     mesh.setDefines(defines);
     mesh.setUniform('alphaTest', DEFAULT_ICON_ALPHA_TEST);
     mesh.setLocalTransform(transform);
     mesh.properties.symbolIndex = geometry.properties.symbolIndex;
     if (haloMesh) {
-        mesh.properties.haloMesh = haloMesh;
+        // mesh.properties.haloMesh = haloMesh;
     }
     meshes.push(mesh);
     return meshes;
@@ -200,10 +199,10 @@ function initMeshDefines(geometry, defines) {
     if (isFnTypeSymbol(symbolDef.markerDy)) {
         defines['HAS_MARKER_DY'] = 1;
     }
-    if (isFnTypeSymbol(symbolDef.markerDx)) {
+    if (isFnTypeSymbol(symbolDef.textDx)) {
         defines['HAS_TEXT_DX'] = 1;
     }
-    if (isFnTypeSymbol(symbolDef.markerDy)) {
+    if (isFnTypeSymbol(symbolDef.textDy)) {
         defines['HAS_TEXT_DY'] = 1;
     }
     if (geometry.data.aPitchAlign) {
