@@ -179,10 +179,10 @@ export default class PointPack extends VectorPack {
         const point = new StyledPoint(feature, this.symbolDef, symbol, fnTypes, options);
         const iconGlyph = point.getIconAndGlyph();
         if (iconGlyph.icon && !this.options['atlas']) {
-            const { url, size } = iconGlyph.icon;
+            const { url, iconSize: size } = iconGlyph.icon;
             // 有时请求同一个图片时，尺寸不同 (例如有 markerTextFit 时)，只保存最大的尺寸
             if (!iconReqs[url]) {
-                iconReqs[url] = iconGlyph.icon.size;
+                iconReqs[url] = iconGlyph.icon.iconSize;
             }
             if (iconReqs[url][0] < size[0]) {
                 iconReqs[url][0] = size[0];
@@ -265,8 +265,7 @@ export default class PointPack extends VectorPack {
     _getTextFnTypeFormats() {
         const { textFillFn, textSizeFn,
             textHaloFillFn, textHaloRadiusFn,
-            textDxFn, textDyFn,
-            textHaloOpacityFn
+            textDxFn, textDyFn
         } = this._fnTypes;
         const formats = [];
         if (textFillFn) {
@@ -297,13 +296,13 @@ export default class PointPack extends VectorPack {
                 name: 'aTextHaloRadius'
             });
         }
-        if (textHaloOpacityFn) {
-            formats.push({
-                type: Uint8Array,
-                width: 1,
-                name: 'aTextHaloOpacity'
-            });
-        }
+        // if (textHaloOpacityFn) {
+        //     formats.push({
+        //         type: Uint8Array,
+        //         width: 1,
+        //         name: 'aTextHaloOpacity'
+        //     });
+        // }
         if (textDxFn) {
             formats.push({
                 type: Int8Array,
@@ -507,15 +506,15 @@ export default class PointPack extends VectorPack {
         if (isFunctionDefinition(textHaloRadius)) {
             this.dynamicAttrs['aTextHaloRadius'] = 1;
         }
-        if (isFunctionDefinition(textHaloOpacity)) {
-            this.dynamicAttrs['aTextHaloOpacity'] = 1;
+        // if (isFunctionDefinition(textHaloOpacity)) {
+        //     this.dynamicAttrs['aTextHaloOpacity'] = 1;
+        // }
+        if (isFunctionDefinition(textDx)) {
+            this.dynamicAttrs['aTextDx'] = 1;
         }
-        // if (isFunctionDefinition(textDx)) {
-        //     this.dynamicAttrs['aTextDx'] = 1;
-        // }
-        // if (isFunctionDefinition(textDy)) {
-        //     this.dynamicAttrs['aTextDy'] = 1;
-        // }
+        if (isFunctionDefinition(textDy)) {
+            this.dynamicAttrs['aTextDy'] = 1;
+        }
         if (isFunctionDefinition(markerWidth)) {
             this.dynamicAttrs['aMarkerWidth'] = 1;
         }
@@ -707,7 +706,7 @@ export default class PointPack extends VectorPack {
         markerWidth, markerHeight, markerDx, markerDy, opacity,
         pitchAlign, rotateAlign, rotation,
         allowOverlap, ignorePlacement) {
-        const { textFillFn, textSizeFn, textHaloFillFn, textHaloRadiusFn, textHaloOpacityFn, textDxFn, textDyFn,
+        const { textFillFn, textSizeFn, textHaloFillFn, textHaloRadiusFn, textDxFn, textDyFn,
             textPitchAlignmentFn, textRotationAlignmentFn, textRotationFn,
             textAllowOverlapFn, textIgnorePlacementFn,
             textOpacityFn,
@@ -745,12 +744,12 @@ export default class PointPack extends VectorPack {
             data.aTextHaloRadius[index++] = textHaloRadius;
             data.aTextHaloRadius.currentIndex = index;
         }
-        if (textHaloOpacityFn) {
-            // data.aTextHaloOpacity.push(textHaloOpacity);
-            let index = data.aTextHaloOpacity.currentIndex;
-            data.aTextHaloOpacity[index++] = textHaloOpacity;
-            data.aTextHaloOpacity.currentIndex = index;
-        }
+        // if (textHaloOpacityFn) {
+        //     // data.aTextHaloOpacity.push(textHaloOpacity);
+        //     let index = data.aTextHaloOpacity.currentIndex;
+        //     data.aTextHaloOpacity[index++] = textHaloOpacity;
+        //     data.aTextHaloOpacity.currentIndex = index;
+        // }
         if (textDxFn) {
             // data.aTextDx.push(textDx);
             let index = data.aTextDx.currentIndex;

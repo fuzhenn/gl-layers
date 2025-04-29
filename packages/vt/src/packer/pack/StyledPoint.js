@@ -40,7 +40,7 @@ export default class StyledPoint {
                 return null;
             }
             const glyphSize = 24;
-            const size = this.size[0],
+            const size = this.textSize[0],
                 fontScale = size / glyphSize;
             const oneEm = 24;
             const keepUpright = symbol['textKeepUpright'],
@@ -76,7 +76,7 @@ export default class StyledPoint {
             }
             shape.textShape = textShape;
         }
-        if (iconGlyph && iconGlyph.icon) {
+    if (iconGlyph && iconGlyph.icon) {
             if (!iconAtlas || !iconAtlas.positions[iconGlyph.icon.url]) {
                 //图片没有载入成功
                 return null;
@@ -85,8 +85,8 @@ export default class StyledPoint {
             const vAlignment = markerVerticalAlignmentFn ? markerVerticalAlignmentFn(null, properties) : symbol['markerVerticalAlignment'];
             const markerAnchor = getAnchor(hAlignment, vAlignment);
             const iconShape = shapeIcon(iconAtlas.positions[iconGlyph.icon.url], markerAnchor, this.options.isVector3D);
-            if (!this.size) {
-                this.size = iconShape.image.displaySize;
+            if (!this.iconSize) {
+                this.iconSize = iconShape.image.displaySize;
             }
             shape.iconShape = iconShape;
         }
@@ -109,9 +109,10 @@ export default class StyledPoint {
         const markerType = markerTypeFn ? markerTypeFn(null, properties) : symbol.markerType;
         const hasMarker = markerFile || markerType || symbol.markerPath;
         const hasText = !isNil(this.symbolDef.textName);
-        let size;
+        let iconSize;
+        let textSize;
         if (hasMarker) {
-            size = evaluateIconSize(symbol, this.symbolDef, properties, zoom, markerWidthFn, markerHeightFn) || [0, 0];
+            iconSize = evaluateIconSize(symbol, this.symbolDef, properties, zoom, markerWidthFn, markerHeightFn) || [0, 0];
             let textFit = symbol.markerTextFit;
             if (markerTextFitFn) {
                 textFit = markerTextFitFn(zoom, properties);
@@ -125,7 +126,7 @@ export default class StyledPoint {
                 const text = resolveText(textName, properties);
                 if (!text) {
                     // blank text
-                    size[0] = size[1] = -1;
+                    iconSize[0] = iconSize[1] = -1;
                 } else {
                     const textSizeFnName = '__fn_textSize'.trim();
                     const textSizeFn0Name = '__fn_textSize_0'.trim();
@@ -142,34 +143,42 @@ export default class StyledPoint {
                     }
                     const tsize = evaluateTextSize(symbol.text, symbol.text, properties, zoom);
                     if (textFit === 'width' || textFit === 'both') {
-                        size[0] = tsize[0] * text.length;
+                        iconSize[0] = tsize[0] * text.length;
                     }
                     // TODO 这里不支持多行文字
                     if (textFit === 'height' || textFit === 'both') {
-                        size[1] = tsize[1];
+                        iconSize[1] = tsize[1];
                     }
                     if (tsize[0] && tsize[1]) {
                         let padding = symbol.markerTextFitPadding || [0, 0, 0, 0];
                         if (markerTextFitPaddingFn) {
                             padding = markerTextFitPaddingFn(zoom, properties);
                         }
-                        size[0] += padding[1] + padding[3];
-                        size[1] += padding[0] + padding[2];
+                        iconSize[0] += padding[1] + padding[3];
+                        iconSize[1] += padding[0] + padding[2];
                     }
                 }
             }
         }
         if (hasText) {
-            size = evaluateTextSize(symbol, this.symbolDef, properties, zoom);
+            textSize = evaluateTextSize(symbol, this.symbolDef, properties, zoom);
         }
-        if (!size) {
+        if (!textSize && !iconSize) {
             return result;
         }
-        size[0] = Math.ceil(size[0]);
-        size[1] = Math.ceil(size[1]);
-        this.size = size;
+        if (iconSize) {
+            iconSize[0] = Math.ceil(iconSize[0]);
+            iconSize[1] = Math.ceil(iconSize[1]);
+        }
+        if (textSize) {
+            textSize[0] = Math.ceil(textSize[0]);
+            textSize[1] = Math.ceil(textSize[1]);
+        }
+
+        this.iconSize = iconSize;
+        this.textSize = textSize;
         // size为0时，仍然能请求图片，例如只有markerFile的symbol，size < 0时的图片应该忽略，例如文字为空的markerTextFit图标
-        if (hasMarker && size[0] >= 0 && size[1] >= 0) {
+        if (hasMarker && iconSize[0] >= 0 && iconSize[1] >= 0) {
             let icon;
             if (markerType) {
                 const url = {};
@@ -262,11 +271,12 @@ export default class StyledPoint {
                 icon = 'vector://' + JSON.stringify(url);
             } else {
                 icon = markerFile ? markerFile.replace(URL_PATTERN, this._thisReplacer) :
-                    symbol.markerPath ? getMarkerPathBase64(symbol, size[0], size[1]) : null;
+                    symbol.markerPath ? getMarkerPathBase64(symbol, iconSize[0], iconSize[1]) : null;
             }
             result.icon = {
                 url: icon,
-                size
+                iconSize,
+                textSize
             };
         }
 
