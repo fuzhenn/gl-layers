@@ -566,11 +566,11 @@ export default class PointPack extends VectorPack {
         let opacity;
         const opacityFn = markerOpacityFn;
         if (opacityFn) {
-            opacity = opacityFn(this.options['zoom'], properties) * 255;
+            opacity = (opacityFn(this.options['zoom'], properties) || 0) * 255;
         }
-        let textOpacity = 1;
+        let textOpacity = 0;
         if (textOpacityFn) {
-            textOpacity = textOpacityFn(this.options['zoom'], properties) * 255;
+            textOpacity = (textOpacityFn(this.options['zoom'], properties) || 0) * 255;
         }
 
         const textCount = textQuads && textQuads.length || 0;
@@ -811,8 +811,9 @@ export default class PointPack extends VectorPack {
         const isTextPlugin = this.options.pluginType === 'text';
         const opacityFn = markerOpacityFn;
         if (!isTextPlugin && (opacityFn || textOpacityFn)) {
+            // debugger
             if (!opacityFn) {
-                opacity = 1;
+                opacity = 255;
             }
             let index = data.aColorOpacity.currentIndex;
             data.aColorOpacity[index++] = opacity;
@@ -820,7 +821,7 @@ export default class PointPack extends VectorPack {
             if (textOpacityFn) {
                 opacity = textOpacity;
             } else {
-                opacity = 1;
+                opacity = 255;
             }
             index = data.aColorOpacity.currentIndex;
             data.aColorOpacity[index++] = opacity;

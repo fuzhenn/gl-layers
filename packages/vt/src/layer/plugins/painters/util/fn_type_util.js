@@ -51,8 +51,10 @@ function prepareAttr(geometry, symbolDef, config, layer) {
         //     arr.buffer.destroy();
         // }
         // delete geometry.data[attrName];
-        geometry.deleteData(attrName);
-        removeFnTypePropArrs(geometry, attrName);
+        if (config.index === undefined) {
+            geometry.deleteData(attrName);
+            removeFnTypePropArrs(geometry, attrName);
+        }
         return null;
     }
     if (isFnTypeSymbol(symbolDef[symbolName])) {
@@ -101,7 +103,10 @@ function createZoomFnTypeIndexData(geometry, symbolDef, config) {
     const hasZoomIdentity = isIdentityFn && StyleUtil.checkIfIdentityZoomDependent(symbolName, symbolDef[symbolName].property, geoProps.features);
     if (!hasZoomIdentity && !stopValues.length) {
         //说明stops中没有function-type类型
-        removeFnTypePropArrs(geometry, attrName);
+        if (config.index === undefined) {
+            // config 中定义了 index，说明和其他属性共享，不能删除
+            removeFnTypePropArrs(geometry, attrName);
+        }
         return;
     }
 
@@ -109,12 +114,18 @@ function createZoomFnTypeIndexData(geometry, symbolDef, config) {
     const aIndex = createFnTypeFeatureIndex(features, aPickingId, symbolDef[symbolName].property, stopValues, hasZoomIdentity);
     if (!aIndex.length) {
         //说明瓦片中没有 function-type 中涉及的 feature
-        removeFnTypePropArrs(geometry, attrName);
+        if (config.index === undefined) {
+            removeFnTypePropArrs(geometry, attrName);
+        }
+        return;
+    }
+
+    geoProps[aIndexPropName] = aIndex;
+    if (geoProps[attrPropName]) {
+        // 当多个 symbolName 共享同一个 attribute 时，array无需再次创建
         return;
     }
     const arr = geometry.data[attrName];
-
-    geoProps[aIndexPropName] = aIndex;
     geoProps[attrPropName] = arr.BYTES_PER_ELEMENT ? new arr.constructor(arr) : new config.type(arr.length);
 
 }
