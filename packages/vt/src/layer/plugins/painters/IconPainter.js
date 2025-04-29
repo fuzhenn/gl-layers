@@ -105,7 +105,10 @@ class IconPainter extends CollisionPainter {
                 textConfigs.splice(i, 1);
             }
         }
-        return iconConfigs.concat(textConfigs);
+        const configs = iconConfigs.concat(textConfigs);
+        configs.text = textConfigs;
+        configs.icon = iconConfigs;
+        return configs;
     }
 
     startFrame(...args) {
@@ -135,7 +138,7 @@ class IconPainter extends CollisionPainter {
             this._prepareRequiredProps(geometry);
             if (iconAtlas) {
                 this.drawDebugAtlas(iconAtlas);
-                prepareMarkerGeometry(geometry, symbolDef, fnTypeConfig, this.layer);
+                prepareMarkerGeometry(geometry, symbolDef, fnTypeConfig.icon, this.layer);
             }
             if (glyphAtlas) {
                 const markerTextFit = symbolDef['markerTextFit'];

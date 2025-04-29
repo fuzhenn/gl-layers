@@ -62,7 +62,7 @@ export function createMarkerMesh(
         geometry.properties.visElemts = new geometry.elements.constructor(geometry.elements.length);
     }
     if (hasText) {
-        prepareTextGeometry.call(this, geometry, symbolDef, fnTypeConfig, enableCollision, visibleInCollision, enableUniquePlacement);
+        prepareTextGeometry.call(this, geometry, symbolDef, fnTypeConfig.text, enableCollision, visibleInCollision, enableUniquePlacement);
     }
 
     prepareDxDy.call(this, geometry);
@@ -194,6 +194,12 @@ function initMeshDefines(geometry, defines) {
         defines['HAS_OPACITY'] = 1;
     }
     const symbolDef = this.getSymbolDef(geometry.properties.symbolIndex);
+    if (isFnTypeSymbol(symbolDef.markerDx)) {
+        defines['HAS_MARKER_DX'] = 1;
+    }
+    if (isFnTypeSymbol(symbolDef.markerDy)) {
+        defines['HAS_MARKER_DY'] = 1;
+    }
     if (isFnTypeSymbol(symbolDef.markerDx)) {
         defines['HAS_TEXT_DX'] = 1;
     }
