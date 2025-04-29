@@ -17,7 +17,7 @@ attribute vec3 aTexCoord;
 #endif
 
 #ifdef HAS_OPACITY
-    attribute float aColorOpacity;
+    attribute vec2 aColorOpacity;
 #endif
 
 #ifdef HAS_TEXT_SIZE
@@ -304,7 +304,11 @@ void main() {
         #endif
 
         #ifdef HAS_OPACITY
-            vOpacity *= aColorOpacity / 255.0;
+            if (isText > 0.5) {
+                vOpacity *= aColorOpacity.y / 255.0;
+            } else {
+                vOpacity *= aColorOpacity.x / 255.0;
+            }
         #endif
 
         #ifdef HAS_TEXT_FILL

@@ -284,6 +284,7 @@ export function getMarkerFnTypeConfig(map, symbolDef) {
     const markerRotationFn = interpolated(symbolDef['markerRotation']);
     const markerAllowOverlapFn = piecewiseConstant(symbolDef['markerAllowOverlapFn']);
     const markerIgnorePlacementFn = piecewiseConstant(symbolDef['markerIgnorePlacement']);
+    const textOpacityFn = interpolated(symbolDef['textOpacity']);
     const textDxFn = interpolated(symbolDef['textDx']);
     const textDyFn = interpolated(symbolDef['textDy']);
     const u8 = new Int16Array(1);
@@ -420,12 +421,35 @@ export function getMarkerFnTypeConfig(map, symbolDef) {
             attrName: 'aColorOpacity',
             symbolName: 'markerOpacity',
             type: Uint8Array,
-            width: 1,
+            width: 2,
+            index: 0,
             define: 'HAS_OPACITY',
             evaluate: (properties, geometry) => {
-                let opacity = markerOpacityFn(map.getZoom(), properties);
-                if (isFunctionDefinition(opacity)) {
-                    opacity = this.evaluateInFnTypeConfig(opacity, geometry, map, properties);
+                let opacity = 1;
+                if (markerOpacityFn) {
+                    opacity = markerOpacityFn(map.getZoom(), properties);
+                    if (isFunctionDefinition(opacity)) {
+                        opacity = this.evaluateInFnTypeConfig(opacity, geometry, map, properties);
+                    }
+                }
+                u8[0] = opacity * 255;
+                return u8[0];
+            }
+        },
+        {
+            attrName: 'aColorOpacity',
+            symbolName: 'textOpacity',
+            type: Uint8Array,
+            width: 2,
+            index: 1,
+            define: 'HAS_OPACITY',
+            evaluate: (properties, geometry) => {
+                let opacity = 1;
+                if (textOpacityFn) {
+                    opacity = textOpacityFn(map.getZoom(), properties);
+                    if (isFunctionDefinition(opacity)) {
+                        opacity = this.evaluateInFnTypeConfig(opacity, geometry, map, properties);
+                    }
                 }
                 u8[0] = opacity * 255;
                 return u8[0];

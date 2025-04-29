@@ -25,6 +25,9 @@ const DEFAULT_VIEW = {
 describe('vector 3d integration specs', () => {
     let map, container;
     before(() => {
+        // const iconDebug = document.createElement('canvas');
+        // iconDebug.id = 'MAPTALKS_ICON_DEBUG';
+        // document.body.appendChild(iconDebug);
         container = document.createElement('div');
         container.style.width = '128px';
         container.style.height = '128px';

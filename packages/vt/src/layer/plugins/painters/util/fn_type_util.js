@@ -277,14 +277,14 @@ function getFnTypePropertyStopValues(stops) {
  * @param {Function} evaluate
  */
 function updateFnTypeAttrib(geometry, aIndex, config, layer) {
-    const { attrName, evaluate, index } = config;
+    const { attrName, evaluate, index, width } = config;
     const { aPickingId, features } = geometry.properties;
     let arr;
     if (aIndex) {
         //二级stops存在与zoom有关的fn-type
         const attrProp = (PREFIX + attrName).trim();
         arr = geometry.properties[attrProp];
-        const len = arr.length / aPickingId.length;
+        const len = width;
         const l = aIndex.length;
         for (let i = 0; i < l; i += 2) {
             const start = aIndex[i];

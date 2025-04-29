@@ -220,7 +220,14 @@ export default class PointPack extends VectorPack {
         const { markerOpacityFn, textOpacityFn, markerPitchAlignmentFn, textPitchAlignmentFn,
             markerRotationAlignmentFn, textRotationAlignmentFn, markerRotationFn, textRotationFn,
             markerAllowOverlapFn, textAllowOverlapFn, markerIgnorePlacementFn, textIgnorePlacementFn } = this._fnTypes;
-        if (markerOpacityFn || textOpacityFn) {
+        if (markerOpacityFn) {
+            format.push({
+                type: Uint8Array,
+                width: 2,
+                name: 'aColorOpacity'
+            });
+        }
+        if (textOpacityFn) {
             format.push({
                 type: Uint8Array,
                 width: 1,
@@ -557,9 +564,13 @@ export default class PointPack extends VectorPack {
             ignorePlacement = ignorePlacementFn(null, properties) || 0;
         }
         let opacity;
-        const opacityFn = textOpacityFn || markerOpacityFn;
+        const opacityFn = markerOpacityFn;
         if (opacityFn) {
             opacity = opacityFn(this.options['zoom'], properties) * 255;
+        }
+        let textOpacity = 1;
+        if (textOpacityFn) {
+            textOpacity = textOpacityFn(this.options['zoom'], properties) * 255;
         }
 
         const textCount = textQuads && textQuads.length || 0;
@@ -587,7 +598,7 @@ export default class PointPack extends VectorPack {
                 this._fillTextData(data, alongLine, charCount, quad.glyphOffset, anchor, isVertical, anchor.axis, anchor.angleR);
 
                 this._fillFnTypeData(data, textFill, textSize, textHaloFill, textHaloRadius, textHaloOpacity, textDx, textDy,
-                    markerWidth, markerHeight, markerDx, markerDy, opacity, pitchAlign, rotateAlign, rotation,
+                    markerWidth, markerHeight, markerDx, markerDy, opacity, textOpacity, pitchAlign, rotateAlign, rotation,
                     allowOverlap, ignorePlacement);
 
                 this._fillPos(data, x, y, altitude, tr.x * 10, tr.y * 10,
@@ -595,7 +606,7 @@ export default class PointPack extends VectorPack {
                 this._fillTextData(data, alongLine, charCount, quad.glyphOffset, anchor, isVertical, anchor.axis, anchor.angleR);
 
                 this._fillFnTypeData(data, textFill, textSize, textHaloFill, textHaloRadius, textHaloOpacity, textDx, textDy,
-                    markerWidth, markerHeight, markerDx, markerDy, opacity, pitchAlign, rotateAlign, rotation,
+                    markerWidth, markerHeight, markerDx, markerDy, opacity, textOpacity, pitchAlign, rotateAlign, rotation,
                     allowOverlap, ignorePlacement);
 
                 this._fillPos(data, x, y, altitude, bl.x * 10, bl.y * 10,
@@ -603,7 +614,7 @@ export default class PointPack extends VectorPack {
                 this._fillTextData(data, alongLine, charCount, quad.glyphOffset, anchor, isVertical, anchor.axis, anchor.angleR);
 
                 this._fillFnTypeData(data, textFill, textSize, textHaloFill, textHaloRadius, textHaloOpacity, textDx, textDy,
-                    markerWidth, markerHeight, markerDx, markerDy, opacity, pitchAlign, rotateAlign, rotation,
+                    markerWidth, markerHeight, markerDx, markerDy, opacity, textOpacity, pitchAlign, rotateAlign, rotation,
                     allowOverlap, ignorePlacement);
 
                 this._fillPos(data, x, y, altitude, br.x * 10, br.y * 10,
@@ -611,7 +622,7 @@ export default class PointPack extends VectorPack {
                 this._fillTextData(data, alongLine, charCount, quad.glyphOffset, anchor, isVertical, anchor.axis, anchor.angleR);
 
                 this._fillFnTypeData(data, textFill, textSize, textHaloFill, textHaloRadius, textHaloOpacity, textDx, textDy,
-                    markerWidth, markerHeight, markerDx, markerDy, opacity, pitchAlign, rotateAlign, rotation,
+                    markerWidth, markerHeight, markerDx, markerDy, opacity, textOpacity, pitchAlign, rotateAlign, rotation,
                     allowOverlap, ignorePlacement);
 
 
@@ -714,7 +725,7 @@ export default class PointPack extends VectorPack {
 
     _fillFnTypeData(data,
         textFill, textSize, textHaloFill, textHaloRadius, textHaloOpacity, textDx, textDy,
-        markerWidth, markerHeight, markerDx, markerDy, opacity,
+        markerWidth, markerHeight, markerDx, markerDy, opacity, textOpacity,
         pitchAlign, rotateAlign, rotation,
         allowOverlap, ignorePlacement) {
         const { textFillFn, textSizeFn, textHaloFillFn, textHaloRadiusFn, textDxFn, textDyFn,
@@ -797,13 +808,30 @@ export default class PointPack extends VectorPack {
             data.aMarkerDy[index++] = markerDy;
             data.aMarkerDy.currentIndex = index;
         }
-        const opacityFn = markerOpacityFn || textOpacityFn;
-        if (opacityFn) {
-            // data.aColorOpacity.push(opacity);
+        const isTextPlugin = this.options.pluginType === 'text';
+        const opacityFn = markerOpacityFn;
+        if (!isTextPlugin && (opacityFn || textOpacityFn)) {
+            if (!opacityFn) {
+                opacity = 1;
+            }
+            let index = data.aColorOpacity.currentIndex;
+            data.aColorOpacity[index++] = opacity;
+            data.aColorOpacity.currentIndex = index;
+            if (textOpacityFn) {
+                opacity = textOpacity;
+            } else {
+                opacity = 1;
+            }
+            index = data.aColorOpacity.currentIndex;
+            data.aColorOpacity[index++] = opacity;
+            data.aColorOpacity.currentIndex = index;
+        }
+        if (isTextPlugin && textOpacityFn) {
             let index = data.aColorOpacity.currentIndex;
             data.aColorOpacity[index++] = opacity;
             data.aColorOpacity.currentIndex = index;
         }
+
         if (textPitchAlignmentFn || markerPitchAlignmentFn) {
             // data.aPitchAlign.push(pitchAlign);
             let index = data.aPitchAlign.currentIndex;
