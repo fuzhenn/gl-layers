@@ -776,7 +776,7 @@ export default class TextPainter extends CollisionPainter {
                 rotation -= Math.PI / 2;
             }
 
-            const shapeMatrix = getShapeMatrix(MAT2, rotation, 0, uniforms['rotateWithMap'], uniforms['pitchWithMap']);
+            const shapeMatrix = getShapeMatrix(MAT2, rotation, 0, uniforms['textRotateWithMap'], uniforms['pitchWithMap']);
 
             const is3DPitchText = aOffset.length > aShape.length;
             let rotMatrix;

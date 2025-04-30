@@ -39,14 +39,14 @@ attribute float aColorOpacity;
     uniform float pitchWithMap;
 #endif
 
-#if defined(HAS_ROTATION_ALIGN)
+#if defined(HAS_TEXT_ROTATION_ALIGN)
     attribute float aRotationAlign;
 #else
-    uniform float rotateWithMap;
+    uniform float textRotateWithMap;
 #endif
 
 uniform float flipY;
-#if defined(HAS_ROTATION)
+#if defined(HAS_TEXT_ROTATION)
     attribute float aRotation;
 #else
     uniform float textRotation;
@@ -128,7 +128,7 @@ void main() {
     #if defined(HAS_ROTATION_ALIGN)
         float isRotateWithMap = aRotationAlign;
     #else
-        float isRotateWithMap = rotateWithMap;
+        float isRotateWithMap = textRotateWithMap;
     #endif
 
     gl_Position = projViewModelMatrix * positionMatrix * vec4(position, 1.0);
@@ -149,7 +149,7 @@ void main() {
             4.0);
     }
 
-    #ifdef HAS_ROTATION
+    #ifdef HAS_TEXT_ROTATION
         float rotation = -aRotation / 9362.0 - mapRotation * isRotateWithMap;
     #else
         float rotation = -textRotation - mapRotation * isRotateWithMap;

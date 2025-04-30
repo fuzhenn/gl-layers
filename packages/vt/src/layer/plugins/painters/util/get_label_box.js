@@ -42,7 +42,16 @@ export function getLabelBox(out, anchor, projAnchor, mesh, textSize, textHaloRad
     const textDx = aTextDx ? aTextDx[i] : symbol['textDx'];
     const textDy = aTextDy ? aTextDy[i] : symbol['textDy'];
     const pitchWithMap = aPitchAlign ? aPitchAlign[i] : uniforms['pitchWithMap'];
-    const rotateWidthMap = aRotationAlign ? aRotationAlign[i] : uniforms['rotateWithMap'];
+    let rotateAlign;
+    if (aRotationAlign) {
+        if (aType) {
+            // with icon
+            rotateAlign = aRotationAlign[i * 2 + 1];
+        } else {
+            rotateAlign = aRotationAlign[i];
+        }
+    }
+    const rotateWidthMap = aRotationAlign ? rotateAlign : uniforms['textRotateWithMap'];
     const dxdy = vec2.set(DXDY, textDx || 0, -(textDy || 0));
 
     if (!isAlongLine) {

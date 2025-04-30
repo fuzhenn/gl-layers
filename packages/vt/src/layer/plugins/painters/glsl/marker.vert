@@ -59,10 +59,14 @@ attribute vec3 aTexCoord;
     uniform float pitchWithMap;
 #endif
 
-#if defined(HAS_ROTATION_ALIGN)
-    attribute float aRotationAlign;
-#else
-    uniform float rotateWithMap;
+#if defined(HAS_MARKER_ROTATION_ALIGN) || defined(HAS_TEXT_ROTATION_ALIGN)
+    attribute vec2 aRotationAlign;
+#endif
+#ifndef HAS_MARKER_ROTATION_ALIGN
+    uniform float markerRotateWithMap;
+#endif
+#ifndef HAS_TEXT_ROTATION_ALIGN
+    uniform float textRotateWithMap;
 #endif
 
 uniform float flipY;
@@ -177,11 +181,23 @@ void main() {
     #else
         float isPitchWithMap = pitchWithMap;
     #endif
-    #if defined(HAS_ROTATION_ALIGN)
-        float isRotateWithMap = aRotationAlign;
-    #else
-        float isRotateWithMap = rotateWithMap;
-    #endif
+
+    float isText = aTexCoord.z;
+    float isRotateWithMap;
+    if (isText > 0.5) {
+        #ifdef HAS_TEXT_ROTATION_ALIGN
+            isRotateWithMap = aRotationAlign.y;
+        #else
+            isRotateWithMap = textRotateWithMap;
+        #endif
+    } else {
+        #ifdef HAS_MARKER_ROTATION_ALIGN
+            isRotateWithMap = aRotationAlign.x;
+        #else
+            isRotateWithMap = markerRotateWithMap;
+        #endif
+    }
+
     gl_Position = projViewModelMatrix * positionMatrix * vec4(position, 1.0);
     float projDistance = gl_Position.w;
 
@@ -196,7 +212,6 @@ void main() {
             0.0, // Prevents oversized near-field symbols in pitched/overzoomed tiles
             4.0);
     }
-    float isText = aTexCoord.z;
     float rotation;
     if (isText > 0.5) {
         #ifdef HAS_TEXT_ROTATION

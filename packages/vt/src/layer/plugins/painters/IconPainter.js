@@ -162,12 +162,13 @@ class IconPainter extends CollisionPainter {
     }
 
     _prepareRequiredProps(geometry) {
-        const { aTexCoord, aCount } = geometry.data;
+        const { aCount, aTexCoord } = geometry.data;
         geometry.properties.aCount = aCount;
         delete geometry.data.aCount;
         // aType = 顶点的类型：0 为 marker， 1 为 text
-        const aType = new Uint8Array(aCount.length);
-        for (let i = 0; i < aTexCoord.length; i++) {
+        const length = aTexCoord.length / 3;
+        const aType = new Uint8Array(length);
+        for (let i = 0; i < length; i++) {
             aType[i] = aTexCoord[i * 3 + 2];
         }
         geometry.properties.aType = aType;

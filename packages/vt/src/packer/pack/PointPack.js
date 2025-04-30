@@ -245,7 +245,7 @@ export default class PointPack extends VectorPack {
         if (markerRotationAlignmentFn || textRotationAlignmentFn) {
             format.push({
                 type: Uint8Array,
-                width: 1,
+                width: isTextPlugin ? 1 : 2,
                 name: 'aRotationAlign'
             });
         }
@@ -431,7 +431,7 @@ export default class PointPack extends VectorPack {
         let markerDx = 0;
         let markerDy = 0;
 
-        let pitchAlign, rotateAlign, markerRotation = 0, textRotation = 0;
+        let pitchAlign, markerRotateAlign = 0, textRotateAlign = 0, markerRotation = 0, textRotation = 0;
         let allowOverlap, ignorePlacement;
         let textQuads;
         if (hasText) {
@@ -480,7 +480,7 @@ export default class PointPack extends VectorPack {
                 pitchAlign = +(textPitchAlignmentFn(null, properties) === 'map');
             }
             if (textRotationAlignmentFn) {
-                rotateAlign = +(textRotationAlignmentFn(null, properties) === 'map');
+                textRotateAlign = +(textRotationAlignmentFn(null, properties) === 'map');
             }
             if (textRotationFn) {
                 textRotation = wrap(textRotationFn(null, properties), 0, 360) * Math.PI / 180;
@@ -512,7 +512,7 @@ export default class PointPack extends VectorPack {
                 pitchAlign = +(markerPitchAlignmentFn(null, properties) === 'map');
             }
             if (markerRotationAlignmentFn) {
-                rotateAlign = +(markerRotationAlignmentFn(null, properties) === 'map');
+                markerRotateAlign = +(markerRotationAlignmentFn(null, properties) === 'map');
             }
             if (markerRotationFn) {
                 markerRotation = wrap(markerRotationFn(null, properties), 0, 360) * Math.PI / 180;
@@ -549,7 +549,7 @@ export default class PointPack extends VectorPack {
         if (isFunctionDefinition(pitchAlign)) {
             this.dynamicAttrs['aPitchAlign'] = 1;
         }
-        if (isFunctionDefinition(rotateAlign)) {
+        if (isFunctionDefinition(markerRotateAlign) || isFunctionDefinition(textRotateAlign)) {
             this.dynamicAttrs['aRotationAlign'] = 1;
         }
         if (isFunctionDefinition(markerRotation) || isFunctionDefinition(textRotation)) {
@@ -599,7 +599,8 @@ export default class PointPack extends VectorPack {
                 this._fillTextData(data, alongLine, charCount, quad.glyphOffset, anchor, isVertical, anchor.axis, anchor.angleR);
 
                 this._fillFnTypeData(data, textFill, textSize, textHaloFill, textHaloRadius, textHaloOpacity, textDx, textDy,
-                    markerWidth, markerHeight, markerDx, markerDy, opacity, textOpacity, pitchAlign, rotateAlign,
+                    markerWidth, markerHeight, markerDx, markerDy, opacity, textOpacity, pitchAlign,
+                    markerRotateAlign, textRotateAlign,
                     markerRotation, textRotation,
                     allowOverlap, ignorePlacement);
 
@@ -608,7 +609,8 @@ export default class PointPack extends VectorPack {
                 this._fillTextData(data, alongLine, charCount, quad.glyphOffset, anchor, isVertical, anchor.axis, anchor.angleR);
 
                 this._fillFnTypeData(data, textFill, textSize, textHaloFill, textHaloRadius, textHaloOpacity, textDx, textDy,
-                    markerWidth, markerHeight, markerDx, markerDy, opacity, textOpacity, pitchAlign, rotateAlign,
+                    markerWidth, markerHeight, markerDx, markerDy, opacity, textOpacity, pitchAlign,
+                    markerRotateAlign, textRotateAlign,
                     markerRotation, textRotation,
                     allowOverlap, ignorePlacement);
 
@@ -617,7 +619,8 @@ export default class PointPack extends VectorPack {
                 this._fillTextData(data, alongLine, charCount, quad.glyphOffset, anchor, isVertical, anchor.axis, anchor.angleR);
 
                 this._fillFnTypeData(data, textFill, textSize, textHaloFill, textHaloRadius, textHaloOpacity, textDx, textDy,
-                    markerWidth, markerHeight, markerDx, markerDy, opacity, textOpacity, pitchAlign, rotateAlign,
+                    markerWidth, markerHeight, markerDx, markerDy, opacity, textOpacity, pitchAlign,
+                    markerRotateAlign, textRotateAlign,
                     markerRotation, textRotation,
                     allowOverlap, ignorePlacement);
 
@@ -626,7 +629,8 @@ export default class PointPack extends VectorPack {
                 this._fillTextData(data, alongLine, charCount, quad.glyphOffset, anchor, isVertical, anchor.axis, anchor.angleR);
 
                 this._fillFnTypeData(data, textFill, textSize, textHaloFill, textHaloRadius, textHaloOpacity, textDx, textDy,
-                    markerWidth, markerHeight, markerDx, markerDy, opacity, textOpacity, pitchAlign, rotateAlign,
+                    markerWidth, markerHeight, markerDx, markerDy, opacity, textOpacity, pitchAlign,
+                    markerRotateAlign, textRotateAlign,
                     markerRotation, textRotation,
                     allowOverlap, ignorePlacement);
 
@@ -731,7 +735,7 @@ export default class PointPack extends VectorPack {
     _fillFnTypeData(data,
         textFill, textSize, textHaloFill, textHaloRadius, textHaloOpacity, textDx, textDy,
         markerWidth, markerHeight, markerDx, markerDy, opacity, textOpacity,
-        pitchAlign, rotateAlign, markerRotation, textRotation,
+        pitchAlign, markerRotateAlign, textRotateAlign, markerRotation, textRotation,
         allowOverlap, ignorePlacement) {
         const { textFillFn, textSizeFn, textHaloFillFn, textHaloRadiusFn, textDxFn, textDyFn,
             textPitchAlignmentFn, textRotationAlignmentFn, textRotationFn,
@@ -845,10 +849,19 @@ export default class PointPack extends VectorPack {
             data.aPitchAlign.currentIndex = index;
         }
         if (markerRotationAlignmentFn ||  textRotationAlignmentFn) {
-            //  data.aRotationAlign.push(rotateAlign);
-            let index = data.aRotationAlign.currentIndex;
-            data.aRotationAlign[index++] = rotateAlign;
-            data.aRotationAlign.currentIndex = index;
+            if (isTextPlugin) {
+                let index = data.aRotationAlign.currentIndex;
+                data.aRotationAlign[index++] = textRotateAlign;
+                data.aRotationAlign.currentIndex = index;
+            } else {
+                let index = data.aRotationAlign.currentIndex;
+                data.aRotationAlign[index++] = markerRotateAlign;
+                data.aRotationAlign.currentIndex = index;
+                index = data.aRotationAlign.currentIndex;
+                data.aRotationAlign[index++] = textRotateAlign;
+                data.aRotationAlign.currentIndex = index;
+            }
+
         }
         if (markerRotationFn || textRotationFn) {
             if (isTextPlugin) {

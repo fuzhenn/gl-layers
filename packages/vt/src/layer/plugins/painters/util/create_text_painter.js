@@ -167,48 +167,50 @@ export function prepareTextGeometry(
     enableUniquePlacement
 ) {
     prepareFnTypeData(geometry, symbolDef, fnTypeConfig, this.layer);
-    if (!geometry.properties.aCount) {
+    const geoProps = geometry.properties;
+    if (!geoProps.textInitialized) {
         prepareGeometry.call(this, geometry, enableCollision || enableUniquePlacement, visibleInCollision);
+        geoProps.textInitialized = true;
         const { aTextSize, aTextDx, aTextDy, aPitchAlign, aRotationAlign, aRotation, aOverlap, aAltitude } = geometry.data;
         if (aTextSize) {
             //for collision
             const keyName = (PREFIX + 'aTextSize').trim();
-            geometry.properties.aTextSize = geometry.properties[keyName] || new aTextSize.constructor(aTextSize);
+            geoProps.aTextSize = geoProps[keyName] || new aTextSize.constructor(aTextSize);
         }
         if (aTextDx) {
             //for collision
             const keyName = (PREFIX + 'aTextDx').trim();
-            geometry.properties.aTextDx = geometry.properties[keyName] || new aTextDx.constructor(aTextDx);
+            geoProps.aTextDx = geoProps[keyName] || new aTextDx.constructor(aTextDx);
         }
         if (aTextDy) {
             //for collision
             const keyName = (PREFIX + 'aTextDy').trim();
-            geometry.properties.aTextDy = geometry.properties[keyName] || new aTextDy.constructor(aTextDy);
+            geoProps.aTextDy = geoProps[keyName] || new aTextDy.constructor(aTextDy);
         }
 
         if (aPitchAlign) {
             //for collision
             const keyName = (PREFIX + 'aPitchAlign').trim();
-            geometry.properties.aPitchAlign = geometry.properties[keyName] || new aPitchAlign.constructor(aPitchAlign);
+            geoProps.aPitchAlign = geoProps[keyName] || new aPitchAlign.constructor(aPitchAlign);
         }
         if (aRotationAlign) {
             //for collision
             const keyName = (PREFIX + 'aRotationAlign').trim();
-            geometry.properties.aRotationAlign = geometry.properties[keyName] || new aRotationAlign.constructor(aRotationAlign);
+            geoProps.aRotationAlign = geoProps[keyName] || new aRotationAlign.constructor(aRotationAlign);
         }
         if (aRotation) {
             //for collision
             const keyName = (PREFIX + 'aRotation').trim();
-            geometry.properties.aRotation = geometry.properties[keyName] || new aRotation.constructor(aRotation);
+            geoProps.aRotation = geoProps[keyName] || new aRotation.constructor(aRotation);
         }
         if (aOverlap) {
             //for collision
             const keyName = (PREFIX + 'aOverlap').trim();
-            geometry.properties.aOverlap = geometry.properties[keyName] || new aOverlap.constructor(aOverlap);
+            geoProps.aOverlap = geoProps[keyName] || new aOverlap.constructor(aOverlap);
         }
         if (aAltitude) {
             const keyName = (PREFIX + 'aAltitude').trim();
-            geometry.properties.aAltitude = geometry.properties[keyName] || new aAltitude.constructor(aAltitude);
+            geoProps.aAltitude = geoProps[keyName] || new aAltitude.constructor(aAltitude);
         }
     }
 }
@@ -258,11 +260,11 @@ export function initTextMeshDefines(defines, mesh) {
     if (geometry.data.aPitchAlign) {
         defines['HAS_PITCH_ALIGN'] = 1;
     }
-    if (geometry.data.aRotationAlign) {
-        defines['HAS_ROTATION_ALIGN'] = 1;
+    if (isFnTypeSymbol(symbolDef.textRotationAlignment)) {
+        defines['HAS_TEXT_ROTATION_ALIGN'] = 1;
     }
     if (geometry.data.aRotation) {
-        defines['HAS_ROTATION'] = 1;
+        defines['HAS_TEXT_ROTATION'] = 1;
     }
     if (geometry.data.aAltitude) {
         defines['HAS_ALTITUDE'] = 1;
@@ -273,30 +275,33 @@ export function initTextMeshDefines(defines, mesh) {
 }
 
 function prepareGeometry(geometry, enableCollision, visibleInCollision) {
-    const symbol = this.getSymbol(geometry.properties.symbolIndex);
-    const isLinePlacement = geometry.properties.textPlacement === 'line' && !isIconText(symbol);
+    const geoProps = geometry.properties;
+    const symbol = this.getSymbol(geoProps.symbolIndex);
+    const isLinePlacement = geoProps.textPlacement === 'line' && !isIconText(symbol);
     const { aPosition, aShape } = geometry.data;
     const vertexCount = aPosition.length / geometry.desc.positionSize;
-    geometry.properties.aPickingId = geometry.data.aPickingId;
-    geometry.properties.aCount = geometry.data.aCount;
-    delete geometry.data.aCount;
+    geoProps.aPickingId = geometry.data.aPickingId;
+    if (!geoProps.aCount) {
+        geoProps.aCount = geometry.data.aCount;
+        delete geometry.data.aCount;
+    }
 
     if ((enableCollision || isLinePlacement)) {
-        geometry.properties.aAnchor = aPosition;
-        geometry.properties.aShape = aShape;
+        geoProps.aAnchor = aPosition;
+        geoProps.aShape = aShape;
     }
-    if (!geometry.properties.visElemts) {
-        geometry.properties.elements = geometry.elements;
-        geometry.properties.visElemts = new geometry.elements.constructor(geometry.elements.length);
+    if (!geoProps.visElemts) {
+        geoProps.elements = geometry.elements;
+        geoProps.visElemts = new geometry.elements.constructor(geometry.elements.length);
     }
 
     if (isLinePlacement) {
         const { aVertical, aSegment, aGlyphOffset, aPitchRotation } = geometry.data;
         const is3DPitchText = !!aPitchRotation;
-        geometry.properties.aGlyphOffset = aGlyphOffset;
-        geometry.properties.aPitchRotation = aPitchRotation;
-        geometry.properties.aSegment = aSegment;
-        geometry.properties.aVertical = aVertical;
+        geoProps.aGlyphOffset = aGlyphOffset;
+        geoProps.aPitchRotation = aPitchRotation;
+        geoProps.aSegment = aSegment;
+        geoProps.aVertical = aVertical;
 
         delete geometry.data.aSegment;
         delete geometry.data.aVertical;
@@ -308,7 +313,7 @@ function prepareGeometry(geometry, enableCollision, visibleInCollision) {
             usage: 'dynamic',
             data: new Int16Array(offsetLength)
         };
-        geometry.properties.aOffset = new Int16Array(offsetLength);
+        geoProps.aOffset = new Int16Array(offsetLength);
     }
 
     if (enableCollision) {
@@ -316,16 +321,16 @@ function prepareGeometry(geometry, enableCollision, visibleInCollision) {
             usage: 'dynamic',
             data: new Uint8Array(vertexCount)
         };
-        geometry.properties.aOpacity = new Uint8Array(vertexCount);
+        geoProps.aOpacity = new Uint8Array(vertexCount);
         if (visibleInCollision) {
-            geometry.properties.aOpacity.fill(255, 0);
+            geoProps.aOpacity.fill(255, 0);
             geometry.data.aOpacity.data.fill(255, 0);
         }
 
         const { aTextHaloRadius } = geometry.data;
-        if (aTextHaloRadius && !geometry.properties.aTextHaloRadius) {
+        if (aTextHaloRadius && !geoProps.aTextHaloRadius) {
             const keyName = (PREFIX + 'aTextHaloRadius').trim();
-            geometry.properties.aTextHaloRadius = geometry.properties[keyName] || new aTextHaloRadius.constructor(aTextHaloRadius);
+            geoProps.aTextHaloRadius = geoProps[keyName] || new aTextHaloRadius.constructor(aTextHaloRadius);
         }
     }
 }
@@ -349,7 +354,7 @@ function setMeshUniforms(geometry, uniforms, symbol) {
     setUniformFromSymbol(uniforms, 'textPerspectiveRatio', symbol, 'textPerspectiveRatio', DEFAULT_UNIFORMS['textPerspectiveRatio'], v => {
         return geometry.properties.textPlacement === 'line' ? 1 : v;
     });
-    setUniformFromSymbol(uniforms, 'rotateWithMap', symbol, 'textRotationAlignment', DEFAULT_UNIFORMS['textRotationAlignment'], v => +(v === 'map'));
+    setUniformFromSymbol(uniforms, 'textRotateWithMap', symbol, 'textRotationAlignment', DEFAULT_UNIFORMS['textRotationAlignment'], v => +(v === 'map'));
     setUniformFromSymbol(uniforms, 'pitchWithMap', symbol, 'textPitchAlignment', DEFAULT_UNIFORMS['textPitchAlignment'], v => +(v === 'map'));
     setUniformFromSymbol(uniforms, 'textSize', symbol, 'textSize', DEFAULT_UNIFORMS['textSize']);
     setUniformFromSymbol(uniforms, 'textDx', symbol, 'textDx', DEFAULT_UNIFORMS['textDx']);
@@ -606,7 +611,7 @@ export function getTextFnTypeConfig(map, symbolDef) {
             symbolName: 'textRotation',
             type: Uint16Array,
             width: 1,
-            define: 'HAS_ROTATION',
+            define: 'HAS_TEXT_ROTATION',
             evaluate: properties => {
                 const y = wrap(textRotationFn(map.getZoom(), properties), 0, 360) * Math.PI / 180;
                 u16[0] = y * 9362;
@@ -682,7 +687,7 @@ export function isLabelCollides(hasCollides, mesh, elements, boxCount, start, en
     //2, 将每个box在collision index中测试
     //   2.1 如果不冲突，则显示label
     //   2.2 如果冲突，则隐藏label
-    if (!isLinePlacement && mesh.material.uniforms['rotateWithMap'] !== 1 && !symbol['textRotation']) {
+    if (!isLinePlacement && mesh.material.uniforms['textRotateWithMap'] !== 1 && !symbol['textRotation']) {
         // 既没有沿线绘制，也没有随地图旋转时，文字本身也没有旋转时，只需为每行文字生成一个box即可
         // 遍历文字的aShape.y，发生变化时，说明新行开始，用第一个字的tl和最后一个字的br生成box
         let firstChrIdx = elements[start];

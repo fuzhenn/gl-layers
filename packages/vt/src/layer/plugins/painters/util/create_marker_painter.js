@@ -68,6 +68,7 @@ export function createMarkerMesh(
     prepareDxDy.call(this, geometry);
 
     geometry.properties.memorySize = geometry.getMemorySize();
+    // console.log('data', geometry.data);
     geometry.generateBuffers(regl, { excludeElementsInVAO: true });
 
     // const symbol = this.getSymbol();
@@ -175,7 +176,7 @@ function setMeshUniforms(uniforms, regl, geometry, symbol) {
     setUniformFromSymbol(uniforms, 'markerDy', symbol, 'markerDy', 0);
     setUniformFromSymbol(uniforms, 'markerRotation', symbol, 'markerRotation', 0, v => v * Math.PI / 180);
     setUniformFromSymbol(uniforms, 'pitchWithMap', symbol, 'markerPitchAlignment', 0, v => v === 'map' ? 1 : 0);
-    setUniformFromSymbol(uniforms, 'rotateWithMap', symbol, 'markerRotationAlignment', 0, v => v === 'map' ? 1 : 0);
+    setUniformFromSymbol(uniforms, 'markerRotateWithMap', symbol, 'markerRotationAlignment', 0, v => v === 'map' ? 1 : 0);
 
     const iconAtlas = geometry.properties.iconAtlas;
     uniforms['iconTex'] = iconAtlas ? createAtlasTexture(regl, iconAtlas, false) : this._emptyTexture;
@@ -208,8 +209,11 @@ function initMeshDefines(geometry, defines) {
     if (geometry.data.aPitchAlign) {
         defines['HAS_PITCH_ALIGN'] = 1;
     }
-    if (geometry.data.aRotationAlign) {
-        defines['HAS_ROTATION_ALIGN'] = 1;
+    if (isFnTypeSymbol(symbolDef.markerRotationAlignment)) {
+        defines['HAS_MARKER_ROTATION_ALIGN'] = 1;
+    }
+    if (isFnTypeSymbol(symbolDef.textRotationAlignment)) {
+        defines['HAS_TEXT_ROTATION_ALIGN'] = 1;
     }
     if (isFnTypeSymbol(symbolDef.markerRotation)) {
         defines['HAS_MARKER_ROTATION'] = 1;
@@ -284,6 +288,7 @@ export function getMarkerFnTypeConfig(map, symbolDef) {
     const markerTextFitFn = interpolated(symbolDef['markerTextFit']);
     const markerPitchAlignmentFn = piecewiseConstant(symbolDef['markerPitchAlignment']);
     const markerRotationAlignmentFn = piecewiseConstant(symbolDef['markerRotationAlignment']);
+    const textRotationAlignmentFn =  piecewiseConstant(symbolDef['textRotationAlignment']);
     const markerRotationFn = interpolated(symbolDef['markerRotation']);
     const textRotationFn = interpolated(symbolDef['textRotation']);
     const markerAllowOverlapFn = piecewiseConstant(symbolDef['markerAllowOverlapFn']);
@@ -474,10 +479,23 @@ export function getMarkerFnTypeConfig(map, symbolDef) {
             attrName: 'aRotationAlign',
             symbolName: 'markerRotationAlignment',
             type: Uint8Array,
-            width: 1,
-            define: 'HAS_ROTATION_ALIGN',
+            width: 2,
+            index: 0,
+            define: 'HAS_MARKER_ROTATION_ALIGN',
             evaluate: properties => {
                 const y = +(markerRotationAlignmentFn(map.getZoom(), properties) === 'map');
+                return y;
+            }
+        },
+        {
+            attrName: 'aRotationAlign',
+            symbolName: 'textRotationAlignment',
+            type: Uint8Array,
+            width: 2,
+            index: 1,
+            define: 'HAS_TEXT_ROTATION_ALIGN',
+            evaluate: properties => {
+                const y = +(textRotationAlignmentFn(map.getZoom(), properties) === 'map');
                 return y;
             }
         },
@@ -487,7 +505,7 @@ export function getMarkerFnTypeConfig(map, symbolDef) {
             type: Uint16Array,
             width: 2,
             index: 0,
-            define: 'HAS_ROTATION',
+            define: 'HAS_MARKER_ROTATION',
             evaluate: properties => {
                 const y = wrap(markerRotationFn(map.getZoom(), properties), 0, 360) * Math.PI / 180;
                 u16[0] = y * 9362;
@@ -500,7 +518,7 @@ export function getMarkerFnTypeConfig(map, symbolDef) {
             type: Uint16Array,
             width: 2,
             index: 1,
-            define: 'HAS_ROTATION',
+            define: 'HAS_TEXT_ROTATION',
             evaluate: properties => {
                 const y = wrap(textRotationFn(map.getZoom(), properties), 0, 360) * Math.PI / 180;
                 u16[0] = y * 9362;
