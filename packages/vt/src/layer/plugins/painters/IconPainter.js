@@ -106,6 +106,7 @@ class IconPainter extends CollisionPainter {
             if (attrName === 'aTextDx' ||
                 attrName === 'aTextDy' ||
                 attrName === 'aPitchAlign' ||
+                attrName === 'aRotation' ||
                 attrName === 'aRotationAlign' ||
                 attrName === 'aColorOpacity' ||
                 attrName === 'aOverlap'

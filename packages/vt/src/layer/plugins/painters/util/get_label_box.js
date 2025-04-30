@@ -38,7 +38,7 @@ export function getLabelBox(out, anchor, projAnchor, mesh, textSize, textHaloRad
             4.0);
     }
 
-    const { aTextDx, aTextDy, aPitchAlign, aRotationAlign, aRotation } = mesh.geometry.properties;
+    const { aTextDx, aTextDy, aPitchAlign, aRotationAlign, aRotation, aType } = mesh.geometry.properties;
     const textDx = aTextDx ? aTextDx[i] : symbol['textDx'];
     const textDy = aTextDy ? aTextDy[i] : symbol['textDy'];
     const pitchWithMap = aPitchAlign ? aPitchAlign[i] : uniforms['pitchWithMap'];
@@ -59,7 +59,16 @@ export function getLabelBox(out, anchor, projAnchor, mesh, textSize, textHaloRad
             vec2.multiply(br, br, AXIS_FACTOR);
         }
 
-        const textRotation = aRotation ? aRotation[i] / 9362 : (symbol['textRotation'] || 0) * Math.PI / 180;
+        let textRotation;
+        if (aRotation) {
+            if (aType && aRotation.length > aType.length) {
+                textRotation = aRotation[i * 2 + 1] / 9362;
+            } else {
+                textRotation = aRotation[i] / 9362;
+            }
+        } else {
+            textRotation = (symbol['textRotation'] || 0) * Math.PI / 180;
+        }
         const mapRotation = !isAlongLine ? map.getBearing() * Math.PI / 180 : 0;
         if (textRotation || mapRotation) {
             const shapeMatrix = getShapeMatrix(MAT2, textRotation, mapRotation, rotateWidthMap, pitchWithMap);

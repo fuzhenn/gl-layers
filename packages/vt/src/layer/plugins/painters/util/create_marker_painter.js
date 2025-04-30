@@ -211,8 +211,11 @@ function initMeshDefines(geometry, defines) {
     if (geometry.data.aRotationAlign) {
         defines['HAS_ROTATION_ALIGN'] = 1;
     }
-    if (geometry.data.aRotation) {
-        defines['HAS_ROTATION'] = 1;
+    if (isFnTypeSymbol(symbolDef.markerRotation)) {
+        defines['HAS_MARKER_ROTATION'] = 1;
+    }
+    if (isFnTypeSymbol(symbolDef.textRotation)) {
+        defines['HAS_TEXT_ROTATION'] = 1;
     }
     if (geometry.data.aPadOffset) {
         defines['HAS_PAD_OFFSET'] = 1;
@@ -282,6 +285,7 @@ export function getMarkerFnTypeConfig(map, symbolDef) {
     const markerPitchAlignmentFn = piecewiseConstant(symbolDef['markerPitchAlignment']);
     const markerRotationAlignmentFn = piecewiseConstant(symbolDef['markerRotationAlignment']);
     const markerRotationFn = interpolated(symbolDef['markerRotation']);
+    const textRotationFn = interpolated(symbolDef['textRotation']);
     const markerAllowOverlapFn = piecewiseConstant(symbolDef['markerAllowOverlapFn']);
     const markerIgnorePlacementFn = piecewiseConstant(symbolDef['markerIgnorePlacement']);
     const textOpacityFn = interpolated(symbolDef['textOpacity']);
@@ -481,10 +485,24 @@ export function getMarkerFnTypeConfig(map, symbolDef) {
             attrName: 'aRotation',
             symbolName: 'markerRotation',
             type: Uint16Array,
-            width: 1,
+            width: 2,
+            index: 0,
             define: 'HAS_ROTATION',
             evaluate: properties => {
                 const y = wrap(markerRotationFn(map.getZoom(), properties), 0, 360) * Math.PI / 180;
+                u16[0] = y * 9362;
+                return u16[0];
+            }
+        },
+        {
+            attrName: 'aRotation',
+            symbolName: 'textRotation',
+            type: Uint16Array,
+            width: 2,
+            index: 1,
+            define: 'HAS_ROTATION',
+            evaluate: properties => {
+                const y = wrap(textRotationFn(map.getZoom(), properties), 0, 360) * Math.PI / 180;
                 u16[0] = y * 9362;
                 return u16[0];
             }

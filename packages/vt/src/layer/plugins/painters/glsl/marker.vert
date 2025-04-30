@@ -66,10 +66,13 @@ attribute vec3 aTexCoord;
 #endif
 
 uniform float flipY;
-#ifdef HAS_ROTATION
-    attribute float aRotation;
-#else
+#if defined(HAS_MARKER_ROTATION) || defined(HAS_TEXT_ROTATION)
+    attribute vec2 aRotation;
+#endif
+#ifndef HAS_MARKER_ROTATION
     uniform float markerRotation;
+#endif
+#ifndef HAS_TEXT_ROTATION
     uniform float textRotation;
 #endif
 
@@ -194,18 +197,21 @@ void main() {
             4.0);
     }
     float isText = aTexCoord.z;
-    #ifdef HAS_ROTATION
-        float rotation = -aRotation / 9362.0 - mapRotation * isRotateWithMap;
-    #else
-        float rotation;
-        if (isText > 0.5) {
+    float rotation;
+    if (isText > 0.5) {
+        #ifdef HAS_TEXT_ROTATION
+            rotation = -aRotation.y / 9362.0 - mapRotation * isRotateWithMap;
+        #else
             rotation = -textRotation - mapRotation * isRotateWithMap;
-        } else {
+        #endif
+    } else {
+        // icon
+        #ifdef HAS_MARKER_ROTATION
+            rotation = -aRotation.x / 9362.0 - mapRotation * isRotateWithMap;
+        #else
             rotation = -markerRotation - mapRotation * isRotateWithMap;
-        }
-    #endif
-
-
+        #endif
+    }
 
     if (isPitchWithMap == 1.0) {
         #ifdef REVERSE_MAP_ROTATION_ON_PITCH
