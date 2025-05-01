@@ -51,7 +51,7 @@ export function getIconBox(out, mesh, i, matrix, map) {
     const { aShape, aMarkerDx, aMarkerDy, aMarkerWidth, aMarkerHeight, aPitchAlign, aRotationAlign, aRotation } = geoProps;
     const markerDx = aMarkerDx ? aMarkerDx[i] : symbol['markerDx'];
     const markerDy = aMarkerDy ? aMarkerDy[i] : symbol['markerDy'];
-    const pitchWithMap = aPitchAlign ? aPitchAlign[i] : uniforms['pitchWithMap'];
+    const pitchWithMap = aPitchAlign ? aPitchAlign[i * 2] : uniforms['markerPitchWithMap'];
     const rotateWithMap = aRotationAlign ? aRotationAlign[i * 2] : uniforms['markerRotateWithMap'];
     const dxdy = vec2.set(DXDY, markerDx || 0, -(markerDy || 0));
 

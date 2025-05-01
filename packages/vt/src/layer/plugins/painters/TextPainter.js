@@ -461,7 +461,7 @@ export default class TextPainter extends CollisionPainter {
         // this._counter++;
 
         const uniforms = mesh.material.uniforms;
-        const isPitchWithMap = uniforms['pitchWithMap'] === 1;
+        const isPitchWithMap = uniforms['textPitchWithMap'] === 1;
 
         const allElements = geometryProps.elements;
 
@@ -592,7 +592,7 @@ export default class TextPainter extends CollisionPainter {
         const renderer = this.layer.getRenderer();
 
         const uniforms = mesh.material.uniforms;
-        const isPitchWithMap = uniforms['pitchWithMap'] === 1;
+        const isPitchWithMap = uniforms['textPitchWithMap'] === 1;
         const terrainHelper = !isPitchWithMap && renderer.getTerrainHelper && renderer.getTerrainHelper();
 
         const enableCollision = this.isEnableCollision();
@@ -776,7 +776,7 @@ export default class TextPainter extends CollisionPainter {
                 rotation -= Math.PI / 2;
             }
 
-            const shapeMatrix = getShapeMatrix(MAT2, rotation, 0, uniforms['textRotateWithMap'], uniforms['pitchWithMap']);
+            const shapeMatrix = getShapeMatrix(MAT2, rotation, 0, uniforms['textRotateWithMap'], uniforms['textPitchWithMap']);
 
             const is3DPitchText = aOffset.length > aShape.length;
             let rotMatrix;

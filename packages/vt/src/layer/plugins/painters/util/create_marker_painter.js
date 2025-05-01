@@ -175,7 +175,7 @@ function setMeshUniforms(uniforms, regl, geometry, symbol) {
     setUniformFromSymbol(uniforms, 'markerDx', symbol, 'markerDx', 0);
     setUniformFromSymbol(uniforms, 'markerDy', symbol, 'markerDy', 0);
     setUniformFromSymbol(uniforms, 'markerRotation', symbol, 'markerRotation', 0, v => v * Math.PI / 180);
-    setUniformFromSymbol(uniforms, 'pitchWithMap', symbol, 'markerPitchAlignment', 0, v => v === 'map' ? 1 : 0);
+    setUniformFromSymbol(uniforms, 'markerPitchWithMap', symbol, 'markerPitchAlignment', 0, v => v === 'map' ? 1 : 0);
     setUniformFromSymbol(uniforms, 'markerRotateWithMap', symbol, 'markerRotationAlignment', 0, v => v === 'map' ? 1 : 0);
 
     const iconAtlas = geometry.properties.iconAtlas;
@@ -206,8 +206,11 @@ function initMeshDefines(geometry, defines) {
     if (isFnTypeSymbol(symbolDef.textDy)) {
         defines['HAS_TEXT_DY'] = 1;
     }
-    if (geometry.data.aPitchAlign) {
-        defines['HAS_PITCH_ALIGN'] = 1;
+    if (isFnTypeSymbol(symbolDef.markerPitchAlignment)) {
+        defines['HAS_MARKER_PITCH_ALIGN'] = 1;
+    }
+    if (isFnTypeSymbol(symbolDef.textPitchAlignment)) {
+        defines['HAS_TEXT_PITCH_ALIGN'] = 1;
     }
     if (isFnTypeSymbol(symbolDef.markerRotationAlignment)) {
         defines['HAS_MARKER_ROTATION_ALIGN'] = 1;
@@ -287,6 +290,7 @@ export function getMarkerFnTypeConfig(map, symbolDef) {
     const markerOpacityFn = interpolated(symbolDef['markerOpacity']);
     const markerTextFitFn = interpolated(symbolDef['markerTextFit']);
     const markerPitchAlignmentFn = piecewiseConstant(symbolDef['markerPitchAlignment']);
+    const textPitchAlignmentFn = piecewiseConstant(symbolDef['textPitchAlignment']);
     const markerRotationAlignmentFn = piecewiseConstant(symbolDef['markerRotationAlignment']);
     const textRotationAlignmentFn =  piecewiseConstant(symbolDef['textRotationAlignment']);
     const markerRotationFn = interpolated(symbolDef['markerRotation']);
@@ -468,10 +472,23 @@ export function getMarkerFnTypeConfig(map, symbolDef) {
             attrName: 'aPitchAlign',
             symbolName: 'markerPitchAlignment',
             type: Uint8Array,
-            width: 1,
+            width: 2,
+            index: 0,
             define: 'HAS_PITCH_ALIGN',
             evaluate: properties => {
                 const y = +(markerPitchAlignmentFn(map.getZoom(), properties) === 'map');
+                return y;
+            }
+        },
+        {
+            attrName: 'aPitchAlign',
+            symbolName: 'textPitchAlignment',
+            type: Uint8Array,
+            width: 2,
+            index: 1,
+            define: 'HAS_PITCH_ALIGN',
+            evaluate: properties => {
+                const y = +(textPitchAlignmentFn(map.getZoom(), properties) === 'map');
                 return y;
             }
         },

@@ -38,10 +38,27 @@ export function getLabelBox(out, anchor, projAnchor, mesh, textSize, textHaloRad
             4.0);
     }
 
-    const { aTextDx, aTextDy, aPitchAlign, aRotationAlign, aRotation, aType } = mesh.geometry.properties;
-    const textDx = aTextDx ? aTextDx[i] : symbol['textDx'];
-    const textDy = aTextDy ? aTextDy[i] : symbol['textDy'];
-    const pitchWithMap = aPitchAlign ? aPitchAlign[i] : uniforms['pitchWithMap'];
+    const { aTextDx, aTextDy, aPitchAlign, aRotationAlign, aRotation, aType, aDxDy } = mesh.geometry.properties;
+    let textDx, textDy;
+    if (aDxDy) {
+        textDx = aDxDy[i * 4 + 2];
+        textDy = aDxDy[i * 4 + 3];
+    } else {
+        textDx = aTextDx ? aTextDx[i] : symbol['textDx'];
+        textDy = aTextDy ? aTextDy[i] : symbol['textDy'];
+    }
+
+    let pitchAlign;
+    if (aPitchAlign) {
+        if (aType) {
+            // with icon
+            pitchAlign = aPitchAlign[i * 2 + 1];
+        } else {
+            pitchAlign = aPitchAlign[i];
+        }
+    }
+    const pitchWithMap = aPitchAlign ? pitchAlign : uniforms['textPitchWithMap'];
+
     let rotateAlign;
     if (aRotationAlign) {
         if (aType) {

@@ -38,7 +38,7 @@ attribute float aColorOpacity;
 #if defined(HAS_PITCH_ALIGN)
     attribute float aPitchAlign;
 #else
-    uniform float pitchWithMap;
+    uniform float textPitchWithMap;
 #endif
 
 uniform float zoomScale;
@@ -110,7 +110,7 @@ void main() {
     #ifdef HAS_PITCH_ALIGN
         float isPitchWithMap = aPitchAlign;
     #else
-        float isPitchWithMap = pitchWithMap;
+        float isPitchWithMap = textPitchWithMap;
     #endif
     gl_Position = projViewModelMatrix * vec4(position, 1.0);
     float projDistance = gl_Position.w;

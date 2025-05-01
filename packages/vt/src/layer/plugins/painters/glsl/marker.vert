@@ -53,10 +53,14 @@ attribute vec3 aTexCoord;
     uniform float markerHeight;
 #endif
 
-#if defined(HAS_PITCH_ALIGN)
-    attribute float aPitchAlign;
-#else
-    uniform float pitchWithMap;
+#if defined(HAS_MARKER_PITCH_ALIGN) || defined(HAS_TEXT_PITCH_ALIGN)
+    attribute vec2 aPitchAlign;
+#endif
+#ifndef HAS_MARKER_PITCH_ALIGN
+    uniform float markerPitchWithMap;
+#endif
+#ifndef HAS_TEXT_PITCH_ALIGN
+    uniform float textPitchWithMap;
 #endif
 
 #if defined(HAS_MARKER_ROTATION_ALIGN) || defined(HAS_TEXT_ROTATION_ALIGN)
@@ -176,13 +180,22 @@ void main() {
     #else
         float myMarkerDy = markerDy;
     #endif
-    #if defined(HAS_PITCH_ALIGN)
-        float isPitchWithMap = aPitchAlign;
-    #else
-        float isPitchWithMap = pitchWithMap;
-    #endif
-
     float isText = aTexCoord.z;
+    float isPitchWithMap;
+    if (isText > 0.5) {
+        #ifdef HAS_TEXT_PITCH_ALIGN
+            isPitchWithMap = aPitchAlign.y;
+        #else
+            isPitchWithMap = textPitchWithMap;
+        #endif
+    } else {
+        #ifdef HAS_MARKER_PITCH_ALIGN
+            isPitchWithMap = aPitchAlign.x;
+        #else
+            isPitchWithMap = markerPitchWithMap;
+        #endif
+    }
+
     float isRotateWithMap;
     if (isText > 0.5) {
         #ifdef HAS_TEXT_ROTATION_ALIGN

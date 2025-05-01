@@ -355,7 +355,7 @@ function setMeshUniforms(geometry, uniforms, symbol) {
         return geometry.properties.textPlacement === 'line' ? 1 : v;
     });
     setUniformFromSymbol(uniforms, 'textRotateWithMap', symbol, 'textRotationAlignment', DEFAULT_UNIFORMS['textRotationAlignment'], v => +(v === 'map'));
-    setUniformFromSymbol(uniforms, 'pitchWithMap', symbol, 'textPitchAlignment', DEFAULT_UNIFORMS['textPitchAlignment'], v => +(v === 'map'));
+    setUniformFromSymbol(uniforms, 'textPitchWithMap', symbol, 'textPitchAlignment', DEFAULT_UNIFORMS['textPitchAlignment'], v => +(v === 'map'));
     setUniformFromSymbol(uniforms, 'textSize', symbol, 'textSize', DEFAULT_UNIFORMS['textSize']);
     setUniformFromSymbol(uniforms, 'textDx', symbol, 'textDx', DEFAULT_UNIFORMS['textDx']);
     setUniformFromSymbol(uniforms, 'textDy', symbol, 'textDy', DEFAULT_UNIFORMS['textDy']);

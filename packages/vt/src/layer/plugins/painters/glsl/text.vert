@@ -36,7 +36,7 @@ attribute float aColorOpacity;
 #if defined(HAS_PITCH_ALIGN)
     attribute float aPitchAlign;
 #else
-    uniform float pitchWithMap;
+    uniform float textPitchWithMap;
 #endif
 
 #if defined(HAS_TEXT_ROTATION_ALIGN)
@@ -123,7 +123,7 @@ void main() {
     #if defined(HAS_PITCH_ALIGN)
         float isPitchWithMap = aPitchAlign;
     #else
-        float isPitchWithMap = pitchWithMap;
+        float isPitchWithMap = textPitchWithMap;
     #endif
     #if defined(HAS_ROTATION_ALIGN)
         float isRotateWithMap = aRotationAlign;
