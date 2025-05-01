@@ -281,7 +281,7 @@ class IconPainter extends CollisionPainter {
                         newCollideIds.fill(id++, startIndex, i);
                         startIndex = i;
                     }
-                    preType = 0;
+                    preType = aType[i];
                 }
                 if (startIndex < collideIds.length) {
                     newCollideIds.fill(id++, startIndex, collideIds.length);

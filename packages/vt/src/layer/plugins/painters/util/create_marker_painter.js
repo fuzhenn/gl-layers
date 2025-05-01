@@ -957,7 +957,7 @@ export function updateMarkerFitSize(map, iconGeometry) {
                 I8[0] = offset;
                 if (aPadOffset[idx * 2] !== I8[0]) {
                     for (let i = idx; i < idx + BOX_VERTEX_COUNT; i++) {
-                        aPadOffset[idx * 2] = offset;
+                        aPadOffset[i * 2] = offset;
                     }
                     aPadOffset.dirty = true;
                 }
@@ -975,7 +975,7 @@ export function updateMarkerFitSize(map, iconGeometry) {
                 I8[0] = offset;
                 if (aPadOffset[idx * 2 + 1] !== I8[0]) {
                     for (let i = idx; i < idx + BOX_VERTEX_COUNT; i++) {
-                        aPadOffset[idx * 2 + 1] = offset;
+                        aPadOffset[i * 2 + 1] = offset;
                     }
                     aPadOffset.dirty = true;
                 }
