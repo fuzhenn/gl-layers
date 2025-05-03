@@ -19,26 +19,6 @@ import { INVALID_ALTITUDE } from '../../../common/Constant';
 
 const { FilterUtil } = getVectorPacker();
 
-const ICON_FILTER = function (mesh) {
-    const renderer = this.layer.getRenderer();
-    return !this._isHalo0(mesh) && renderer.isForeground(mesh) && !!mesh.geometry.properties.iconAtlas && !mesh.geometry.properties.isEmpty;
-};
-
-const ICON_FILTER_N = function (mesh) {
-    const renderer = this.layer.getRenderer();
-    return !this._isHalo0(mesh) && !renderer.isForeground(mesh) && !!mesh.geometry.properties.iconAtlas && !mesh.geometry.properties.isEmpty;
-};
-
-const TEXT_FILTER = function (mesh) {
-    const renderer = this.layer.getRenderer();
-    return !this._isHalo0(mesh) && renderer.isForeground(mesh) && !!mesh.geometry.properties.glyphAtlas;
-};
-
-const TEXT_FILTER_N = function (mesh) {
-    const renderer = this.layer.getRenderer();
-    return !this._isHalo0(mesh) && !renderer.isForeground(mesh) && !!mesh.geometry.properties.glyphAtlas;
-};
-
 //temparary variables
 const PROJ_MATRIX = [];
 
@@ -65,10 +45,6 @@ class IconPainter extends CollisionPainter {
         this._fnTypeConfigs = {};
         this.isLabelCollides = isLabelCollides.bind(this);
 
-        this._iconFilter0 = ICON_FILTER.bind(this);
-        this._iconFilter1 = ICON_FILTER_N.bind(this);
-        this._textFilter0 = TEXT_FILTER.bind(this);
-        this._textFilter1 = TEXT_FILTER_N.bind(this);
         this._meshesToCheck = [];
         this._emptyTexture = regl.texture(2);
     }
@@ -166,12 +142,18 @@ class IconPainter extends CollisionPainter {
         geometry.properties.aCount = aCount;
         delete geometry.data.aCount;
         // aType = 顶点的类型：0 为 marker， 1 为 text
-        const length = aTexCoord.length / 3;
+        const length = aTexCoord.length / 4;
         const aType = new Uint8Array(length);
         for (let i = 0; i < length; i++) {
-            aType[i] = aTexCoord[i * 3 + 2];
+            aType[i] = aTexCoord[i * 4 + 2];
         }
         geometry.properties.aType = aType;
+
+        const aHalo = new Uint8Array(length);
+        for (let i = 0; i < length; i++) {
+            aHalo[i] = aTexCoord[i * 4 + 3];
+        }
+        geometry.properties.aHalo = aHalo;
     }
 
 
@@ -183,7 +165,7 @@ class IconPainter extends CollisionPainter {
         // aPickingIds 中存放的 KEY_IDX 的值
         // Vector3DLayer 中，feature有多个symbol时，会有多个数据的 feature.id 相同，但KEY_IDX不同的情况存在
         // 但 feature.id 可能不存在（比如mapbox的vt在线服务），aPickingId一定存在，所以遍历用的id数组优先选用 collideIds，没有的话就选用aPickingId
-        const { collideIds, elements, aCount, aType } = geo.properties;
+        const { collideIds, elements, aCount, aType, aHalo } = geo.properties;
         if (!collideIds) {
             return;
         }
@@ -197,27 +179,45 @@ class IconPainter extends CollisionPainter {
         let index = 0;
         let idx = elements[0];
         let start = 0, current = collideIds[idx];
+        let iconEndIndex = -1;
         let type = aType[0];
         let charCount = 1;
         if (aCount) {
             charCount = aCount[elements[start]];
         }
+        // 数据的排列方式
+        // * 兼有icon 和 text 或只有text: icon | halo | text | icon | halo | text
+        // * 只有icon: icon | icon | icon
         for (let ii = 0; ii <= elements.length; ii += BOX_ELEMENT_COUNT) {
             idx = elements[ii];
+            if (aHalo[idx] === 1) {
+                if (iconEndIndex === -1) {
+                    // 记录第一次碰到halo attr时的index，即icon结束时的index
+                    iconEndIndex = ii;
+                }
+                // 忽略halo text的属性值
+                continue;
+            }
             //pickingId发生变化，新的feature出现
             if (collideIds[idx] !== current || type !== aType[idx] || ii === elements.length) {
                 if (!collideBoxIndex[current]) {
                     collideBoxIndex[current] = [];
                 }
+                // 对于icon，除非没有text和halo，end为iconIndex（ii中包含了icon和halo，但halo需要忽略）
+                const end = (type === 0 && iconEndIndex > -1) ? iconEndIndex : ii;
                 collideBoxIndex[current].push([
                     start,
-                    ii,
-                    (ii - start) / (charCount * BOX_ELEMENT_COUNT),
+                    end,
+                    (end - start) / (charCount * BOX_ELEMENT_COUNT),
                     index++
                 ]);
                 current = collideIds[idx];
                 type = aType[idx];
                 start = ii;
+                if (type === 0) {
+                    // 新的icon开始，重置iconEndIndex
+                    iconEndIndex = -1;
+                }
                 if (aCount) {
                     charCount = aCount[elements[start]];
                 }
@@ -377,7 +377,7 @@ class IconPainter extends CollisionPainter {
     isMeshIterable(mesh) {
         //halo和正文共享的同一个geometry，无需更新
         return mesh && mesh.geometry && !mesh.geometry.properties.isEmpty &&
-            mesh.material && !mesh.material.get('isHalo') && this.isMeshVisible(mesh) &&
+            mesh.material && this.isMeshVisible(mesh) &&
             !(this.shouldIgnoreBackground() && !this.layer.getRenderer().isForeground(mesh));
     }
 
@@ -552,9 +552,6 @@ class IconPainter extends CollisionPainter {
         const meshes = mesh.meshes;
         for (let i = 0; i < meshes.length; i++) {
             const mesh = meshes[i];
-            if (mesh.properties.isHalo) {
-                continue;
-            }
             const geometry = mesh && mesh.geometry;
             if (!geometry || geometry.properties.isEmpty) {
                 continue;

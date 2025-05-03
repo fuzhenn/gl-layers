@@ -79,7 +79,7 @@ export function createMarkerMesh(
         tileRatio: geometry.properties.tileRatio
     };
     setMeshUniforms.call(this, uniforms, regl, geometry, symbol);
-    initTextUniforms.call(this, uniforms, regl, geometry, symbolDef, symbol);
+    initTextUniforms.call(this, uniforms, regl, geometry, symbol);
     uniforms.isHalo = 0;
 
     const meshes = [];
@@ -104,7 +104,9 @@ export function createMarkerMesh(
 
     const material = new reshader.Material(uniforms);
     const mesh = new reshader.Mesh(geometry, material, meshConfig);
-    const defines = {};
+    const defines = {
+        'HAS_HALO_ATTR': 1
+    };
     if (enableCollision) {
         defines['ENABLE_COLLISION'] = 1;
     }

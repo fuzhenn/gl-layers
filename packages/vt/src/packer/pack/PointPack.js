@@ -585,7 +585,7 @@ export default class PointPack extends VectorPack {
         const { altitude: featureAltitude } = getFeaAltitudeAndHeight(point.feature, altitudeScale, altitudeProperty, defaultAltitude);
 
 
-        const fillQuadData = (isText, quads, x, y, altitude, anchor) => {
+        const fillQuadData = (isText, quads, x, y, altitude, anchor, isHalo) => {
             if (!quads) {
                 return;
             }
@@ -597,7 +597,7 @@ export default class PointPack extends VectorPack {
                 const { tl, tr, bl, br, tex } = quad;
                 //char's quad if flipped
                 this._fillPos(data, x, y, altitude, tl.x * 10, tl.y * 10,
-                    tex.x, tex.y + tex.h, isText);
+                    tex.x, tex.y + tex.h, isText, isHalo);
                 this._fillTextData(data, alongLine, charCount, quad.glyphOffset, anchor, isVertical, anchor.axis, anchor.angleR);
 
                 this._fillFnTypeData(data, textFill, textSize, textHaloFill, textHaloRadius, textHaloOpacity, textDx, textDy,
@@ -607,7 +607,7 @@ export default class PointPack extends VectorPack {
                     allowOverlap, ignorePlacement);
 
                 this._fillPos(data, x, y, altitude, tr.x * 10, tr.y * 10,
-                    tex.x + tex.w, tex.y + tex.h, isText);
+                    tex.x + tex.w, tex.y + tex.h, isText, isHalo);
                 this._fillTextData(data, alongLine, charCount, quad.glyphOffset, anchor, isVertical, anchor.axis, anchor.angleR);
 
                 this._fillFnTypeData(data, textFill, textSize, textHaloFill, textHaloRadius, textHaloOpacity, textDx, textDy,
@@ -617,7 +617,7 @@ export default class PointPack extends VectorPack {
                     allowOverlap, ignorePlacement);
 
                 this._fillPos(data, x, y, altitude, bl.x * 10, bl.y * 10,
-                    tex.x, tex.y, isText);
+                    tex.x, tex.y, isText, isHalo);
                 this._fillTextData(data, alongLine, charCount, quad.glyphOffset, anchor, isVertical, anchor.axis, anchor.angleR);
 
                 this._fillFnTypeData(data, textFill, textSize, textHaloFill, textHaloRadius, textHaloOpacity, textDx, textDy,
@@ -627,7 +627,7 @@ export default class PointPack extends VectorPack {
                     allowOverlap, ignorePlacement);
 
                 this._fillPos(data, x, y, altitude, br.x * 10, br.y * 10,
-                    tex.x + tex.w, tex.y, isText);
+                    tex.x + tex.w, tex.y, isText, isHalo);
                 this._fillTextData(data, alongLine, charCount, quad.glyphOffset, anchor, isVertical, anchor.axis, anchor.angleR);
 
                 this._fillFnTypeData(data, textFill, textSize, textHaloFill, textHaloRadius, textHaloOpacity, textDx, textDy,
@@ -647,6 +647,9 @@ export default class PointPack extends VectorPack {
                 }
             }
         }
+
+        const isTextPlugin = this.options.pluginType === 'text';
+
         for (let i = 0; i < anchors.length; i++) {
             const anchor = anchors[i];
             const altitude = anchor.z || featureAltitude || 0;
@@ -661,12 +664,17 @@ export default class PointPack extends VectorPack {
             }
 
             if (hasText) {
-                fillQuadData(true, textQuads, x, y, altitude, anchor);
+                // halo
+                if (!isTextPlugin) {
+                    // halo attributes
+                    fillQuadData(true, textQuads, x, y, altitude, anchor, true);
+                }
+                fillQuadData(true, textQuads, x, y, altitude, anchor, false);
             }
         }
     }
 
-    _fillPos(data, x, y, altitude, shapeX, shapeY, texX, texY, isText) {
+    _fillPos(data, x, y, altitude, shapeX, shapeY, texX, texY, isText, isHalo) {
 
         this.fillPosition(data, x, y, altitude);
 
@@ -679,7 +687,8 @@ export default class PointPack extends VectorPack {
         data.aTexCoord[index++] = texX;
         data.aTexCoord[index++] = texY;
         if (this.options.pluginType !== 'text') {
-            data.aTexCoord[index++] = isText ? 1 : 0;
+            data.aTexCoord[index++] = +!!isText;
+            data.aTexCoord[index++] = +!!isHalo;
         }
         data.aTexCoord.currentIndex = index;
 
@@ -999,7 +1008,7 @@ export default class PointPack extends VectorPack {
                 },
                 {
                     type: Uint16Array,
-                    width: this.options.pluginType === 'text' ? 2 : 3,
+                    width: this.options.pluginType === 'text' ? 2 : 4,
                     name: 'aTexCoord'
                 },
                 {

@@ -15,6 +15,7 @@ uniform float layerOpacity;
 varying vec2 vTexCoord;
 varying float vOpacity;
 varying float vIsText;
+varying float vHalo;
 
 #include <text_render_frag>
 

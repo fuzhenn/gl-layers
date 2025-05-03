@@ -9,11 +9,11 @@ uniform highp float gammaScale;
 uniform float isHalo;
 uniform highp float textHaloBlur;
 
-#ifdef HAS_TEXT_HALO_OPACITY
-    varying float vTextHaloOpacity;
-#else
-    uniform float textHaloOpacity;
-#endif
+// #ifdef HAS_TEXT_HALO_OPACITY
+//     varying float vTextHaloOpacity;
+// #else
+//     uniform float textHaloOpacity;
+// #endif
 varying float vTextSize;
 varying float vGammaScale;
 
@@ -46,7 +46,14 @@ vec4 renderText(vec2 texCoord) {
     vec4 color = myTextFill;
     highp float gamma = EDGE_GAMMA / (fontScale * gammaScale);
     lowp float buff = 185.0 / 256.0;//(256.0 - 64.0) / 256.0;
-    if (isHalo == 1.0) {
+    bool isHaloText;
+    #ifdef HAS_HALO_ATTR
+        // text halo in icon
+        isHaloText = vHalo > 0.5;
+    #else
+        isHaloText = isHalo == 1.0;
+    #endif
+    if (isHaloText) {
         #ifdef HAS_TEXT_HALO_FILL
             vec4 haloFill = vTextHaloFill;
         #else
@@ -57,6 +64,9 @@ vec4 renderText(vec2 texCoord) {
         #else
             float haloRadius = textHaloRadius;
         #endif
+        if (haloRadius == 0.0) {
+            discard;
+        }
         color = haloFill;
         gamma = (textHaloBlur * 1.19 / SDF_PX + EDGE_GAMMA) / (fontScale * gammaScale);
         buff = (6.0 - haloRadius / fontScale) / SDF_PX;

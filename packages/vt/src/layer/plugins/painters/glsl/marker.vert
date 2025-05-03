@@ -10,7 +10,7 @@
 #endif
 
 attribute vec2 aShape;
-attribute vec3 aTexCoord;
+attribute vec4 aTexCoord;
 //uint8
 #ifdef ENABLE_COLLISION
     attribute float aOpacity;
@@ -118,6 +118,7 @@ varying float vIsText;
     varying float vOpacity;
     varying float vGammaScale;
     varying float vTextSize;
+    varying float vHalo;
 
     #ifdef HAS_TEXT_FILL
         attribute vec4 aTextFill;
@@ -330,6 +331,7 @@ void main() {
             vTexCoord = aTexCoord.xy / iconTexSize;
         }
 
+        vHalo = aTexCoord.w;
         vTextSize = myTextSize;
         #ifdef ENABLE_COLLISION
             vOpacity = aOpacity / 255.0;
