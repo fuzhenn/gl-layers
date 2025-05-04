@@ -117,9 +117,9 @@ export default class StyledPoint {
             if (markerTextFitFn) {
                 textFit = markerTextFitFn(zoom, properties);
             }
-            if (textFit && symbol.text && textFit !== 'none') {
-                const textSize = symbol.text.textSize;
-                let textName = symbol.text.textName;
+            if (textFit && symbol.textName && textFit !== 'none') {
+                const textSize = symbol.textSize;
+                let textName = symbol.textName;
                 if (isFunctionDefinition(textName)) {
                     textName = interpolated(textName)(zoom, properties);
                 }
@@ -130,10 +130,10 @@ export default class StyledPoint {
                 } else {
                     const textSizeFnName = '__fn_textSize'.trim();
                     const textSizeFn0Name = '__fn_textSize_0'.trim();
-                    if (isFunctionDefinition(textSize) && !symbol.text[textSizeFnName]) {
-                        symbol.text[textSizeFn0Name] = interpolated(textSize);
-                        symbol.text[textSizeFnName] = (zoom, properties) => {
-                            const v = symbol.text[textSizeFn0Name](zoom, properties);
+                    if (isFunctionDefinition(textSize) && !symbol[textSizeFnName]) {
+                        symbol[textSizeFn0Name] = interpolated(textSize);
+                        symbol[textSizeFnName] = (zoom, properties) => {
+                            const v = symbol[textSizeFn0Name](zoom, properties);
                             if (isFunctionDefinition(v)) {
                                 return interpolated(v)(zoom, properties);
                             } else {
@@ -141,7 +141,7 @@ export default class StyledPoint {
                             }
                         };
                     }
-                    const tsize = evaluateTextSize(symbol.text, symbol.text, properties, zoom);
+                    const tsize = evaluateTextSize(symbol, properties, zoom);
                     if (textFit === 'width' || textFit === 'both') {
                         iconSize[0] = tsize[0] * text.length;
                     }
@@ -161,7 +161,7 @@ export default class StyledPoint {
             }
         }
         if (hasText) {
-            textSize = evaluateTextSize(symbol, this.symbolDef, properties, zoom);
+            textSize = evaluateTextSize(symbol, properties, zoom);
         }
         if (!textSize && !iconSize) {
             return result;
