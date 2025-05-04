@@ -73,15 +73,11 @@ uniform float textPitchFilter;
         varying vec4 vTextHaloFill;
     #endif
 
-    #ifdef HAS_TEXT_HALO_RADIUS
-        attribute float aTextHaloRadius;
-        varying float vTextHaloRadius;
+    #if defined(HAS_TEXT_HALO_RADIUS) || defined(HAS_TEXT_HALO_OPACITY)
+        attribute vec2 aTextHalo;
+        varying vec2 vTextHalo;
     #endif
 
-    #ifdef HAS_TEXT_HALO_OPACITY
-        attribute float aTextHaloOpacity;
-        varying float vTextHaloOpacity;
-    #endif
 
     #include <highlight_vert>
 #else
@@ -195,12 +191,8 @@ void main() {
             vTextHaloFill = aTextHaloFill / 255.0;
         #endif
 
-        #ifdef HAS_TEXT_HALO_RADIUS
-            vTextHaloRadius = aTextHaloRadius;
-        #endif
-
-        #ifdef HAS_TEXT_HALO_OPACITY
-            vTextHaloOpacity = aTextHaloOpacity;
+        #if defined(HAS_TEXT_HALO_RADIUS) || defined(HAS_TEXT_HALO_OPACITY)
+            vTextHalo = aTextHalo;
         #endif
 
         highlight_setVarying();

@@ -244,13 +244,13 @@ export function initTextMeshDefines(defines, mesh) {
     if (geometry.data.aTextHaloFill && mesh.material.uniforms.isHalo) {
         defines['HAS_TEXT_HALO_FILL'] = 1;
     }
-    if (geometry.data.aTextHaloRadius && mesh.material.uniforms.isHalo) {
+    const symbolDef = this.getSymbolDef(geometry.properties.symbolIndex);
+    if (isFnTypeSymbol(symbolDef.textHaloRadius) && mesh.material.uniforms.isHalo) {
         defines['HAS_TEXT_HALO_RADIUS'] = 1;
     }
-    // if (geometry.data.aTextHaloOpacity && mesh.material.uniforms.isHalo) {
-    //     defines['HAS_TEXT_HALO_OPACITY'] = 1;
-    // }
-    const symbolDef = this.getSymbolDef(geometry.properties.symbolIndex);
+    if (isFnTypeSymbol(symbolDef.textHaloOpacity) && mesh.material.uniforms.isHalo) {
+        defines['HAS_TEXT_HALO_OPACITY'] = 1;
+    }
     if (isFnTypeSymbol(symbolDef.textDx)) {
         defines['HAS_TEXT_DX'] = 1;
     }
@@ -327,10 +327,10 @@ function prepareGeometry(geometry, enableCollision, visibleInCollision) {
             geometry.data.aOpacity.data.fill(255, 0);
         }
 
-        const { aTextHaloRadius } = geometry.data;
-        if (aTextHaloRadius && !geoProps.aTextHaloRadius) {
-            const keyName = (PREFIX + 'aTextHaloRadius').trim();
-            geoProps.aTextHaloRadius = geoProps[keyName] || new aTextHaloRadius.constructor(aTextHaloRadius);
+        const { aTextHalo } = geometry.data;
+        if (aTextHalo && !geoProps.aTextHalo) {
+            const keyName = (PREFIX + 'aTextHalo').trim();
+            geoProps.aTextHalo = geoProps[keyName] || new aTextHalo.constructor(aTextHalo);
         }
     }
 }
@@ -448,7 +448,7 @@ export function getTextFnTypeConfig(map, symbolDef) {
     const textSizeFn = interpolated(symbolDef['textSize']);
     const textHaloFillFn = interpolated(symbolDef['textHaloFill']);
     const textHaloRadiusFn = interpolated(symbolDef['textHaloRadius']);
-    // const textHaloOpacityFn = interpolated(symbolDef['textHaloOpacity']);
+    const textHaloOpacityFn = interpolated(symbolDef['textHaloOpacity']);
     const textDxFn = interpolated(symbolDef['textDx']);
     const textDyFn = interpolated(symbolDef['textDy']);
     const textOpacityFn = interpolated(symbolDef['textOpacity']);
@@ -516,29 +516,31 @@ export function getTextFnTypeConfig(map, symbolDef) {
             }
         },
         {
-            attrName: 'aTextHaloRadius',
+            attrName: 'aTextHalo',
             symbolName: 'textHaloRadius',
             define: 'HAS_TEXT_HALO_RADIUS',
             type: Uint8Array,
-            width: 1,
+            index: 0,
+            width: 2,
             evaluate: properties => {
                 const radius = textHaloRadiusFn(map.getZoom(), properties);
                 u8[0] = radius;
                 return u8[0];
             }
         },
-        // {
-        //     attrName: 'aTextHaloOpacity',
-        //     symbolName: 'textHaloOpacity',
-        //     define: 'HAS_TEXT_HALO_OPACITY',
-        //     type: Uint8Array,
-        //     width: 1,
-        //     evaluate: properties => {
-        //         const radius = textHaloOpacityFn(map.getZoom(), properties);
-        //         u8[0] = radius;
-        //         return u8[0];
-        //     }
-        // },
+        {
+            attrName: 'aTextHalo',
+            symbolName: 'textHaloOpacity',
+            define: 'HAS_TEXT_HALO_OPACITY',
+            type: Uint8Array,
+            index: 1,
+            width: 2,
+            evaluate: properties => {
+                const opacity = textHaloOpacityFn(map.getZoom(), properties);
+                u8[0] = opacity * 255;
+                return u8[0];
+            }
+        },
         {
             attrName: 'aTextDx',
             symbolName: 'textDx',
@@ -659,12 +661,12 @@ export function isLabelCollides(hasCollides, mesh, elements, boxCount, start, en
     const geoProps = mesh.geometry.properties;
     const symbol = this.getSymbol(geoProps.symbolIndex);
     const isLinePlacement = geoProps.textPlacement === 'line' && !isIconText(symbol);
-    const { aTextSize, aTextHaloRadius, aShape } = geoProps;
+    const { aTextSize, aTextHalo, aShape } = geoProps;
     let textSize = (aTextSize ? aTextSize[elements[start]] : symbol.textSize);
     if (textSize === null || textSize === undefined) {
         textSize = DEFAULT_UNIFORMS['textSize'];
     }
-    const haloRadius = aTextHaloRadius ? aTextHaloRadius[elements[start]] : mesh.properties.textHaloRadius;
+    const haloRadius = aTextHalo ? aTextHalo[elements[start] * 2] : mesh.properties.textHaloRadius;
 
     const anchor = getAnchor(ANCHOR, mesh, elements[start]);
     const { aProjectedAnchor } = mesh.geometry.properties;

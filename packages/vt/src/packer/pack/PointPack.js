@@ -273,6 +273,7 @@ export default class PointPack extends VectorPack {
     _getTextFnTypeFormats() {
         const { textFillFn, textSizeFn,
             textHaloFillFn, textHaloRadiusFn,
+            textHaloOpacityFn,
             textDxFn, textDyFn
         } = this._fnTypes;
         const formats = [];
@@ -297,11 +298,11 @@ export default class PointPack extends VectorPack {
                 name: 'aTextHaloFill'
             });
         }
-        if (textHaloRadiusFn) {
+        if (textHaloRadiusFn || textHaloOpacityFn) {
             formats.push({
                 type: Uint8Array,
-                width: 1,
-                name: 'aTextHaloRadius'
+                width: 2,
+                name: 'aTextHalo'
             });
         }
         // if (textHaloOpacityFn) {
@@ -524,8 +525,8 @@ export default class PointPack extends VectorPack {
         if (isFunctionDefinition(textSize)) {
             this.dynamicAttrs['aTextSize'] = 1;
         }
-        if (isFunctionDefinition(textHaloRadius)) {
-            this.dynamicAttrs['aTextHaloRadius'] = 1;
+        if (isFunctionDefinition(textHaloRadius) || isFunctionDefinition(textHaloOpacity)) {
+            this.dynamicAttrs['aTextHalo'] = 1;
         }
         // if (isFunctionDefinition(textHaloOpacity)) {
         //     this.dynamicAttrs['aTextHaloOpacity'] = 1;
@@ -751,7 +752,7 @@ export default class PointPack extends VectorPack {
         const { textFillFn, textSizeFn, textHaloFillFn, textHaloRadiusFn, textDxFn, textDyFn,
             textPitchAlignmentFn, textRotationAlignmentFn, textRotationFn,
             textAllowOverlapFn, textIgnorePlacementFn,
-            textOpacityFn,
+            textOpacityFn, textHaloOpacityFn,
             markerWidthFn, markerHeightFn, markerDxFn, markerDyFn,
             markerPitchAlignmentFn, markerRotationAlignmentFn, markerRotationFn,
             markerAllowOverlapFn, markerIgnorePlacementFn,
@@ -780,11 +781,15 @@ export default class PointPack extends VectorPack {
             data.aTextHaloFill[index++] = textHaloFill[3];
             data.aTextHaloFill.currentIndex = index;
         }
-        if (textHaloRadiusFn) {
+        if (textHaloRadiusFn || textHaloOpacityFn) {
             // data.aTextHaloRadius.push(textHaloRadius);
-            let index = data.aTextHaloRadius.currentIndex;
-            data.aTextHaloRadius[index++] = textHaloRadius;
-            data.aTextHaloRadius.currentIndex = index;
+            let index = data.aTextHalo.currentIndex;
+            data.aTextHalo[index++] = textHaloRadius || 0;
+            data.aTextHalo.currentIndex = index;
+
+            index = data.aTextHalo.currentIndex;
+            data.aTextHalo[index++] = (isNil(textHaloOpacity) ? 1 : textHaloOpacity) * 255;
+            data.aTextHalo.currentIndex = index;
         }
         // if (textHaloOpacityFn) {
         //     // data.aTextHaloOpacity.push(textHaloOpacity);

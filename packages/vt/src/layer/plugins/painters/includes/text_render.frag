@@ -9,11 +9,15 @@ uniform highp float gammaScale;
 uniform float isHalo;
 uniform highp float textHaloBlur;
 
-// #ifdef HAS_TEXT_HALO_OPACITY
-//     varying float vTextHaloOpacity;
-// #else
-//     uniform float textHaloOpacity;
-// #endif
+#if defined(HAS_TEXT_HALO_OPACITY) || defined(HAS_TEXT_HALO_RADIUS)
+    varying vec2 vTextHalo;
+#endif
+#ifndef HAS_TEXT_HALO_OPACITY
+    uniform float textHaloOpacity;
+#endif
+#ifndef HAS_TEXT_HALO_RADIUS
+    uniform highp float textHaloRadius;
+#endif
 varying float vTextSize;
 varying float vGammaScale;
 
@@ -27,12 +31,6 @@ varying float vGammaScale;
     varying vec4 vTextHaloFill;
 #else
     uniform vec4 textHaloFill;
-#endif
-
-#ifdef HAS_TEXT_HALO_RADIUS
-    varying float vTextHaloRadius;
-#else
-    uniform highp float textHaloRadius;
 #endif
 
 vec4 renderText(vec2 texCoord) {
@@ -60,7 +58,7 @@ vec4 renderText(vec2 texCoord) {
             vec4 haloFill = textHaloFill;
         #endif
         #ifdef HAS_TEXT_HALO_RADIUS
-            float haloRadius = vTextHaloRadius;
+            float haloRadius = vTextHalo.x;
         #else
             float haloRadius = textHaloRadius;
         #endif
@@ -70,12 +68,12 @@ vec4 renderText(vec2 texCoord) {
         color = haloFill;
         gamma = (textHaloBlur * 1.19 / SDF_PX + EDGE_GAMMA) / (fontScale * gammaScale);
         buff = (6.0 - haloRadius / fontScale) / SDF_PX;
-        // #ifdef HAS_TEXT_HALO_OPACITY
-        //     float haloOpacity = vTextHaloOpacity / 255.0;
-        // #else
-        //     float haloOpacity = textHaloOpacity;
-        // #endif
-        float haloOpacity = 1.0;
+        #ifdef HAS_TEXT_HALO_OPACITY
+            float haloOpacity = vTextHalo.y / 255.0;
+        #else
+            float haloOpacity = textHaloOpacity;
+        #endif
+
         color *= haloOpacity * 1.25;
     }
 

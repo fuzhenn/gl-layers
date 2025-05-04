@@ -104,6 +104,7 @@ export default class StyledPoint {
         const { zoom } = this.options;
         const result = {};
         const symbol = this.symbol;
+        const symbolDef = this.symbolDef;
         const properties = this.feature.properties;
         const markerFile = markerFileFn ? markerFileFn(null, properties) : symbol.markerFile;
         const markerType = markerTypeFn ? markerTypeFn(null, properties) : symbol.markerType;
@@ -117,9 +118,9 @@ export default class StyledPoint {
             if (markerTextFitFn) {
                 textFit = markerTextFitFn(zoom, properties);
             }
-            if (textFit && symbol.textName && textFit !== 'none') {
-                const textSize = symbol.textSize;
-                let textName = symbol.textName;
+            if (textFit && symbolDef.textName && textFit !== 'none') {
+                const textSize = symbolDef.textSize;
+                let textName = symbolDef.textName;
                 if (isFunctionDefinition(textName)) {
                     textName = interpolated(textName)(zoom, properties);
                 }
@@ -130,10 +131,10 @@ export default class StyledPoint {
                 } else {
                     const textSizeFnName = '__fn_textSize'.trim();
                     const textSizeFn0Name = '__fn_textSize_0'.trim();
-                    if (isFunctionDefinition(textSize) && !symbol[textSizeFnName]) {
-                        symbol[textSizeFn0Name] = interpolated(textSize);
-                        symbol[textSizeFnName] = (zoom, properties) => {
-                            const v = symbol[textSizeFn0Name](zoom, properties);
+                    if (isFunctionDefinition(textSize) && !symbolDef[textSizeFnName]) {
+                        symbolDef[textSizeFn0Name] = interpolated(textSize);
+                        symbolDef[textSizeFnName] = (zoom, properties) => {
+                            const v = symbolDef[textSizeFn0Name](zoom, properties);
                             if (isFunctionDefinition(v)) {
                                 return interpolated(v)(zoom, properties);
                             } else {
@@ -141,7 +142,7 @@ export default class StyledPoint {
                             }
                         };
                     }
-                    const tsize = evaluateTextSize(symbol, properties, zoom);
+                    const tsize = evaluateTextSize(symbolDef, symbolDef, properties, zoom);
                     if (textFit === 'width' || textFit === 'both') {
                         iconSize[0] = tsize[0] * text.length;
                     }
@@ -161,7 +162,7 @@ export default class StyledPoint {
             }
         }
         if (hasText) {
-            textSize = evaluateTextSize(symbol, properties, zoom);
+            textSize = evaluateTextSize(symbol, this.symbolDef, properties, zoom);
         }
         if (!textSize && !iconSize) {
             return result;

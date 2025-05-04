@@ -5,6 +5,7 @@ import collisionFrag from './glsl/collision.frag';
 import BasicPainter from './BasicPainter';
 import { clamp, isNil, getUniqueIds } from '../Util';
 import CollisionGroup from './CollisionGroup';
+import { isFnTypeSymbol } from './util/fn_type_util';
 // import { getLabelContent } from './util/get_label_content';
 
 
@@ -1128,10 +1129,12 @@ export default class CollisionPainter extends BasicPainter {
         if (!mesh || !mesh.geometry) {
             return true;
         }
-        if (!mesh.geometry.properties.glyphAtlas || !mesh.material.get('isHalo') || mesh.geometry.data.aTextHaloRadius && mesh.geometry.properties.hasHalo) {
+        const symbolDef = this.getSymbolDef(mesh.geometry.properties.symbolIndex);
+        const hasHaloRadius = isFnTypeSymbol(symbolDef.textHaloRadius);
+        if (!mesh.geometry.properties.glyphAtlas || !mesh.material.get('isHalo') || hasHaloRadius && mesh.geometry.properties.hasHalo) {
             return false;
         }
-        if (mesh.geometry.data.aTextHaloRadius && !mesh.geometry.properties.hasHalo) {
+        if (hasHaloRadius && !mesh.geometry.properties.hasHalo) {
             return true;
         }
         const symbol = this.getSymbol(mesh.geometry.properties.symbolIndex);

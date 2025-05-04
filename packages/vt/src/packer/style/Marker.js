@@ -163,10 +163,10 @@ export function evaluateIconSize(symbol, symbolDef, properties, zoom, markerWidt
 const DEFAULT_TEXT_SIZE = 16;
 const FN_STOPS_KEY = '___fn_in_stops';
 
-export function evaluateTextSize(symbol, properties, zoom) {
+export function evaluateTextSize(symbol, symbolDef, properties, zoom) {
     const keyName = '__fn_textSize'.trim();
     let textSize = symbol.textSize;
-    if (isNil(symbol.textSize)) {
+    if (isNil(symbolDef.textSize)) {
         //default text size of marker
         return [DEFAULT_TEXT_SIZE, DEFAULT_TEXT_SIZE];
     }

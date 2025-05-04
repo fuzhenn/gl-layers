@@ -85,13 +85,9 @@ uniform float isRenderingTerrain;
         varying vec4 vTextHaloFill;
     #endif
 
-    #ifdef HAS_TEXT_HALO_RADIUS
-        attribute float aTextHaloRadius;
-        varying float vTextHaloRadius;
-    #endif
-    #ifdef HAS_TEXT_HALO_OPACITY
-        attribute float aTextHaloOpacity;
-        varying float vTextHaloOpacity;
+    #if defined(HAS_TEXT_HALO_RADIUS) || defined(HAS_TEXT_HALO_OPACITY)
+        attribute vec2 aTextHalo;
+        varying vec2 vTextHalo;
     #endif
 
     #include <highlight_vert>
@@ -231,12 +227,8 @@ void main() {
             vTextHaloFill = aTextHaloFill / 255.0;
         #endif
 
-        #ifdef HAS_TEXT_HALO_RADIUS
-            vTextHaloRadius = aTextHaloRadius;
-        #endif
-
-        #ifdef HAS_TEXT_HALO_OPACITY
-            vTextHaloOpacity = aTextHaloOpacity;
+        #if defined(HAS_TEXT_HALO_RADIUS) || defined(HAS_TEXT_HALO_OPACITY)
+            vTextHalo = aTextHalo;
         #endif
 
         highlight_setVarying();
