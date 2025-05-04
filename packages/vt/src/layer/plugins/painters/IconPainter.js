@@ -68,8 +68,8 @@ class IconPainter extends CollisionPainter {
         return super.isTerrainSkin() && this.needToRefreshTerrainTileOnZooming();
     }
 
-    setTextShaderDefines(defines) {
-        this._textDefines = defines;
+    setShaderDefines(defines) {
+        this._shaderDefines = defines;
     }
 
     createFnTypeConfig(map, symbolDef) {
@@ -723,6 +723,7 @@ class IconPainter extends CollisionPainter {
                 offset: this.getPolygonOffset()
             }
         };
+        const defines = this._shaderDefines || {};
         this.shader = new reshader.MeshShader({
             vert, frag,
             uniforms: [
@@ -741,7 +742,8 @@ class IconPainter extends CollisionPainter {
                     }
                 }
             ],
-            extraCommandProps: iconExtraCommandProps
+            extraCommandProps: iconExtraCommandProps,
+            defines
         });
         this.shader.version = 300;
 

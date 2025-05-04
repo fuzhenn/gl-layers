@@ -240,7 +240,7 @@ void main() {
 
     if (isPitchWithMap == 1.0) {
         #ifdef REVERSE_MAP_ROTATION_ON_PITCH
-            // PointLayer 的  mapRotation 计算方式
+            // PointLayer 下 text 和 icon 的 mapRotation 计算一致
             rotation += mapRotation;
         #else
             if (isText > 0.5) {
