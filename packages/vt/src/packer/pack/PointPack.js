@@ -227,8 +227,7 @@ export default class PointPack extends VectorPack {
                 width: 2,
                 name: 'aColorOpacity'
             });
-        }
-        if (textOpacityFn) {
+        } else if (textOpacityFn) {
             format.push({
                 type: Uint8Array,
                 width: 1,
@@ -864,7 +863,7 @@ export default class PointPack extends VectorPack {
         }
         if (isTextPlugin && textOpacityFn) {
             let index = data.aColorOpacity.currentIndex;
-            data.aColorOpacity[index++] = opacity;
+            data.aColorOpacity[index++] = textOpacity;
             data.aColorOpacity.currentIndex = index;
         }
 

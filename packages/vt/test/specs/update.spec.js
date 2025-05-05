@@ -2223,14 +2223,18 @@ describe('update style specs', () => {
                     renderPlugin: {
                         dataConfig: {
                             type: "point",
-                        }, sceneConfig: {
+                        },
+                        sceneConfig: {
                             collision: false, fading: false, depthFunc: "always",
-                        }, postProcess: {
+                        },
+                        postProcess: {
                             enable: true, antialias: {
                                 enable: true,
                             },
-                        }, type: "text",
-                    }, symbol: {
+                        },
+                        type: "text",
+                    },
+                    symbol: {
                         textName: "{name}",
                         textSize: 14,
                         textFill: '#f00',
