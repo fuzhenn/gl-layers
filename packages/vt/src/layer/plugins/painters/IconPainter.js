@@ -13,7 +13,7 @@ import CollisionGroup from './CollisionGroup';
 
 import { updateOneGeometryFnTypeAttrib } from './util/fn_type_util';
 import { GLYPH_SIZE, ICON_SIZE } from './Constant';
-import { createMarkerMesh, getMarkerFnTypeConfig, prepareMarkerGeometry, prepareLabelIndex, updateMarkerFitSize, BOX_VERTEX_COUNT, BOX_ELEMENT_COUNT } from './util/create_marker_painter';
+import { createMarkerMesh, getMarkerFnTypeConfig, prepareMarkerGeometry, prepareDxDy, prepareLabelIndex, updateMarkerFitSize, BOX_VERTEX_COUNT, BOX_ELEMENT_COUNT } from './util/create_marker_painter';
 import { getVectorPacker } from '../../../packer/inject';
 import { INVALID_ALTITUDE } from '../../../common/Constant';
 
@@ -154,6 +154,7 @@ class IconPainter extends CollisionPainter {
             aHalo[i] = aTexCoord[i * 4 + 3];
         }
         geometry.properties.aHalo = aHalo;
+        prepareDxDy.call(this, geometry);
     }
 
 

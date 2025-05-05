@@ -65,8 +65,6 @@ export function createMarkerMesh(
         prepareTextGeometry.call(this, geometry, symbolDef, fnTypeConfig.text, enableCollision, visibleInCollision, enableUniquePlacement);
     }
 
-    prepareDxDy.call(this, geometry);
-
     geometry.properties.memorySize = geometry.getMemorySize();
     // console.log('data', geometry.data);
     geometry.generateBuffers(regl, { excludeElementsInVAO: true });
@@ -131,7 +129,7 @@ export function createMarkerMesh(
     return meshes;
 }
 
-function prepareDxDy(geometry) {
+export function prepareDxDy(geometry) {
     const { aMarkerDx, aMarkerDy, aTextDx, aTextDy } = geometry.data;
     const dxdy = (aTextDx || aTextDy || aMarkerDx || aMarkerDy);
     if (dxdy) {
