@@ -362,7 +362,7 @@ function setMeshUniforms(geometry, uniforms, symbol) {
     setUniformFromSymbol(uniforms, 'textRotation', symbol, 'textRotation', DEFAULT_UNIFORMS['textRotation'], v => v * Math.PI / 180);
 }
 
-export function createTextShader(canvas, sceneConfig) {
+export function createTextShader(canvas) {
     const viewport = {
         x: 0,
         y: 0,
@@ -418,18 +418,17 @@ export function createTextShader(canvas, sceneConfig) {
         },
         blend: {
             enable: true,
-            func: {
-                // src: 'src alpha',
-                // dst: 'one minus src alpha'
-                src: 'one',
-                dst: 'one minus src alpha'
-            },
+            func: this.getBlendFunc(),
             equation: 'add'
         },
         depth: {
             enable: true,
-            range: sceneConfig.depthRange || [0, 1],
-            func: sceneConfig.depthFunc || 'always',
+            range: () => {
+                return this.sceneConfig.depthRange || [0, 1];
+            },
+            func: () => {
+                return this.sceneConfig.depthFunc || 'always';
+            },
             mask: false
         },
         polygonOffset: {

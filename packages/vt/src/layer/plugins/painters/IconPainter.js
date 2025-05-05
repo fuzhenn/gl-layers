@@ -165,7 +165,7 @@ class IconPainter extends CollisionPainter {
         // aPickingIds 中存放的 KEY_IDX 的值
         // Vector3DLayer 中，feature有多个symbol时，会有多个数据的 feature.id 相同，但KEY_IDX不同的情况存在
         // 但 feature.id 可能不存在（比如mapbox的vt在线服务），aPickingId一定存在，所以遍历用的id数组优先选用 collideIds，没有的话就选用aPickingId
-        const { collideIds, elements, aCount, aType, aHalo } = geo.properties;
+        const { collideIds, elements, aCount, aType } = geo.properties;
         if (!collideIds) {
             return;
         }
@@ -179,45 +179,39 @@ class IconPainter extends CollisionPainter {
         let index = 0;
         let idx = elements[0];
         let start = 0, current = collideIds[idx];
-        let iconEndIndex = -1;
         let type = aType[0];
         let charCount = 1;
         if (aCount) {
             charCount = aCount[elements[start]];
         }
         // 数据的排列方式
-        // * 兼有icon 和 text 或只有text: icon | halo | text | icon | halo | text
+        // * 兼有icon 和 text : icon | halo | text | icon | halo | text
         // * 只有icon: icon | icon | icon
+        // * 只有text: halo | text | halo | text | halo | text
         for (let ii = 0; ii <= elements.length; ii += BOX_ELEMENT_COUNT) {
             idx = elements[ii];
-            if (aHalo[idx] === 1) {
-                if (iconEndIndex === -1) {
-                    // 记录第一次碰到halo attr时的index，即icon结束时的index
-                    iconEndIndex = ii;
-                }
-                // 忽略halo text的属性值
-                continue;
-            }
             //pickingId发生变化，新的feature出现
             if (collideIds[idx] !== current || type !== aType[idx] || ii === elements.length) {
                 if (!collideBoxIndex[current]) {
                     collideBoxIndex[current] = [];
                 }
                 // 对于icon，除非没有text和halo，end为iconIndex（ii中包含了icon和halo，但halo需要忽略）
-                const end = (type === 0 && iconEndIndex > -1) ? iconEndIndex : ii;
+                const end = ii;
+                let collideStart = start;
+                if (type === 1) {
+                    // halo永远在text前面，忽略text前面的halo部分
+                    collideStart = start + (end - start) / 2;
+                }
                 collideBoxIndex[current].push([
-                    start,
+                    collideStart,
                     end,
-                    (end - start) / (charCount * BOX_ELEMENT_COUNT),
-                    index++
+                    (end - collideStart) / (charCount * BOX_ELEMENT_COUNT),
+                    index++,
+                    start
                 ]);
                 current = collideIds[idx];
                 type = aType[idx];
                 start = ii;
-                if (type === 0) {
-                    // 新的icon开始，重置iconEndIndex
-                    iconEndIndex = -1;
-                }
                 if (aCount) {
                     charCount = aCount[elements[start]];
                 }
@@ -518,6 +512,8 @@ class IconPainter extends CollisionPainter {
                 meshBoxes[index].mesh = mesh;
                 meshBoxes[index].start = startIndex;
                 meshBoxes[index].end = end;//startIndex + charCount * BOX_ELEMENT_COUNT;
+                // boxInfos[j][4] 中是box的start，因为text前面有halo，text的开始用来计算collide，而halo的开始用来显示
+                meshBoxes[index].boxStart = boxInfos[j][4];
                 meshBoxes[index].boxCount = geoProps.glyphAtlas ? charCount : boxCount;
                 meshBoxes[index].allElements = elements;
                 index++;
@@ -562,9 +558,11 @@ class IconPainter extends CollisionPainter {
                 continue;
             }
             for (let j = 0; j < boxInfos.length; j++) {
-                const [start, end] = boxInfos[j];
+                // boxInfos[j][4] 中是box的start，因为text前面有halo，text的开始用来计算collide，而halo的开始用来显示
+                const boxStart = boxInfos[j][4];
+                const end = boxInfos[j][1];
                 let count = visElemts.count;
-                for (let i = start; i < end; i++) {
+                for (let i = boxStart; i < end; i++) {
                     visElemts[count++] = elements[i];
                 }
                 visElemts.count = count;
