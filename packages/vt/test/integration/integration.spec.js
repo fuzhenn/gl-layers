@@ -30,6 +30,9 @@ const DEFAULT_VIEW = {
 describe('vector tile integration specs', () => {
     let map, container, server;
     before(done => {
+        // const iconDebug = document.createElement('canvas');
+        // iconDebug.id = 'MAPTALKS_ICON_DEBUG';
+        // document.body.appendChild(iconDebug);
         container = document.createElement('div');
         container.style.width = '128px';
         container.style.height = '128px';

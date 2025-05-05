@@ -488,3 +488,10 @@ export function resizeToPowerOfTwo(image: HTMLImageElement | NumberArray, width?
 export function supportNPOT(regl: any) {
     return regl['_gl'] instanceof WebGL2RenderingContext;
 }
+
+export function isTextureDestroyed(texture) {
+    if (texture['_texture']) {
+        return !texture['_texture'].texture;
+    }
+    return true;
+}
