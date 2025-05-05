@@ -561,11 +561,21 @@ export default class PointPack extends VectorPack {
 
         const allowOverlapFn = markerAllowOverlapFn || textAllowOverlapFn;
         if (allowOverlapFn) {
-            allowOverlap = allowOverlapFn(null, properties) || 0;
+            if (markerAllowOverlapFn) {
+                allowOverlap = markerAllowOverlapFn(null, properties) || 0;
+            }
+            if (!allowOverlap && textAllowOverlapFn) {
+                allowOverlap = textAllowOverlapFn(null, properties) || 0;
+            }
         }
         const ignorePlacementFn = markerIgnorePlacementFn || textIgnorePlacementFn;
         if (ignorePlacementFn) {
-            ignorePlacement = ignorePlacementFn(null, properties) || 0;
+            if (markerIgnorePlacementFn) {
+                ignorePlacement = markerIgnorePlacementFn(null, properties) || 0;
+            }
+            if (!ignorePlacement && textIgnorePlacementFn) {
+                ignorePlacement = textIgnorePlacementFn(null, properties) || 0;
+            }
         }
         let opacity;
         const opacityFn = markerOpacityFn;
