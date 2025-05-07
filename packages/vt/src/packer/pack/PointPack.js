@@ -383,7 +383,11 @@ export default class PointPack extends VectorPack {
     }
 
     placeVector(point, scale) {
-        const { iconShape, textShape } = point.getShape(this.iconAtlas, this.glyphAtlas);
+        const shape = point.getShape(this.iconAtlas, this.glyphAtlas);
+        if (!shape) {
+            return;
+        }
+        const { iconShape, textShape } = shape;
         const invalidIconShape = !iconShape || !iconShape.image;
         const invalidTextShape = !textShape || !textShape.horizontal && !textShape.vertical;
         if (!this.options['allowEmptyPack'] && invalidIconShape && invalidTextShape) {
