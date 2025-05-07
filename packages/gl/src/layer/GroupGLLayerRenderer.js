@@ -396,7 +396,7 @@ class GroupGLLayerRenderer extends maptalks.renderer.CanvasRenderer {
         }
         const layers = this._getLayers();
         for (const layer of layers) {
-            if (!layer || !layer.isVisible()) {
+            if (!layer) {
                 continue;
             }
             const renderer = layer.getRenderer();
