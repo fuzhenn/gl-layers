@@ -1,5 +1,11 @@
 # @maptalks/reshader.gl
 
+## 0.104.0
+
+### Minor Changes
+
+- mainly updates for vt
+
 ## 0.103.3
 
 ### Patch Changes

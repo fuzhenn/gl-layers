@@ -1,5 +1,11 @@
 # @maptalks/analysis
 
+## 0.102.0
+
+### Minor Changes
+
+- mainly updates for vt
+
 ## 0.101.2
 
 ### Patch Changes

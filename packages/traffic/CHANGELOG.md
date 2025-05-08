@@ -1,5 +1,16 @@
 # @maptalks/traffic
 
+## 0.102.0
+
+### Minor Changes
+
+- mainly updates for vt
+
+### Patch Changes
+
+- Updated dependencies
+  - @maptalks/gltf-layer@0.104.0
+
 ## 0.101.3
 
 ### Patch Changes

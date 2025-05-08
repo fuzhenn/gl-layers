@@ -1,5 +1,11 @@
 # @maptalks/3dtiles
 
+## 0.105.0
+
+### Minor Changes
+
+- mainly updates for vt
+
 ## 0.104.2
 
 ### Patch Changes
