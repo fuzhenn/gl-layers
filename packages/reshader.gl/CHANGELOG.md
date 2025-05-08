@@ -1,5 +1,11 @@
 # @maptalks/reshader.gl
 
+## 0.104.1
+
+### Patch Changes
+
+- upgrade maptalks
+
 ## 0.104.0
 
 ### Minor Changes

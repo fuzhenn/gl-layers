@@ -1,5 +1,11 @@
 # @maptalks/analysis
 
+## 0.102.1
+
+### Patch Changes
+
+- upgrade maptalks
+
 ## 0.102.0
 
 ### Minor Changes

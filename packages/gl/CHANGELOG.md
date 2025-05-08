@@ -1,5 +1,14 @@
 # @maptalks/gl
 
+## 0.106.1
+
+### Patch Changes
+
+- upgrade maptalks
+- Updated dependencies
+  - @maptalks/gltf-loader@0.102.1
+  - @maptalks/reshader.gl@0.104.1
+
 ## 0.106.0
 
 ### Minor Changes
