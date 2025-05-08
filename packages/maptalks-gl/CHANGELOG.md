@@ -1,5 +1,11 @@
 # maptalks-gl
 
+## 0.107.2
+
+### Patch Changes
+
+- fix maptalks version
+
 ## 0.107.1
 
 ### Patch Changes
