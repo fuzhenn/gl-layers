@@ -1,5 +1,13 @@
 # @maptalks/traffic
 
+## 0.102.2
+
+### Patch Changes
+
+- upgrade maptalks
+- Updated dependencies
+  - @maptalks/gltf-layer@0.104.2
+
 ## 0.102.1
 
 ### Patch Changes

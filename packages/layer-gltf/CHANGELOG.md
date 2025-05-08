@@ -1,5 +1,11 @@
 # @maptalks/gltf-layer
 
+## 0.104.2
+
+### Patch Changes
+
+- upgrade maptalks
+
 ## 0.104.1
 
 ### Patch Changes
