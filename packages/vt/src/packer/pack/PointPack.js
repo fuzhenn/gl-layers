@@ -598,7 +598,7 @@ export default class PointPack extends VectorPack {
         const { altitudeScale, altitudeProperty, defaultAltitude } = this.options;
         const { altitude: featureAltitude } = getFeaAltitudeAndHeight(point.feature, altitudeScale, altitudeProperty, defaultAltitude);
 
-
+        const needAltitudeAttribute = this.needAltitudeAttribute();
         const fillQuadData = (isText, quads, x, y, altitude, anchor, isHalo) => {
             if (!quads) {
                 return;
@@ -655,7 +655,12 @@ export default class PointPack extends VectorPack {
                 this.addElements(currentIdx + 1, currentIdx + 2, currentIdx + 3);
                 currentIdx += 4;
 
-                const max = Math.max(Math.abs(x), Math.abs(y), Math.abs(altitude));
+                let max;
+                if (needAltitudeAttribute) {
+                    max = Math.max(Math.abs(x), Math.abs(y));
+                } else {
+                    max = Math.max(Math.abs(x), Math.abs(y), Math.abs(altitude));
+                }
                 if (max > this.maxPos) {
                     this.maxPos = max;
                 }
