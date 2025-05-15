@@ -363,6 +363,21 @@ export default class PointPack extends VectorPack {
         return formats;
     }
 
+    _prepareFnTypes() {
+        if (!this.iconAtlas) {
+            this._fnTypes.markerWidthFn = this._fnTypes.markerHeightFn = this._fnTypes.markerDxFn = this._fnTypes.markerDyFn =
+            this._fnTypes.markerPitchAlignmentFn = this._fnTypes.markerRotationAlignmentFn = this._fnTypes.markerRotationFn =
+            this._fnTypes.markerAllowOverlapFn = this._fnTypes.markerIgnorePlacementFn =
+            this._fnTypes.markerOpacityFn = null;
+        }
+        if (!this.glyphAtlas) {
+            this._fnTypes.textFillFn = this._fnTypes.textSizeFn = this._fnTypes.textHaloFillFn = this._fnTypes.textHaloRadiusFn = this._fnTypes.textHaloOpacityFn = this._fnTypes.textDxFn = this._fnTypes.textDyFn =
+            this._fnTypes.textPitchAlignmentFn = this._fnTypes.textRotationAlignmentFn = this._fnTypes.textRotationFn =
+            this._fnTypes.textAllowOverlapFn = this._fnTypes.textIgnorePlacementFn =
+            this._fnTypes.textOpacityFn = null;
+        }
+    }
+
     createDataPack() {
         if (!this.iconAtlas && !this.glyphAtlas) {
             if (!this.options['allowEmptyPack']) {
@@ -371,6 +386,7 @@ export default class PointPack extends VectorPack {
                 this.empty = true;
             }
         }
+        this._prepareFnTypes();
         this.countOutOfAngle = 0;
         this.lineVertex = [];
         const pack = super.createDataPack.apply(this, arguments);
