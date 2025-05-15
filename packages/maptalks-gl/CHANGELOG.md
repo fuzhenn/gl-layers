@@ -1,5 +1,13 @@
 # maptalks-gl
 
+## 0.107.5
+
+### Patch Changes
+
+- Updated dependencies
+  - @maptalks/vt@0.105.3
+  - @maptalks/gltf-layer@0.104.2
+
 ## 0.107.4
 
 ### Patch Changes
