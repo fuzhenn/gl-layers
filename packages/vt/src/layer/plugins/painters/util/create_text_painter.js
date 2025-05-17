@@ -280,15 +280,25 @@ function prepareGeometry(geometry, enableCollision, visibleInCollision) {
     const isLinePlacement = geoProps.textPlacement === 'line' && !isIconText(symbol);
     const { aPosition, aShape } = geometry.data;
     const vertexCount = aPosition.length / geometry.desc.positionSize;
+    geoProps.vertexCount = vertexCount;
     geoProps.aPickingId = geometry.data.aPickingId;
     if (!geoProps.aCount) {
         geoProps.aCount = geometry.data.aCount;
         delete geometry.data.aCount;
     }
 
+
     if ((enableCollision || isLinePlacement)) {
+        let aShapeData = aShape;
+        if (aShape.length === vertexCount * 4) {
+            aShapeData = new aShape.constructor(vertexCount * 2);
+            for (let i = 0; i < vertexCount; i++) {
+                aShapeData[i * 2] = aShape[i * 4];
+                aShapeData[i * 2 + 1] = aShape[i * 4 + 1];
+            }
+        }
         geoProps.aAnchor = aPosition;
-        geoProps.aShape = aShape;
+        geoProps.aShape = aShapeData;
     }
     if (!geoProps.visElemts) {
         geoProps.elements = geometry.elements;
@@ -308,7 +318,7 @@ function prepareGeometry(geometry, enableCollision, visibleInCollision) {
         delete geometry.data.aGlyphOffset;
         delete geometry.data.aPitchRotation;
 
-        const offsetLength = aShape.length / 2 * (is3DPitchText ? 3 : 2);
+        const offsetLength = vertexCount * (is3DPitchText ? 3 : 2);
         geometry.data.aOffset = {
             usage: 'dynamic',
             data: new Int16Array(offsetLength)

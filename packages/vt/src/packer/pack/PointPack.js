@@ -718,14 +718,22 @@ export default class PointPack extends VectorPack {
         data.aShape[index++] = shapeY;
         data.aShape.currentIndex = index;
 
-        index = data.aTexCoord.currentIndex;
-        data.aTexCoord[index++] = texX;
-        data.aTexCoord[index++] = texY;
-        if (this.options.pluginType !== 'text') {
-            data.aTexCoord[index++] = +!!isText;
-            data.aTexCoord[index++] = +!!isHalo;
+        if (data.aTexCoord) {
+            index = data.aTexCoord.currentIndex;
+            data.aTexCoord[index++] = texX;
+            data.aTexCoord[index++] = texY;
+            data.aTexCoord.currentIndex = index;
+        } else {
+            index = data.aShape.currentIndex;
+            if (this.options.pluginType !== 'text') {
+                data.aShape[index++] = (texX << 1) + (+!!isText);
+                data.aShape[index++] = (texY << 1) + (+!!isHalo);
+            } else {
+                data.aShape[index++] = texX;
+                data.aShape[index++] = texY;
+            }
+            data.aShape.currentIndex = index;
         }
-        data.aTexCoord.currentIndex = index;
 
         // data.aShape.push(shapeX, shapeY);
         // data.aTexCoord.push(texX, texY);
@@ -1042,13 +1050,8 @@ export default class PointPack extends VectorPack {
                 ...this.getPositionFormat(),
                 {
                     type: Int16Array,
-                    width: 2,
+                    width: 4,
                     name: 'aShape'
-                },
-                {
-                    type: Uint16Array,
-                    width: this.options.pluginType === 'text' ? 2 : 4,
-                    name: 'aTexCoord'
                 },
                 {
                     type: Uint8Array,
@@ -1057,22 +1060,6 @@ export default class PointPack extends VectorPack {
                 }
             ];
         }
-    }
-
-    getPackMarkerFormat() {
-        return [
-            ...this.getPositionFormat(),
-            {
-                type: Int16Array,
-                width: 2,
-                name: 'aShape'
-            },
-            {
-                type: Uint16Array,
-                width: 3,
-                name: 'aTexCoord'
-            }
-        ];
     }
 
 }
