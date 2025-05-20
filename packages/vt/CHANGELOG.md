@@ -1,5 +1,11 @@
 # @maptalks/vt
 
+## 0.105.3
+
+### Patch Changes
+
+- fixes for vt
+
 ## 0.105.2
 
 ### Patch Changes

@@ -1,4 +1,4 @@
-import { mat4 } from 'gl-matrix';
+import { vec3, mat4 } from 'gl-matrix';
 import { defined, isNumber, isInterleaved, extend } from '../common/Util';
 import Skin from './Skin';
 import TRS from './TRS';
@@ -12,6 +12,7 @@ import Texture from '../Texture2D';
 let timespan = 0;
 
 const MAT4 = [];
+const TEMP_VEC = [];
 
 export default class GLTFPack {
 
@@ -462,6 +463,67 @@ export default class GLTFPack {
             wrapT: getTextureWrap(sampler.wrapT) || 'repeat'
         });
     }
+
+    arrangeAlongLine(map, from, to, scale, projectionScale, options) {
+        const items = [];
+        const dist = map.getProjection().measureLenBetween(from, to);
+        let boxWidth = this._calBoxWidth(scale, options);
+        boxWidth /= projectionScale;
+        const times = Math.floor(dist / boxWidth);
+        const rotationZ = this._getRotation(map, from, to);
+        //取余缩放
+        if (times >= 1) {
+            for (let i = 1; i <= times; i++) {
+                const t = boxWidth * (i - 0.5) / dist;
+                const item = {
+                    coordinates: interpolate(from, to, t),
+                    scale: [1, 1, 1],
+                    rotation: [0, 0, rotationZ]
+                }
+                items.push(item);
+            }
+            //尾巴
+            if (options['scaleVertex']) {
+                const t = (boxWidth * times + (dist - boxWidth * times) / 2) / dist;
+                const scale = (dist - boxWidth * times) / boxWidth;
+                const item = {
+                    coordinates: interpolate(from, to, t),
+                    scale: [scale, 1, 1],
+                    rotation: [0, 0, rotationZ]
+                }
+                items.push(item);
+            }
+        } else if (options['scaleVertex']) {
+            const scale = dist / boxWidth;
+            const item = {
+                coordinates: interpolate(from, to, 0.5),
+                scale: [scale, 1, 1],
+                rotation: [0, 0, rotationZ]
+            }
+            items.push(item);
+        }
+        return items;
+    }
+
+    _getRotation(map, from, to) {
+        const res = map.getGLRes();
+        const vp = map.coordinateToPointAtRes(from, res);
+        const vp1 = map.coordinateToPointAtRes(to, res);
+        const degree = computeDegree(
+            vp1.x, vp1.y,
+            vp.x, vp.y
+        );
+        return degree / Math.PI * 180;
+    }
+
+    _calBoxWidth(scale, options) {
+        const gltfmodelBBox = this.getGLTFBBox();
+        const direction = options.direction || 0;
+        const boxExtent = vec3.sub(TEMP_VEC, gltfmodelBBox.max, gltfmodelBBox.min);
+        vec3.multiply(boxExtent, boxExtent, scale);
+        const gapLength = options['gapLength'];
+        return boxExtent[direction] + gapLength;
+    }
 }
 
 function createGeometry(primitive, regl, hasAOMap) {
@@ -541,4 +603,23 @@ function numericalSort(a, b) {
 
 function absNumericalSort(a, b) {
     return Math.abs(b[1]) - Math.abs(a[1]);
+}
+
+function computeDegree(x0, y0, x1, y1) {
+    const dx = x1 - x0;
+    const dy = y1 - y0;
+    return Math.atan2(dy, dx);
+}
+
+function interpolate(from, to, t) {
+    const x = lerp(from.x, to.x, t);
+    const y = lerp(from.y, to.y, t);
+    const z1 = from.z || 0;
+    const z2 = to.z || 0;
+    const z = lerp(z1, z2, t);
+    return new from.constructor(x, y, z);
+}
+
+function lerp(a, b, t) {
+    return a + t * (b - a);
 }
