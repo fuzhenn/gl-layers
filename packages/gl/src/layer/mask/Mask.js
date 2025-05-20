@@ -103,7 +103,7 @@ export default class Mask extends Polygon {
     }
 
     _createTexcoords(vertices, dimension) {
-        const texcoords = [0.0, 0.0, 1.0, 0.0, 1.0, 1.0, 0.0, 1.0];
+        const texcoords = [0.0, 0.0, 0.0, 1.0, 1.0, 1.0, 1.0, 0.0];
         if (this.hasHoles()) {
             const count = vertices.length / dimension * 2;
             for (let i = texcoords.length / 2 - 1; i < count; i += 2) {
