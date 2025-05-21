@@ -20,6 +20,10 @@ export default class ImageMask extends Mask {
             const maskTexture = mesh.material.get('maskTexture');
             if (maskTexture) {
                 this._createTexture(maskTexture);
+                const layer = this.getLayer();
+                if (layer) {
+                    layer.getRenderer().setToRedraw();
+                }
             }
         }
     }
