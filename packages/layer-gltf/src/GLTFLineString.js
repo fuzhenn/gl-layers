@@ -1,5 +1,5 @@
 import MultiGLTFMarker from "./MultiGLTFMarker";
-import { Coordinate, Util } from "maptalks";
+import { Coordinate, Point, Util } from "maptalks";
 import { vec3 } from '@maptalks/gl';
 
 const options = {
@@ -9,6 +9,9 @@ const options = {
 };
 
 const TEMP_COORD = new Coordinate(0, 0);
+const TEMP_SCALE = [];
+const FROM_POINT = new Point(0, 0);
+const TO_POINT = new Point(0, 0);
 
 export default class GLTFLineString extends MultiGLTFMarker {
     constructor(coordinates, options) {
@@ -55,12 +58,20 @@ export default class GLTFLineString extends MultiGLTFMarker {
         }
         this.removeAllData();
         const map = this.getMap();
-        const scale = this._calGLTFScale();
+        const res = map.getGLRes();
+        const projection = map.getProjection();
+        const gltfScale = this._calGLTFScale();
+        const zScale = map.altitudeToPoint(1, res);
         for (let i = 0; i < coordinates.length - 1; i++) {
             const from = this._toCoordinate(coordinates[i]), to = this._toCoordinate(coordinates[i + 1]);
+            const fromPoint = map.coordinateToPointAtRes(from, res, FROM_POINT);
+            const toPoint = map.coordinateToPointAtRes(to, res, TO_POINT);
             const projectionScale = this._calProjectionScale(from, to);
-            const dataArr = this.gltfPack.arrangeAlongLine(map, from, to, scale, projectionScale, this.options);
+            const dist = projection.measureLenBetween(from, to);
+            const dataArr = this.gltfPack.arrangeAlongLine(fromPoint, toPoint, dist, zScale, gltfScale, projectionScale, this.options);
             dataArr.forEach(item => {
+                // convert to coordinates
+                item.coordinates = interpolate(from, to, item.t);
                 this.addData(item);
             });
         }
@@ -72,11 +83,15 @@ export default class GLTFLineString extends MultiGLTFMarker {
         const modelHeight = this.getModelHeight();
         if (modelHeight) {
             this._calModelHeightScale(scale, modelHeight);
-        } else {
-            const symbol = this.getSymbol();
-            vec3.set(scale, symbol.scaleX || 1, symbol.scaleY || 1, symbol.scaleZ || 1);
         }
-        return scale;
+        const symbol = this.getSymbol();
+        vec3.set(
+            TEMP_SCALE,
+            Util.isNil(symbol.scaleX) ? 1 : symbol.scaleX,
+            Util.isNil(symbol.scaleY) ? 1 : symbol.scaleY,
+            Util.isNil(symbol.scaleZ) ? 1 : symbol.scaleZ
+        );
+        return vec3.multiply(scale, scale, TEMP_SCALE);
     }
 
     _calProjectionScale(from, to) {
@@ -97,3 +112,16 @@ export default class GLTFLineString extends MultiGLTFMarker {
 
 GLTFLineString.mergeOptions(options);
 GLTFLineString.registerJSONType('GLTFLineString');
+
+function interpolate(from, to, t) {
+    const x = lerp(from.x, to.x, t);
+    const y = lerp(from.y, to.y, t);
+    const z1 = from.z || 0;
+    const z2 = to.z || 0;
+    const z = lerp(z1, z2, t);
+    return new from.constructor(x, y, z);
+}
+
+function lerp(a, b, t) {
+    return a + t * (b - a);
+}

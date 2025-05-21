@@ -464,21 +464,37 @@ export default class GLTFPack {
         });
     }
 
-    arrangeAlongLine(map, from, to, scale, projectionScale, options) {
+    /**
+     *
+     * @param map
+     * @param from
+     * @param to
+     * @param dist
+     * @param rotationZ 模型绕Z轴旋转角度，弧度
+     * @param rotationXY 模型绕Z轴与线段的交叉轴的旋转角度，弧度
+     * @param gltfScale
+     * @param projectionScale
+     * @param options
+     * @returns
+     */
+    arrangeAlongLine(from, to, dist, zScale, gltfScale, projectionScale, options) {
         const items = [];
-        const dist = map.getProjection().measureLenBetween(from, to);
-        let boxWidth = this._calBoxWidth(scale, options);
+        const rotationZ = this._getRotationZ(from, to);
+        const rotationXY = this._getRotationXY(from, to, zScale);
+        let boxWidth = this._calBoxWidth(gltfScale, options);
         boxWidth /= projectionScale;
         const times = Math.floor(dist / boxWidth);
-        const rotationZ = this._getRotation(map, from, to);
         //取余缩放
         if (times >= 1) {
             for (let i = 1; i <= times; i++) {
                 const t = boxWidth * (i - 0.5) / dist;
                 const item = {
                     coordinates: interpolate(from, to, t),
+                    t,
                     scale: [1, 1, 1],
-                    rotation: [0, 0, rotationZ]
+                    rotation: [0, 0, rotationZ],
+                    rotationZ,
+                    rotationXY
                 }
                 items.push(item);
             }
@@ -488,8 +504,11 @@ export default class GLTFPack {
                 const scale = (dist - boxWidth * times) / boxWidth;
                 const item = {
                     coordinates: interpolate(from, to, t),
+                    t,
                     scale: [scale, 1, 1],
-                    rotation: [0, 0, rotationZ]
+                    rotation: [0, 0, rotationZ],
+                    rotationZ,
+                    rotationXY
                 }
                 items.push(item);
             }
@@ -497,23 +516,21 @@ export default class GLTFPack {
             const scale = dist / boxWidth;
             const item = {
                 coordinates: interpolate(from, to, 0.5),
+                t: 0.5,
                 scale: [scale, 1, 1],
-                rotation: [0, 0, rotationZ]
+                rotation: [0, 0, rotationZ],
+                rotationZ,
+                rotationXY
             }
             items.push(item);
         }
         return items;
     }
 
-    _getRotation(map, from, to) {
-        const res = map.getGLRes();
-        const vp = map.coordinateToPointAtRes(from, res);
-        const vp1 = map.coordinateToPointAtRes(to, res);
-        const degree = computeDegree(
-            vp1.x, vp1.y,
-            vp.x, vp.y
-        );
-        return degree / Math.PI * 180;
+    calModelHeightScale(out, modelHeight) {
+        const bbox = this.getGLTFBBox();
+        const fitScale = modelHeight / (Math.abs(bbox.max[1] - bbox.min[1]));//YZ轴做了翻转，所以需要用y方向来算高度比例
+        return vec3.set(out, fitScale, fitScale, fitScale);
     }
 
     _calBoxWidth(scale, options) {
@@ -523,6 +540,20 @@ export default class GLTFPack {
         vec3.multiply(boxExtent, boxExtent, scale);
         const gapLength = options['gapLength'];
         return boxExtent[direction] + gapLength;
+    }
+
+    _getRotationZ(from, to) {
+        const degree = computeDegree(
+            to.x, to.y,
+            from.x, from.y
+        );
+        return degree / Math.PI * 180;
+    }
+
+    _getRotationXY(from, to, zScale) {
+         const dist = from.distanceTo(to);
+         const z = zScale * ((from.z || 0) - (to.z || 0));
+         return Math.atan(z / dist);
     }
 }
 
