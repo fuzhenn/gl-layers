@@ -1,3 +1,4 @@
+import { Coordinate, Point } from 'maptalks';
 import { vec3, mat4, quat, reshader } from '@maptalks/gl';
 import { setUniformFromSymbol, createColorSetter, isNumber, extend } from '../Util';
 import { getCentiMeterScale, isNil } from '../../../common/Util';
@@ -10,6 +11,7 @@ const V3 = [];
 const TEMP_V3_0 = [];
 const TEMP_V3_1 = [];
 const TEMP_V3_2 = [];
+const TEMP_SCALE = [];
 const Q4 = [];
 const DEFAULT_TRANSLATION = [0, 0, 0];
 const DEFAULT_ROTATION = [0, 0, 0];
@@ -96,18 +98,21 @@ const GLTFMixin = Base =>
             return EMPTY_ARRAY;
         }
 
-        createMesh(geo, transform, { tileTranslationMatrix, tileExtent }, { timestamp }) {
+        createMesh(geo, transform, { tileTranslationMatrix, tileExtent, tilePoint }, { timestamp }) {
             if (!this._ready) {
                 return null;
             }
             const map = this.getMap();
             const { geometry } = geo;
             const { positionSize, features } = geometry;
-            const { aPosition, aPickingId, aXYRotation, aZRotation, aAltitude } = geometry.data;
-            const count = aPosition.length / positionSize;
-            if (count === 0) {
+            if (!geometry.data.aPosition || geometry.data.aPosition.length === 0) {
                 return null;
             }
+            if (this.dataConfig.type === 'native-line') {
+                this._arrangeAlongLine(0, geometry, tilePoint);
+            }
+            const { aPosition, aPickingId, aXYRotation, aZRotation, aAltitude } = geometry.data;
+            let count = aPosition.length / positionSize;
             const instanceData = {
                 'instance_vectorA': new Float32Array(count * 4),
                 'instance_vectorB': new Float32Array(count * 4),
@@ -278,6 +283,81 @@ const GLTFMixin = Base =>
             };
 
             return meshes;
+        }
+
+
+        _arrangeAlongLine(symbolIndex, geometry, tilePoint) {
+            const map = this.getMap();
+            const tileResolution = geometry.properties.tileResolution;
+            const tileCoord = map.pointAtResToCoordinate(new Point(tilePoint), tileResolution);
+            const pointToMeter = map.pointAtResToDistance(1, 0, tileResolution, tileCoord);
+            const tileRatio = geometry.properties.tileRatio;
+            const { data, positionSize } = geometry;
+
+            const zScale = map.altitudeToPoint(1, tileResolution);
+            const gltfScale = this._calGLTFScale(symbolIndex);
+            const options = {
+                gapLength: this.dataConfig.gapLength || 0,
+                direction: this.dataConfig.direction || 0,
+                scaleVertex: true
+            };
+            const gltfPack = this._gltfPack[0][0];
+
+            const { aPosition, aAltitude, aPickingId } = data;
+            const coord0 = new Coordinate(0, 0, 0);
+            const coord1 = new Coordinate(0, 0, 0);
+            const newPosition = [];
+            const newAltitude = aAltitude ? [] : newPosition;
+            const newPickingId = [];
+            const newRotationZ = [];
+            const newRotationXY = [];
+            for (let i = 0; i < aPosition.length - positionSize; i += positionSize) {
+                const x0 = aPosition[i];
+                const y0 = aPosition[i + 1];
+                const z0 = aAltitude ? aAltitude[i / positionSize] : aPosition[i + 2];
+
+                const x1 = aPosition[i + positionSize];
+                const y1 = aPosition[i + positionSize + 1];
+                const z1 = aAltitude ? aAltitude[i / positionSize + 1] : aPosition[i + positionSize + 2];
+
+                const pickingId = aPickingId[i / positionSize];
+
+                const from = coord0.set(x0, y0, z0);
+                const to = coord1.set(x1, y1, z1);
+                const dist = from.distanceTo(to) / tileRatio * pointToMeter;
+
+                const items = gltfPack.arrangeAlongLine(from, to, dist, zScale, gltfScale, 1, options);
+                for (let j = 0; j < items.length; j++) {
+                    const item = items[j];
+                    const coord = item.coordinates;
+                    newPosition.push(coord.x, coord.y);
+                    newAltitude.push(coord.z);
+                    newPickingId.push(pickingId);
+                    newRotationZ.push((item.rotationZ) * Math.PI / 180);
+                    newRotationXY.push(item.rotationXY * Math.PI / 180);
+                }
+            }
+            geometry.data = {
+                aPosition: new aPosition.constructor(newPosition),
+                aPickingId: new aPickingId.constructor(newPickingId),
+                aZRotation: new Float32Array(newRotationZ),
+                aXYRotation: new Float32Array(newRotationXY)
+            };
+            if (aAltitude) {
+                geometry.data.aAltitude = new aAltitude.constructor(newAltitude);
+            }
+        }
+
+        _calGLTFScale(symbolIndex) {
+            const symbol = this.getSymbols()[symbolIndex];
+            const scale = [1, 1, 1];
+            const modelHeight = symbol.modelHeight;
+            if (modelHeight) {
+                const gltfPack = this._gltfPack[symbolIndex][0];
+                gltfPack.calModelHeightScale(scale, modelHeight);
+            }
+            vec3.set(TEMP_SCALE, symbol.scaleX || 1, symbol.scaleY || 1, symbol.scaleZ || 1);
+            return vec3.multiply(scale, scale, TEMP_SCALE);
         }
 
         _getMeshNodeMatrix(symbolIndex, meshIndex, nodeIndex) {
