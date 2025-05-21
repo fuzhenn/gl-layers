@@ -4,7 +4,7 @@ import Mask from './Mask';
 export default class VideoMask extends Mask {
     constructor(coordinates, options) {
         super(coordinates, options);
-        this._mode = 'video';
+        this._mode = 'texture';
     }
 
     play() {
@@ -53,7 +53,7 @@ export default class VideoMask extends Mask {
 
     _setDefines(mesh) {
         const defines = mesh.getDefines();
-        defines['HAS_VIDEO'] = 1;
+        defines['HAS_TEXTURE'] = 1;
         mesh.setDefines(defines);
     }
 

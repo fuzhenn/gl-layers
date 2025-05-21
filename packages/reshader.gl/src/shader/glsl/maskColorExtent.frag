@@ -2,12 +2,12 @@
 precision highp float;
 #endif
 uniform vec4 maskColor;
-#ifdef HAS_VIDEO
+#ifdef HAS_TEXTURE
     uniform sampler2D maskTexture;
     varying vec2 uv;
 #endif
 void main() {
-    #ifdef HAS_VIDEO
+    #ifdef HAS_TEXTURE
         gl_FragColor = texture2D(maskTexture, uv);
         gl_FragColor.a = maskColor.a;
     #else

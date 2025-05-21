@@ -320,6 +320,32 @@ describe('setMask', () => {
         gltflayer.setMask(mask);
     });
 
+    it('ImageMask', done => {
+        const gltflayer = new maptalks.GLTFLayer('gltf');
+        const marker = new maptalks.GLTFGeometry(center, {
+            symbol: {
+                url: url4,
+                scaleX: 80,
+                scaleY: 80,
+                scaleZ: 80
+            }
+        }).addTo(gltflayer);
+        marker.once('load', () => {
+            setTimeout(function() {
+                const pixel1 = pickPixel(map, map.width / 2, map.height / 2, 1, 1);
+                expect(pixelMatch([101, 88, 80, 255], pixel1)).to.be.eql(true);
+                const pixel2 = pickPixel(map, map.width / 2 + 100, map.height / 2, 1, 1);
+                expect(pixelMatch([0, 0, 0, 0], pixel2)).to.be.eql(true);
+                done();
+            }, 100);
+        });
+        new maptalks.GroupGLLayer('gl', [gltflayer], { sceneConfig }).addTo(map);
+        const mask = new maptalks.ImageMask(coord1, {
+            url: 'resources/ground.jpg'
+        });
+        gltflayer.setMask(mask);
+    });
+
     it('update symbol', done => {
         const gltflayer = new maptalks.GLTFLayer('gltf');
         const marker = new maptalks.GLTFGeometry(center, {
@@ -452,7 +478,7 @@ describe('setMask', () => {
             mask.setCoordinates(coord2);
             setTimeout(function() {
                 const pixel1 = pickPixel(map, map.width / 2, map.height / 2, 1, 1);
-                expect(pixelMatch([133, 7, 8, 255], pixel1)).to.be.eql(true);
+                expect(pixelMatch([10, 15, 16, 255], pixel1)).to.be.eql(true);
                 const pixel2 = pickPixel(map, map.width / 2 - 70, map.height / 2 + 70, 1, 1);
                 expect(pixelMatch([0, 0, 0, 0], pixel2)).to.be.eql(true);
                 done();
@@ -718,7 +744,7 @@ describe('setMask', () => {
         mask.on('mousemove', () => {
             const infoWindowStyle = mask.getInfoWindow().__uiDOM.style;
             expect(infoWindowStyle.display).not.to.be.eql('none');
-            expect(infoWindowStyle.cssText).to.be.eql('width: auto; bottom: 0px; position: absolute; left: 0px; transform: translate3d(170.703px, 135.67px, 0px) scale(1); transform-origin: 34.6172px bottom; z-index: 0;');
+            expect(infoWindowStyle.cssText).to.be.eql('width: auto; bottom: 0px; position: absolute; left: 0px; transform: translate3d(171px, 136px, 0px) scale(1); transform-origin: 34.4375px bottom; z-index: 0;');
             done();
         });
         gltflayer.setMask(mask);

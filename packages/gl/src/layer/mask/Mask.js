@@ -5,7 +5,7 @@ import { earcut } from '@maptalks/reshader.gl';
 import { coordinateToWorld, normalizeColor, isNumber } from "../util/util";
 
 const MASK_MODES = {
-    'clip-inside': 0.1, 'clip-outside': 0.2, 'flat-inside': 0.3, 'flat-outside': 0.4, 'color': 0.5, 'video': 0.6, 'elevate': 0.7
+    'clip-inside': 0.1, 'clip-outside': 0.2, 'flat-inside': 0.3, 'flat-outside': 0.4, 'color': 0.5, 'texture': 0.6, 'elevate': 0.7
 };
 const QUAT = [], SCALE = [1, 1, 1];
 const DEFAULT_SYMBOL = {
@@ -93,7 +93,7 @@ export default class Mask extends Polygon {
         const pos = [];
         const idx = this.getLayer().getMasks().indexOf(this);
         const heightOffset = idx * 0.01;
-        const len = this.getMode() === 'video' ? 4 : data.vertices.length / dimension;
+        const len = this.getMode() === 'texture' ? 4 : data.vertices.length / dimension;
         for (let i = 0; i < len; i++) {
             pos.push(data.vertices[i * dimension] - centerPos[0]);
             pos.push(data.vertices[i * dimension + 1] - centerPos[1]);
