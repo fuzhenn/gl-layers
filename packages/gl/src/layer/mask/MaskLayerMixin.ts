@@ -137,7 +137,7 @@ export default function <T extends MixinConstructor>(Base: T) {
                 const hits = [];
                 for (let i = 0; i < masks.length; i++) {
                     const maskMode = masks[i].getMode();
-                    if (masks[i].containsPoint(coordinate) && (maskMode === 'color' || maskMode === 'video')) {
+                    if (masks[i].containsPoint(coordinate) && (maskMode === 'color' || maskMode === 'texture')) {
                         hits.push(masks[i]);
                     }
                 }

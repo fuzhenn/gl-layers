@@ -17,12 +17,13 @@ import FlatInsideMask from './layer/mask/FlatInsideMask';
 import FlatOutsideMask from './layer/mask/FlatOutsideMask';
 import ColorMask from './layer/mask/ColorMask';
 import VideoMask from './layer/mask/VideoMask';
+import ImageMask from './layer/mask/ImageMask';
 import ElevateMask from './layer/mask/ElevateMask';
 import BoxInsideClipMask from './layer/mask/BoxInsideClipMask';
 import BoxOutsideClipMask from './layer/mask/BoxOutsideClipMask';
 import RayCaster from './layer/raycaster/RayCaster';
 export { MaskLayerMixin, MaskRendererMixin };
-export { ClipInsideMask, ClipOutsideMask, FlatInsideMask, FlatOutsideMask, ElevateMask, ColorMask, VideoMask, BoxInsideClipMask, BoxOutsideClipMask };
+export { ClipInsideMask, ClipOutsideMask, FlatInsideMask, FlatOutsideMask, ElevateMask, ColorMask, VideoMask, ImageMask, BoxInsideClipMask, BoxOutsideClipMask };
 export { RayCaster };
 
 import Distance3DTool from './analysis/Distance3DTool';
