@@ -477,17 +477,20 @@ export default class GLTFPack {
      * @param options
      * @returns
      */
-    arrangeAlongLine(from, to, dist, zScale, gltfScale, projectionScale, options) {
+    arrangeAlongLine(from, to, xyDist, gltfScale, projectionScale, options) {
         const items = [];
         const rotationZ = this._getRotationZ(from, to);
-        const rotationXY = this._getRotationXY(from, to, zScale);
+        // cm to mi
+        const zDist = (from.z || 0) - (to.z || 0);
+        const rotationXY = this._getRotationXY(xyDist, zDist);
         let boxWidth = this._calBoxWidth(gltfScale, options);
         boxWidth /= projectionScale;
-        const times = Math.floor(dist / boxWidth);
+        const distance = Math.sqrt(xyDist * xyDist + zDist * zDist);
+        const times = Math.floor(distance / boxWidth);
         //取余缩放
         if (times >= 1) {
             for (let i = 1; i <= times; i++) {
-                const t = boxWidth * (i - 0.5) / dist;
+                const t = boxWidth * (i - 0.5) / distance;
                 const item = {
                     coordinates: interpolate(from, to, t),
                     t,
@@ -500,8 +503,8 @@ export default class GLTFPack {
             }
             //尾巴
             if (options['scaleVertex']) {
-                const t = (boxWidth * times + (dist - boxWidth * times) / 2) / dist;
-                const scale = (dist - boxWidth * times) / boxWidth;
+                const t = (boxWidth * times + (distance - boxWidth * times) / 2) / distance;
+                const scale = (distance - boxWidth * times) / boxWidth;
                 const item = {
                     coordinates: interpolate(from, to, t),
                     t,
@@ -513,7 +516,7 @@ export default class GLTFPack {
                 items.push(item);
             }
         } else if (options['scaleVertex']) {
-            const scale = dist / boxWidth;
+            const scale = distance / boxWidth;
             const item = {
                 coordinates: interpolate(from, to, 0.5),
                 t: 0.5,
@@ -550,10 +553,9 @@ export default class GLTFPack {
         return degree / Math.PI * 180;
     }
 
-    _getRotationXY(from, to, zScale) {
-         const dist = from.distanceTo(to);
-         const z = zScale * ((from.z || 0) - (to.z || 0));
-         return Math.atan(z / dist);
+    _getRotationXY(xyDist, zDist) {
+        const rotation = Math.atan(zDist / xyDist) * 180 / Math.PI;
+        return rotation;
     }
 }
 

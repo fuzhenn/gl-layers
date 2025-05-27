@@ -294,7 +294,6 @@ const GLTFMixin = Base =>
             const tileRatio = geometry.properties.tileRatio;
             const { data, positionSize } = geometry;
 
-            const zScale = map.altitudeToPoint(1, tileResolution);
             const gltfScale = this._calGLTFScale(symbolIndex);
             const options = {
                 gapLength: this.dataConfig.gapLength || 0,
@@ -311,30 +310,39 @@ const GLTFMixin = Base =>
             const newPickingId = [];
             const newRotationZ = [];
             const newRotationXY = [];
+            const vertex = [];
             for (let i = 0; i < aPosition.length - positionSize; i += positionSize) {
-                const x0 = aPosition[i];
-                const y0 = aPosition[i + 1];
-                const z0 = aAltitude ? aAltitude[i / positionSize] : aPosition[i + 2];
+                if (aAltitude) {
+                    vec3.set(vertex, aPosition[i], aPosition[i + 1], aAltitude[i / positionSize]);
+                } else {
+                    PackUtil.unpackPosition(vertex, aPosition[i], aPosition[i + 1], aPosition[i + 2]);
+                }
+                const [x0, y0, z0] = vertex;
 
-                const x1 = aPosition[i + positionSize];
-                const y1 = aPosition[i + positionSize + 1];
-                const z1 = aAltitude ? aAltitude[i / positionSize + 1] : aPosition[i + positionSize + 2];
+                let j = i + positionSize;
+                if (aAltitude) {
+                    vec3.set(vertex, aPosition[j], aPosition[j + 1], aAltitude[j / positionSize]);
+                } else {
+                    PackUtil.unpackPosition(vertex, aPosition[j], aPosition[j + 1], aPosition[j + 2]);
+                }
+                const [x1, y1, z1] = vertex;
 
                 const pickingId = aPickingId[i / positionSize];
-
-                const from = coord0.set(x0, y0, z0);
-                const to = coord1.set(x1, y1, z1);
+                // altitude cm => meter
+                const from = coord0.set(x0, y0, z0 / 100);
+                const to = coord1.set(x1, y1, z1 / 100);
                 const dist = from.distanceTo(to) / tileRatio * pointToMeter;
 
-                const items = gltfPack.arrangeAlongLine(from, to, dist, zScale, gltfScale, 1, options);
+                const items = gltfPack.arrangeAlongLine(from, to, dist, gltfScale, 1, options);
                 for (let j = 0; j < items.length; j++) {
                     const item = items[j];
                     const coord = item.coordinates;
                     newPosition.push(coord.x, coord.y);
-                    newAltitude.push(coord.z);
+                    newAltitude.push(coord.z * 100);
                     newPickingId.push(pickingId);
-                    newRotationZ.push((item.rotationZ) * Math.PI / 180);
+                    newRotationZ.push(item.rotationZ * Math.PI / 180);
                     newRotationXY.push(item.rotationXY * Math.PI / 180);
+
                 }
             }
             geometry.data = {
@@ -559,6 +567,7 @@ const GLTFMixin = Base =>
             // 如果没有 fn type，trs会作为positionMatrix设置到mesh上
             const hasFnType = this._hasFuncType();
             const zAxis = [0, 0, 1];
+            const rotateOrigin = [0, 0, 0];
 
             for (let i = 0; i < count; i++) {
                 if (aAltitude) {
@@ -583,12 +592,9 @@ const GLTFMixin = Base =>
                 } else {
                     // const quaterion = quat.fromEuler([], xRotation * 180 / Math.PI, yRotation * 180 / Math.PI, zRotation * 180 / Math.PI);
                     mat4.fromRotation(mat, zRotation, zAxis);
-
-                    const v = vec3.set(V3, x, y, 0);
-                    const axis = vec3.normalize(v, vec3.cross(v, v, zAxis));
+                    const v = vec3.set(V3, Math.cos(zRotation), Math.sin(zRotation), 0);
+                    const axis = vec3.rotateZ(v, v, rotateOrigin, 90 * Math.PI / 180);
                     mat4.rotate(mat, mat, xyRotation, axis);
-
-                    // mat4.fromRotation(mat, 0, axis);
                     const tMat = mat4.fromTranslation(TEMP_MATRIX, pos);
                     mat4.multiply(mat, tMat, mat);
                 }

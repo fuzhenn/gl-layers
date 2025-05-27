@@ -61,14 +61,13 @@ export default class GLTFLineString extends MultiGLTFMarker {
         const res = map.getGLRes();
         const projection = map.getProjection();
         const gltfScale = this._calGLTFScale();
-        const zScale = map.altitudeToPoint(1, res);
         for (let i = 0; i < coordinates.length - 1; i++) {
             const from = this._toCoordinate(coordinates[i]), to = this._toCoordinate(coordinates[i + 1]);
             const fromPoint = map.coordinateToPointAtRes(from, res, FROM_POINT);
             const toPoint = map.coordinateToPointAtRes(to, res, TO_POINT);
             const projectionScale = this._calProjectionScale(from, to);
             const dist = projection.measureLenBetween(from, to);
-            const dataArr = this.gltfPack.arrangeAlongLine(fromPoint, toPoint, dist, zScale, gltfScale, projectionScale, this.options);
+            const dataArr = this.gltfPack.arrangeAlongLine(fromPoint, toPoint, dist, gltfScale, projectionScale, this.options);
             dataArr.forEach(item => {
                 // convert to coordinates
                 item.coordinates = interpolate(from, to, item.t);
