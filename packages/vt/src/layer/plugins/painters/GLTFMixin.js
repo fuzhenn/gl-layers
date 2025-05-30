@@ -1,4 +1,4 @@
-import { Coordinate, Point } from 'maptalks';
+import { Coordinate } from 'maptalks';
 import { vec3, mat4, quat, reshader } from '@maptalks/gl';
 import { setUniformFromSymbol, createColorSetter, isNumber, extend } from '../Util';
 import { getCentiMeterScale, isNil } from '../../../common/Util';
@@ -286,15 +286,13 @@ const GLTFMixin = Base =>
         }
 
 
-        _arrangeAlongLine(symbolIndex, geometry, tilePoint) {
-            const map = this.getMap();
-            const tileResolution = geometry.properties.tileResolution;
-            const tileCoord = map.pointAtResToCoordinate(new Point(tilePoint), tileResolution);
-            const pointToMeter = map.pointAtResToDistance(1, 0, tileResolution, tileCoord);
-            const tileRatio = geometry.properties.tileRatio;
+        _arrangeAlongLine(symbolIndex, geometry) {
+            const { tileExtent, z: tileZoom } = geometry.properties;
             const { data, positionSize } = geometry;
 
-            const gltfScale = this._calGLTFScale(symbolIndex);
+            let gltfScale = this._calGLTFScale(symbolIndex);
+            const meterScale = this._getMeterScale();
+            gltfScale = vec3.scale([], gltfScale, meterScale);
             const options = {
                 gapLength: this.dataConfig.gapLength || 0,
                 direction: this.dataConfig.direction || 0,
@@ -310,37 +308,45 @@ const GLTFMixin = Base =>
             const newPickingId = [];
             const newRotationZ = [];
             const newRotationXY = [];
-            const vertex = [];
+            const vertex0 = [];
+            const vertex1 = [];
+            const tileSize = this.layer.getTileSize().width;
+            const tileScale = tileSize / tileExtent * this.layer.getRenderer().getTileGLScale(tileZoom);
+            const zScale = this.layer.getRenderer().getZScale();
             for (let i = 0; i < aPosition.length - positionSize; i += positionSize) {
                 if (aAltitude) {
-                    vec3.set(vertex, aPosition[i], aPosition[i + 1], aAltitude[i / positionSize]);
+                    vec3.set(vertex0, aPosition[i], aPosition[i + 1], aAltitude[i / positionSize]);
                 } else {
-                    PackUtil.unpackPosition(vertex, aPosition[i], aPosition[i + 1], aPosition[i + 2]);
+                    PackUtil.unpackPosition(vertex0, aPosition[i], aPosition[i + 1], aPosition[i + 2]);
                 }
-                const [x0, y0, z0] = vertex;
+                const [x0, y0, z0] = vertex0;
 
                 let j = i + positionSize;
                 if (aAltitude) {
-                    vec3.set(vertex, aPosition[j], aPosition[j + 1], aAltitude[j / positionSize]);
+                    vec3.set(vertex1, aPosition[j], aPosition[j + 1], aAltitude[j / positionSize]);
                 } else {
-                    PackUtil.unpackPosition(vertex, aPosition[j], aPosition[j + 1], aPosition[j + 2]);
+                    PackUtil.unpackPosition(vertex1, aPosition[j], aPosition[j + 1], aPosition[j + 2]);
                 }
-                const [x1, y1, z1] = vertex;
+                const [x1, y1, z1] = vertex1;
 
                 const pickingId = aPickingId[i / positionSize];
                 // altitude cm => meter
-                const from = coord0.set(x0, y0, z0 / 100);
-                const to = coord1.set(x1, y1, z1 / 100);
-                const dist = from.distanceTo(to) / tileRatio * pointToMeter;
+                const from = coord0.set(x0 * tileScale, y0 * tileScale, z0 * zScale);
+                const to = coord1.set(x1 * tileScale, y1 * tileScale, z1 * zScale);
+                const dist = from.distanceTo(to);
 
                 const items = gltfPack.arrangeAlongLine(from, to, dist, gltfScale, 1, options);
                 for (let j = 0; j < items.length; j++) {
                     const item = items[j];
-                    const coord = item.coordinates;
+                    // const coord = item.coordinates;
+                    // newPosition.push(coord.x, coord.y);
+                    coord0.set(x0, y0, z0);
+                    coord1.set(x1, y1, z1);
+                    const coord = interpolate(coord0, coord1, item.t);
                     newPosition.push(coord.x, coord.y);
-                    newAltitude.push(coord.z * 100);
+                    newAltitude.push(coord.z);
                     newPickingId.push(pickingId);
-                    newRotationZ.push(item.rotationZ * Math.PI / 180);
+                    newRotationZ.push(-item.rotationZ * Math.PI / 180);
                     newRotationXY.push(item.rotationXY * Math.PI / 180);
 
                 }
@@ -348,8 +354,8 @@ const GLTFMixin = Base =>
             geometry.data = {
                 aPosition: new aPosition.constructor(newPosition),
                 aPickingId: new aPickingId.constructor(newPickingId),
-                aZRotation: new Float32Array(newRotationZ),
-                aXYRotation: new Float32Array(newRotationXY)
+                aZRotation: newRotationZ,
+                aXYRotation: newRotationXY
             };
             if (aAltitude) {
                 geometry.data.aAltitude = new aAltitude.constructor(newAltitude);
@@ -877,4 +883,16 @@ function generatePickingIndiceIndex(aPickingId) {
         index.push(i);
     }
     return pickingIdIndiceMap;
+}
+
+function interpolate(from, to, t) {
+    const x = lerp(from.x, to.x, t);
+    const y = lerp(from.y, to.y, t);
+    const z1 = from.z || 0;
+    const z2 = to.z || 0;
+    const z = lerp(z1, z2, t);
+    return new from.constructor(x, y, z);
+}
+function lerp(a, b, t) {
+    return a + t * (b - a);
 }
