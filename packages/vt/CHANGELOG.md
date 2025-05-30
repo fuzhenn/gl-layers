@@ -1,5 +1,11 @@
 # @maptalks/vt
 
+## 0.106.1
+
+### Patch Changes
+
+- fix gltf-lit on native-line's end
+
 ## 0.106.0
 
 ### Minor Changes

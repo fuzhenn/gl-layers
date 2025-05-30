@@ -1,5 +1,14 @@
 # maptalks-gl
 
+## 0.108.1
+
+### Patch Changes
+
+- fix gltf-lit on native-line's end
+- Updated dependencies
+  - @maptalks/vt@0.106.1
+  - @maptalks/gltf-layer@0.104.3
+
 ## 0.108.0
 
 ### Minor Changes
