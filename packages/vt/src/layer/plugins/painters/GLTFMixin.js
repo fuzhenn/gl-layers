@@ -313,7 +313,13 @@ const GLTFMixin = Base =>
             const tileSize = this.layer.getTileSize().width;
             const tileScale = tileSize / tileExtent * this.layer.getRenderer().getTileGLScale(tileZoom);
             const zScale = this.layer.getRenderer().getZScale();
+            let currentPickingId = aPickingId[0];
             for (let i = 0; i < aPosition.length - positionSize; i += positionSize) {
+                const nextPickingId = aPickingId[i / positionSize + 1];
+                if (nextPickingId !== currentPickingId) {
+                    currentPickingId = nextPickingId;
+                    continue;
+                }
                 if (aAltitude) {
                     vec3.set(vertex0, aPosition[i], aPosition[i + 1], aAltitude[i / positionSize]);
                 } else {
