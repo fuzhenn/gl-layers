@@ -464,56 +464,76 @@ export default class GLTFPack {
         });
     }
 
-    arrangeAlongLine(map, from, to, scale, projectionScale, options) {
+    /**
+     *
+     * @param map
+     * @param from
+     * @param to
+     * @param dist
+     * @param rotationZ 模型绕Z轴旋转角度，弧度
+     * @param rotationXY 模型绕Z轴与线段的交叉轴的旋转角度，弧度
+     * @param gltfScale
+     * @param projectionScale
+     * @param options
+     * @returns
+     */
+    arrangeAlongLine(from, to, xyDist, gltfScale, projectionScale, options) {
         const items = [];
-        const dist = map.getProjection().measureLenBetween(from, to);
-        let boxWidth = this._calBoxWidth(scale, options);
+        const rotationZ = this._getRotationZ(from, to);
+        // cm to mi
+        const zDist = (from.z || 0) - (to.z || 0);
+        const rotationXY = this._getRotationXY(xyDist, zDist);
+        let boxWidth = this._calBoxWidth(gltfScale, options);
         boxWidth /= projectionScale;
-        const times = Math.floor(dist / boxWidth);
-        const rotationZ = this._getRotation(map, from, to);
+        const distance = Math.sqrt(xyDist * xyDist + zDist * zDist);
+        const times = Math.floor(distance / boxWidth);
         //取余缩放
         if (times >= 1) {
             for (let i = 1; i <= times; i++) {
-                const t = boxWidth * (i - 0.5) / dist;
+                const t = boxWidth * (i - 0.5) / distance;
                 const item = {
                     coordinates: interpolate(from, to, t),
+                    t,
                     scale: [1, 1, 1],
-                    rotation: [0, 0, rotationZ]
+                    rotation: [0, 0, rotationZ],
+                    rotationZ,
+                    rotationXY
                 }
                 items.push(item);
             }
             //尾巴
             if (options['scaleVertex']) {
-                const t = (boxWidth * times + (dist - boxWidth * times) / 2) / dist;
-                const scale = (dist - boxWidth * times) / boxWidth;
+                const t = (boxWidth * times + (distance - boxWidth * times) / 2) / distance;
+                const scale = (distance - boxWidth * times) / boxWidth;
                 const item = {
                     coordinates: interpolate(from, to, t),
+                    t,
                     scale: [scale, 1, 1],
-                    rotation: [0, 0, rotationZ]
+                    rotation: [0, 0, rotationZ],
+                    rotationZ,
+                    rotationXY
                 }
                 items.push(item);
             }
         } else if (options['scaleVertex']) {
-            const scale = dist / boxWidth;
+            const scale = distance / boxWidth;
             const item = {
                 coordinates: interpolate(from, to, 0.5),
+                t: 0.5,
                 scale: [scale, 1, 1],
-                rotation: [0, 0, rotationZ]
+                rotation: [0, 0, rotationZ],
+                rotationZ,
+                rotationXY
             }
             items.push(item);
         }
         return items;
     }
 
-    _getRotation(map, from, to) {
-        const res = map.getGLRes();
-        const vp = map.coordinateToPointAtRes(from, res);
-        const vp1 = map.coordinateToPointAtRes(to, res);
-        const degree = computeDegree(
-            vp1.x, vp1.y,
-            vp.x, vp.y
-        );
-        return degree / Math.PI * 180;
+    calModelHeightScale(out, modelHeight) {
+        const bbox = this.getGLTFBBox();
+        const fitScale = modelHeight / (Math.abs(bbox.max[1] - bbox.min[1]));//YZ轴做了翻转，所以需要用y方向来算高度比例
+        return vec3.set(out, fitScale, fitScale, fitScale);
     }
 
     _calBoxWidth(scale, options) {
@@ -523,6 +543,19 @@ export default class GLTFPack {
         vec3.multiply(boxExtent, boxExtent, scale);
         const gapLength = options['gapLength'];
         return boxExtent[direction] + gapLength;
+    }
+
+    _getRotationZ(from, to) {
+        const degree = computeDegree(
+            to.x, to.y,
+            from.x, from.y
+        );
+        return degree / Math.PI * 180;
+    }
+
+    _getRotationXY(xyDist, zDist) {
+        const rotation = Math.atan(zDist / xyDist) * 180 / Math.PI;
+        return rotation;
     }
 }
 

@@ -528,9 +528,7 @@ export default class GLTFMarker extends Marker {
     }
 
     _calModelHeightScale(out, modelHeight) {
-        const bbox = this._gltfModelBBox;
-        const fitScale = modelHeight / (Math.abs(bbox.max[1] - bbox.min[1]));//YZ轴做了翻转，所以需要用y方向来算高度比例
-        return vec3.set(out, fitScale, fitScale, fitScale);
+        return this.gltfPack.calModelHeightScale(out, modelHeight);
     }
 
     _calFixSizeScale(out, pixelHeight) {
@@ -1322,9 +1320,12 @@ export default class GLTFMarker extends Marker {
 
     getScale() {
         const symbol = this['_getInternalSymbol']();
-        const scaleX = symbol && symbol['scaleX'] || 1;
-        const scaleY = symbol && symbol['scaleY'] || 1;
-        const scaleZ = symbol && symbol['scaleZ'] || 1;
+        if (!symbol) {
+            return vec3.set(this._defaultTRS.scale, 1, 1, 1);
+        }
+        const scaleX = Util.isNil(symbol['scaleX']) ? 1 : symbol['scaleX'];
+        const scaleY = Util.isNil(symbol['scaleY']) ? 1 : symbol['scaleY'];
+        const scaleZ = Util.isNil(symbol['scaleZ']) ? 1 : symbol['scaleZ'];
         return vec3.set(this._defaultTRS.scale, scaleX, scaleY, scaleZ);
     }
 
