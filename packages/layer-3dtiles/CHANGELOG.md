@@ -1,5 +1,11 @@
 # @maptalks/3dtiles
 
+## 0.105.3
+
+### Patch Changes
+
+- gltf-lit along native-line
+
 ## 0.105.2
 
 ### Patch Changes

@@ -1,5 +1,14 @@
 # @maptalks/gl
 
+## 0.106.3
+
+### Patch Changes
+
+- gltf-lit along native-line
+- Updated dependencies
+  - @maptalks/reshader.gl@0.105.0
+  - @maptalks/gltf-loader@0.102.3
+
 ## 0.106.2
 
 ### Patch Changes

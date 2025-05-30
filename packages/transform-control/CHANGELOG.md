@@ -1,5 +1,14 @@
 # @maptalks/transform-control
 
+## 0.105.3
+
+### Patch Changes
+
+- gltf-lit along native-line
+- Updated dependencies
+  - @maptalks/gl@0.106.3
+  - @maptalks/gltf-layer@0.104.3
+
 ## 0.105.2
 
 ### Patch Changes
