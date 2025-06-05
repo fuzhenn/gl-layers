@@ -1,5 +1,14 @@
 # @maptalks/transform-control
 
+## 0.105.4
+
+### Patch Changes
+
+- Add ImageMask and fix some bugs
+- Updated dependencies
+  - @maptalks/gl@0.107.0
+  - @maptalks/gltf-layer@0.104.3
+
 ## 0.105.3
 
 ### Patch Changes

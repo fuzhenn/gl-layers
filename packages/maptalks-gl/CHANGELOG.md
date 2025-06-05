@@ -1,5 +1,21 @@
 # maptalks-gl
 
+## 0.109.0
+
+### Minor Changes
+
+- Add ImageMask and fix some bugs
+
+### Patch Changes
+
+- Updated dependencies
+  - @maptalks/gl@0.107.0
+  - @maptalks/transform-control@0.105.4
+  - @maptalks/3dtiles@0.105.3
+  - @maptalks/gltf-layer@0.104.3
+  - @maptalks/video-layer@0.102.3
+  - @maptalks/vt@0.106.2
+
 ## 0.108.1
 
 ### Patch Changes

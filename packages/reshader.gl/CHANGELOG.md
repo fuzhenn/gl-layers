@@ -1,5 +1,11 @@
 # @maptalks/reshader.gl
 
+## 0.106.0
+
+### Minor Changes
+
+- Add ImageMask and fix some bugs
+
 ## 0.105.0
 
 ### Minor Changes

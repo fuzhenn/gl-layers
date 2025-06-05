@@ -1,5 +1,16 @@
 # @maptalks/gl
 
+## 0.107.0
+
+### Minor Changes
+
+- Add ImageMask and fix some bugs
+
+### Patch Changes
+
+- Updated dependencies
+  - @maptalks/reshader.gl@0.106.0
+
 ## 0.106.3
 
 ### Patch Changes
