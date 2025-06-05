@@ -1,5 +1,11 @@
 # @maptalks/reshader.gl
 
+## 0.105.0
+
+### Minor Changes
+
+- gltf-lit along native-line
+
 ## 0.104.2
 
 ### Patch Changes

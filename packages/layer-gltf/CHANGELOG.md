@@ -1,5 +1,11 @@
 # @maptalks/gltf-layer
 
+## 0.104.3
+
+### Patch Changes
+
+- gltf-lit along native-line
+
 ## 0.104.2
 
 ### Patch Changes

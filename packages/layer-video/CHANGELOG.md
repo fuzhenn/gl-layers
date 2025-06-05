@@ -1,5 +1,11 @@
 # @maptalks/video-layer
 
+## 0.102.3
+
+### Patch Changes
+
+- gltf-lit along native-line
+
 ## 0.102.2
 
 ### Patch Changes

@@ -1,6 +1,6 @@
 {
   "name": "maptalks-gl",
-  "version": "0.107.5",
+  "version": "0.108.1",
   "description": "All-in-one package for maptalks webgl layers",
   "module": "index.js",
   "main": "dist/maptalks-gl.js",
@@ -48,6 +48,6 @@
     "@maptalks/transform-control": "workspace:*",
     "@maptalks/video-layer": "workspace:*",
     "@maptalks/vt": "workspace:*",
-    "maptalks": "^1.1.2"
+    "maptalks": "^1.1.3"
   }
 }

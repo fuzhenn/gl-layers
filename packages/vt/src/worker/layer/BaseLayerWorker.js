@@ -297,7 +297,6 @@ export default class BaseLayerWorker {
 
         const fnTypeProps = [];
         let hasFnTypeProps = false;
-
         for (let i = 0; i < pluginConfigs.length; i++) {
             typeIndex++;
             const pluginConfig = pluginConfigs[i];
