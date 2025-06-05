@@ -47,6 +47,11 @@ export default class VideoMask extends Mask {
     _updateUniforms(mesh) {
         const maskMode = this._getMaskMode();
         mesh.setUniform('maskMode', maskMode);
+        if (this._positions && this._positions.length) {
+            for (let i = 0; i < 4; i++) {
+                mesh.setUniform('mask_position' + i, this._positions.slice(i * 3, i * 3 + 3));
+            }
+        }
         const color = this._getMaskColor();
         mesh.setUniform('maskColor', color);
     }

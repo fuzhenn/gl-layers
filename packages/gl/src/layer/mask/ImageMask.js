@@ -44,6 +44,11 @@ export default class ImageMask extends Mask {
         mesh.setUniform('maskMode', maskMode);
         const color = this._getMaskColor();
         mesh.setUniform('maskColor', color);
+        if (this._positions && this._positions.length) {
+            for (let i = 0; i < 4; i++) {
+                mesh.setUniform('mask_position' + i, this._positions.slice(i * 3, i * 3 + 3));
+            }
+        }
     }
 
     _setDefines(mesh) {

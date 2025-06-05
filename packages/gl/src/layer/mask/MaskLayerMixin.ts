@@ -220,15 +220,13 @@ export default function <T extends MixinConstructor>(Base: T) {
         getMaskExtent() {
             let xmin = Infinity, ymin = Infinity, xmax = -Infinity, ymax = -Infinity, maxheight = -Infinity, minheight = Infinity;
             let hasMaskInExtent = false;
-            const map = this['getMap']();
-            const mapExtent = map.getExtent();
             for (let i = 0; i < this['_maskList'].length; i++) {
                 const mask = this['_maskList'][i];
                 if (!mask.isVisible()) {
                     continue;
                 }
                 const extent = mask.getExtent();
-                if (!extent || !mapExtent.intersects(extent)) {
+                if (!extent) {
                     continue;
                 }
                 hasMaskInExtent = true;

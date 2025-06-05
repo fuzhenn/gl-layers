@@ -4,6 +4,7 @@ uniform mat4 projViewModelMatrix;
 #ifdef HAS_TEXTURE
     attribute vec2 aTexCoord;
     varying vec2 uv;
+    varying vec4 vPos;
 #endif
 #include <get_output>
 void main()
@@ -13,5 +14,6 @@ void main()
     gl_Position = projViewModelMatrix * localPosition;
     #ifdef HAS_TEXTURE
         uv = aTexCoord;
+        vPos = getPosition(aPosition);
     #endif
 }
