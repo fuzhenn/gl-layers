@@ -4,7 +4,7 @@ import Mask from './Mask';
 export default class VideoMask extends Mask {
     constructor(coordinates, options) {
         super(coordinates, options);
-        this._mode = 'video';
+        this._mode = 'texture';
     }
 
     play() {
@@ -47,13 +47,18 @@ export default class VideoMask extends Mask {
     _updateUniforms(mesh) {
         const maskMode = this._getMaskMode();
         mesh.setUniform('maskMode', maskMode);
+        if (this._positions && this._positions.length) {
+            for (let i = 0; i < 4; i++) {
+                mesh.setUniform('mask_position' + i, this._positions.slice(i * 3, i * 3 + 3));
+            }
+        }
         const color = this._getMaskColor();
         mesh.setUniform('maskColor', color);
     }
 
     _setDefines(mesh) {
         const defines = mesh.getDefines();
-        defines['HAS_VIDEO'] = 1;
+        defines['HAS_TEXTURE'] = 1;
         mesh.setDefines(defines);
     }
 
