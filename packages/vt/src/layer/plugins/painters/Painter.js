@@ -1390,6 +1390,10 @@ class Painter {
             this._terrainAltitudeCache.add(cacheId, { altitudeData: aTerrainAltitude, terrainTileInfos });
         }
     }
+
+    shouldDrawParentTile() {
+        return true;
+    }
 }
 
 export default Painter;

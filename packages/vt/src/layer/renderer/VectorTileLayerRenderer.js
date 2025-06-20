@@ -1387,6 +1387,9 @@ class VectorTileLayerRenderer extends maptalks.renderer.TileLayerCanvasRenderer 
             if (!tileCache[idx]) {
                 return;
             }
+            if (this.drawingParentTiles && !plugin.painter.shouldDrawParentTile()) {
+                return;
+            }
             const isRenderingTerrainSkin = isRenderingTerrain && terrainSkinFilter(plugin);
             const regl = this.regl;
             const gl = this.gl;
