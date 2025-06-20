@@ -1505,7 +1505,7 @@ class VectorTileLayerRenderer extends maptalks.renderer.TileLayerCanvasRenderer 
             if (!plugin) {
                 return;
             }
-            const visible = this._isVisible(plugin);
+            const visible = plugin.isVisible();
             if (!visible) {
                 return;
             }
