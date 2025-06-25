@@ -2078,6 +2078,158 @@ describe('gl tests', () => {
             floodAnalysis.addTo(group);
         })
     });
+
+    context('scan effect', () => {
+        it('add scan effect in sceneConfig', (done) => {
+            map = new maptalks.Map(container, {
+                center: [91.14478,29.658272],
+                zoom: 12,
+                lights: {
+                    ambient: {
+                        hsv: [0, 0, -0.298],
+                        orientation: 0
+                    }
+                }
+            });
+            const center = map.getCenter();
+            const sceneConfig = {
+                environment: {
+                    enable: true,
+                    mode: 1,
+                    level: 3,
+                    brightness: 0.489
+                },
+                postProcess: {
+                    enable: true,
+                    ssr: {
+                        enable: true
+                    },
+                    "scanEffect": {
+                        "enable": true,
+                        effects: [{
+                            center: center,
+                            radius: 6000,
+                            speed: 1.5,
+                            color: [0.4667, 0.8800, 0.3804]
+                        }]
+                    }
+                }
+            };
+            map.setPitch(45);
+            const skinLayers = [
+                new maptalks.TileLayer('base', {
+                    urlTemplate: '/fixtures/google-256/{z}/{x}/{y}.jpg'
+                })
+            ];
+            const terrain = {
+                fadeAnimation: false,
+                type: 'mapbox',
+                tileSize: 512,
+                spatialReference: 'preset-vt-3857',
+                urlTemplate: '/fixtures/mapbox-terrain/{z}/{x}/{y}.webp',
+                tileStackDepth: 0
+            };
+            const group = new maptalks.GroupGLLayer('group', skinLayers, { terrain, sceneConfig });
+            group.once('terrainlayercreated', () => {
+                const terrainLayer = group.getTerrainLayer();
+                terrainLayer.once('terrainreadyandrender', () => {
+                    group.once('layerload', () => {
+                        setTimeout(() => {
+                            const canvas = map.getRenderer().canvas;
+                            const ctx = canvas.getContext('2d');
+                            const pixel = ctx.getImageData(canvas.width / 2, 158, 1, 1).data;
+                            expect(Math.abs(pixel[1] - 250) < 10).to.be.eql(true);
+                            expect(Math.abs(pixel[2] - 250) < 10).to.be.eql(true);
+                            done();
+                        }, 100);
+                    });
+                });
+            });
+            group.addTo(map);
+        });
+
+        it('update scan effect', (done) => {
+            map = new maptalks.Map(container, {
+                center: [91.14478,29.658272],
+                zoom: 12,
+                lights: {
+                    ambient: {
+                        hsv: [0, 0, -0.298],
+                        orientation: 0
+                    }
+                }
+            });
+            const center = map.getCenter();
+            const sceneConfig = {
+                environment: {
+                    enable: true,
+                    mode: 1,
+                    level: 3,
+                    brightness: 0.489
+                },
+                postProcess: {
+                    enable: true,
+                    ssr: {
+                        enable: true
+                    },
+                    "scanEffect": {
+                        "enable": true,
+                        effects: [{
+                            center: center,
+                            radius: 6000,
+                            speed: 1.5,
+                            color: [0.4667, 0.8800, 0.3804]
+                        }]
+                    }
+                }
+            };
+            map.setPitch(45);
+            const skinLayers = [
+                new maptalks.TileLayer('base', {
+                    urlTemplate: '/fixtures/google-256/{z}/{x}/{y}.jpg'
+                })
+            ];
+            const terrain = {
+                fadeAnimation: false,
+                type: 'mapbox',
+                tileSize: 512,
+                spatialReference: 'preset-vt-3857',
+                urlTemplate: '/fixtures/mapbox-terrain/{z}/{x}/{y}.webp',
+                tileStackDepth: 0
+            };
+            const group = new maptalks.GroupGLLayer('group', skinLayers, { terrain, sceneConfig });
+            function updateScanEffect() {
+                const effect = {
+                    center: center.add(0, -0.06),
+                    radius: 3000,
+                    speed: 2,
+                    color: [0.8, 0.5, 0.4]
+                };
+                const sceneConfig = group.getSceneConfig();
+                sceneConfig.postProcess.scanEffect.effects.push(effect);
+                group.setSceneConfig(sceneConfig);
+            }
+            updateScanEffect();
+            group.once('terrainlayercreated', () => {
+                const terrainLayer = group.getTerrainLayer();
+                terrainLayer.once('terrainreadyandrender', () => {
+                    group.once('layerload', () => {
+                        setTimeout(() => {
+                            const canvas = map.getRenderer().canvas;
+                            const ctx = canvas.getContext('2d');
+                            const pixel1 = ctx.getImageData(canvas.width / 2, 325, 1, 1).data;
+                            const pixel2 = ctx.getImageData(canvas.width / 2, 158, 1, 1).data;
+                            expect(Math.abs(pixel1[0] - pixel1[2]) < 10).to.be.eql(true);
+                            expect(Math.abs(pixel2[1] - 250) < 10).to.be.eql(true);
+                            expect(Math.abs(pixel2[2] - 250) < 10).to.be.eql(true);
+                            done();
+                        }, 100);
+                    });
+                });
+            });
+            group.addTo(map);
+        });
+    });
 });
 
 function readPixel(canvas, x, y) {
