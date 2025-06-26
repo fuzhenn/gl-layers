@@ -172,7 +172,8 @@ export default class GLTFMarker extends Marker {
             let needUpdateMatrix = this.isAnimated() ||
             (this._getMarkerPixelHeight() && map.isZooming()) ||
             this._dirtyMarkerBBox ||
-            (this.getGLTFMarkerType() === 'multigltfmarker' && this._dirty);
+            (this.getGLTFMarkerType() === 'multigltfmarker' && this._dirty) ||
+            this.getGLTFMarkerType() === 'effectmarker';
             if (!needUpdateMatrix) {
                 const trsMatrix = this._modelMatrix;
                 mat4.copy(TEMP_MAT, trsMatrix);
@@ -184,7 +185,7 @@ export default class GLTFMarker extends Marker {
             }
             meshes = this._meshes.filter(mesh => {
                 if (intersectsBox(map.projViewMatrix, mesh.getBoundingBox()) || mesh instanceof reshader.InstancedMesh) {
-                    this._updateUniforms(mesh);
+                    this._updateUniforms(mesh, timestamp);
                     this._updateDefines(mesh);
                     return true;
                 }

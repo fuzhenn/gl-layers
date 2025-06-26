@@ -10,6 +10,7 @@ import WeatherPainter from './weather/WeatherPainter';
 import PostProcess from './postprocess/PostProcess.js';
 import AnalysisPainter from '../analysis/AnalysisPainter.js';
 import { createGLContext } from './util/util.js';
+import ScanEffectPainter from './effect/ScanEffectPainter.js';
 
 const EMPTY_COLOR = [0, 0, 0, 0];
 const DEFAULT_LIGHT_DIRECTION = [1, 1, -1];
@@ -215,8 +216,8 @@ class GroupGLLayerRenderer extends maptalks.renderer.CanvasRenderer {
             //     this.clearStencil(renderer, fbo);
             //     renderer[methodName].apply(renderer, args);
             // }
-            this.clearStencil(renderer, fbo);
-            renderer[methodName].apply(renderer, args);
+                this.clearStencil(renderer, fbo);
+                renderer[methodName].apply(renderer, args);
         });
     }
 
@@ -386,6 +387,9 @@ class GroupGLLayerRenderer extends maptalks.renderer.CanvasRenderer {
         if (this._weatherPainter && this._weatherPainter.isEnable()) {
             return true;
         }
+        if (this.isEnableScanEffect()) {
+            return true;
+        }
         const terrainLayer = this.layer.getTerrainLayer();
         if (terrainLayer) {
             const renderer = terrainLayer.getRenderer();
@@ -506,6 +510,7 @@ class GroupGLLayerRenderer extends maptalks.renderer.CanvasRenderer {
         const weatherConfig = this.layer.getWeatherConfig();
         this._weatherPainter = new WeatherPainter(this.regl, layer, weatherConfig);
         this._analysisPainter = new AnalysisPainter(this.regl, layer);
+        this._scanEffectPainter = new ScanEffectPainter(this.regl, layer);
 
         const sceneConfig =  this.layer._getSceneConfig() || {};
         const config = sceneConfig && sceneConfig.postProcess;
@@ -1071,7 +1076,7 @@ class GroupGLLayerRenderer extends maptalks.renderer.CanvasRenderer {
                     }
                     if (shadowMeshes[i].needUpdateShadow) {
                         forceUpdate = true;
-                        shadowMeshes[i].needUpdateShadow = false;
+                    shadowMeshes[i].needUpdateShadow = false;
                     }
                     if (shadowMeshes[i].hasFunctionUniform) {
                         if (!shadowMeshes[i].hasFunctionUniform('minAltitude')) {
@@ -1079,7 +1084,7 @@ class GroupGLLayerRenderer extends maptalks.renderer.CanvasRenderer {
                                 return layer && layer.options.altitude || 0;
                             });
                         }
-                        meshes.push(shadowMeshes[i]);
+                    meshes.push(shadowMeshes[i]);
                     }
                 }
             }
@@ -1118,6 +1123,22 @@ class GroupGLLayerRenderer extends maptalks.renderer.CanvasRenderer {
         }
         const weatherConfig = this.layer.getWeatherConfig();
         return this._weatherPainter.paint(tex, meshes, weatherConfig);
+    }
+
+    _renderScanEffect(tex) {
+        let meshes = [];
+        this.forEachRenderer((renderer, layer) => {
+            if (!renderer.getAnalysisMeshes || !layer.isVisible()) {
+                return;
+            }
+            const renderMeshes = renderer.getAnalysisMeshes();
+            meshes = meshes.concat(renderMeshes);
+        });
+        if (this._groundPainter) {
+            const groundMesh = this._groundPainter.getRenderMeshes();
+            meshes = meshes.concat(groundMesh);
+        }
+        return this._scanEffectPainter.paint(tex, meshes);
     }
 
     getGroundMesh() {
@@ -1288,7 +1309,8 @@ class GroupGLLayerRenderer extends maptalks.renderer.CanvasRenderer {
         // const enableAntialias = +!!(config.antialias && config.antialias.enable);
         const enableAnalysis = this._analysisPainter._hasAnalysis();
         const enableWeather = this._weatherPainter._hasWeather();
-        const hasPost = /* enableSSAO ||  */enableBloom || enableSSR || enableAnalysis || enableWeather;
+        const enableScanEffect = this.isEnableScanEffect();
+        const hasPost = /*enableSSAO || */enableBloom || enableSSR || enableAnalysis || enableWeather || enableScanEffect;
 
         let postFBO = this._postFBO;
         if (hasPost) {
@@ -1374,6 +1396,10 @@ class GroupGLLayerRenderer extends maptalks.renderer.CanvasRenderer {
                 this._needUpdateSSR = false;
             }
         }
+
+        if (this._scanEffectPainter && this.isEnableScanEffect()) {
+            tex = this._renderScanEffect(tex);
+        }
         if (this._analysisPainter) {
             tex = this._renderAnalysis(tex);
         }
@@ -1385,6 +1411,12 @@ class GroupGLLayerRenderer extends maptalks.renderer.CanvasRenderer {
             this._postProcessor.renderFBOToScreen(tex, +!!(config.sharpen && config.sharpen.enable), sharpFactor, map.getDevicePixelRatio());
         }
         this.layer.fire('postprocessend');
+    }
+
+    isEnableScanEffect() {
+        const sceneConfig =  this.layer._getSceneConfig();
+        const config = sceneConfig && sceneConfig.postProcess && sceneConfig.postProcess.scanEffect;
+        return config && config.enable && config.effects.length;
     }
 }
 
