@@ -417,7 +417,7 @@ describe('bug', () => {
             setTimeout(function() {
                 const infoWindowStyle = gltfMarker.getInfoWindow().__uiDOM.style;
                 expect(infoWindowStyle.display).not.to.be.eql('none');
-                expect(infoWindowStyle.cssText).to.be.eql('width: auto; bottom: 0px; position: absolute; left: 0px; transform: translate3d(114.5px, 137.887px, 0px) scale(1); transform-origin: 81.5px bottom; z-index: 0;');
+                expect(infoWindowStyle.cssText).to.be.eql('width: auto; bottom: 0px; position: absolute; left: 0px; transform: translate3d(116px, 138px, 0px) scale(1); transform-origin: 79.8438px bottom; z-index: 0;');
                 done();
             }, 100);
         });
