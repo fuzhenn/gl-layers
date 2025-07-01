@@ -65,6 +65,7 @@ describe('vector tile integration specs', () => {
             const limit = style.renderingCount || 1;
             options.devicePixelRatio = 1;
             map = new maptalks.Map(container, options);
+            style.features = true;
             style.debugCollision = true;
             style.tileLimitPerFrame = 0;
             style.loadingLimit = 0;
@@ -100,6 +101,7 @@ describe('vector tile integration specs', () => {
                     if (DEBUGGING) {
                         ended = true;
                         done();
+                        return;
                     }
                     //比对测试
                     match(canvas, expectedPath, (err, result) => {
@@ -430,6 +432,16 @@ describe('vector tile integration specs', () => {
             }
         }
     });
+
+    context('billboard specs', () => {
+        const specs = readSpecs(path.resolve(__dirname, 'fixtures', 'billboard'));
+        for (const p in specs) {
+            if (hasOwn(specs, p)) {
+                it(p, runner(p, specs[p]));
+            }
+        }
+    });
+
 });
 
 
