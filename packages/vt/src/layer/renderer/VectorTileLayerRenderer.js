@@ -184,19 +184,15 @@ class VectorTileLayerRenderer extends maptalks.renderer.TileLayerCanvasRenderer 
         return needRefresh;
     }
 
-    //always redraw when map is interacting
-    needToRedraw() {
-        const redraw = super.needToRedraw();
-        if (!redraw) {
-            const plugins = this._getFramePlugins();
-            for (let i = 0; i < plugins.length; i++) {
-                if (plugins[i] && plugins[i].needToRedraw()) {
-                    return true;
-                }
-
+    testIfNeedRedraw() {
+        const plugins = this._getFramePlugins();
+        for (let i = 0; i < plugins.length; i++) {
+            if (plugins[i] && plugins[i].needToRedraw()) {
+                return true;
             }
+
         }
-        return redraw;
+        return super.testIfNeedRedraw();
     }
 
     needRetireFrames() {
@@ -516,6 +512,10 @@ class VectorTileLayerRenderer extends maptalks.renderer.TileLayerCanvasRenderer 
 
     isForeground(mesh) {
         return !!(this._vtCurrentTiles && this._vtCurrentTiles[mesh.properties.tile.id]);
+    }
+
+    getCurrentTiles() {
+        return this._vtCurrentTiles;
     }
 
     _getTileZoomDiff(mesh) {

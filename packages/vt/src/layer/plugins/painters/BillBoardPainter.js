@@ -10,11 +10,13 @@ import { isFunction, isString } from '../../../common/Util';
 import { isFunctionDefinition, interpolated } from '@maptalks/function-type';
 import { createAtlasTexture } from './util/atlas_util';
 import { getIndexArrayType } from '../../../packer/pack/util/array';
+import { isObjectEmpty } from './util/is_obj_empty';
 
 const TILE_POINT = new maptalks.Point(0, 0);
 
 const sizeOut = [];
 const OUT_QUAT = [];
+const canvas = document.createElement('canvas');
 
 export default class BillBoardPainter extends BasicPainter {
 
@@ -59,8 +61,97 @@ export default class BillBoardPainter extends BasicPainter {
             };
             image.src = symbolDef.source;
         }
+    }
 
+    needToRedraw() {
+        const symbolDef = this.getSymbolDef({ index: 0 });
+        if (!symbolDef || !isFunction(symbolDef.source)) {
+            return super.needToRedraw();
+        }
+        const renderer = this.layer.getRenderer();
+        const currentTiles = renderer.getCurrentTiles();
+        if (!currentTiles || isObjectEmpty(currentTiles)) {
+            return super.needToRedraw();
+        }
+        const redraw = this._checkIfSourceUpdated();
+        return redraw || super.needToRedraw();
+    }
 
+    _checkIfSourceUpdated() {
+        let redraw = false;
+        const renderer = this.layer.getRenderer();
+        const currentTiles = renderer.getCurrentTiles();
+        const symbolDef = this.getSymbolDef({ index: 0 });
+        const source = symbolDef.source;
+        const tileCache = renderer.tileCache;
+        const bins = [];
+        for (const p in currentTiles) {
+            const tile = tileCache.get(p);
+            if (!tile || !tile.image || !tile.image.cache || !tile.image.cache[0]) {
+                continue;
+            }
+            let { geometry } = tile.image.cache[0];
+            if (!geometry || !geometry[0] || !geometry[0].geometry) {
+                continue;
+            }
+            geometry = geometry[0].geometry.properties.billGeometry;
+            const { oldPickingId, contextCache, textureCache, features, billTexture } = geometry.properties;
+            if (!oldPickingId || !oldPickingId.length) {
+                continue;
+            }
+            let tileRedraw = false;
+            let refreshTexCoord = false;
+            const count = oldPickingId.length;
+            for (let i = 0; i < count; i++) {
+                const pickingId = oldPickingId[i];
+                const context = contextCache[pickingId] = contextCache[pickingId] || {};
+                const feature = features[pickingId] && features[pickingId].feature;
+                if (!feature) {
+                    continue;
+                }
+                const current = textureCache[pickingId];
+                let currentWidth = 0;
+                let currentHeight = 0;
+                if (current) {
+                    currentWidth = current.width;
+                    currentHeight = current.height;
+                }
+                let tex = source(context, feature.properties);
+                let texture;
+                if (tex.redraw) {
+                    tileRedraw = redraw = true;
+                    texture = textureCache[pickingId] = tex.data;
+                    if (currentWidth !== texture.width || currentHeight !== texture.height) {
+                        refreshTexCoord = true;
+                    }
+                } else {
+                    texture = textureCache[pickingId];
+                }
+                bins.push({
+                    id: pickingId,
+                    w: texture.width,
+                    h: texture.height
+                });
+            }
+            if (tileRedraw) {
+                const aTexCoord = refreshTexCoord ? geometry.properties.aTexCoord : null;
+                const image = this._fillFnTextureData(aTexCoord, geometry, bins);
+                billTexture({
+                    width: image.width,
+                    height: image.height,
+                    data: image.data,
+                    format: image.format,
+                    mag: 'linear',
+                    min: 'linear',
+                    flipY: false,
+                    premultiplyAlpha: true
+                });
+                if (refreshTexCoord) {
+                    geometry.updateData('aTexCoord', geometry.properties.aTexCoord);
+                }
+            }
+        }
+        return redraw;
     }
 
     isTerrainSkin() {
@@ -79,14 +170,15 @@ export default class BillBoardPainter extends BasicPainter {
         if (!this._ready) {
             return null;
         }
-        let { geometry } = geo;
-        const { features, tileResolution, tileRatio } = geometry.properties;
-        if (!geometry.data.aPosition || geometry.data.aPosition.length === 0) {
+        let { geometry: pointGeo } = geo;
+        const { features, tileResolution, tileRatio } = pointGeo.properties;
+        if (!pointGeo.data.aPosition || pointGeo.data.aPosition.length === 0) {
             return null;
         }
 
-        geometry = this._createBillboard(geometry, geometry.desc.positionSize, features);
+        const geometry = this._createBillboard(pointGeo, pointGeo.desc.positionSize, features);
         geometry.generateBuffers(this.regl);
+        pointGeo.properties.billGeometry = geometry;
 
         const material = new reshader.Material({
             texture: geometry.properties.billTexture
@@ -122,13 +214,12 @@ export default class BillBoardPainter extends BasicPainter {
 
     _createBillboard(geometry, positionSize, features) {
         const tileZoom = geometry.properties.z;
-
-
         const { aPosition, aPickingId } = geometry.data;
         const geoProps = geometry.properties;
+        geoProps.oldPickingId = aPickingId;
         const contextCache = geoProps.contextCache = [];
         const textureCache = geoProps.textureCache = [];
-        const count = aPosition.length / positionSize;
+        const count = aPickingId.length;
         const newCount = count * 6;
         const newPosition = new aPosition.constructor(newCount * positionSize);
         const aExtrude = new Int16Array(newCount * 2);
@@ -136,10 +227,7 @@ export default class BillBoardPainter extends BasicPainter {
         const newPickingId = new aPickingId.constructor(newCount);
 
         const source = this.getSymbolDef({ index: 0 }).source;
-        const pack = new ShelfPack(0, 0, { autoResize: true });
         const bins = [];
-        const canvas = document.createElement('canvas');
-        const ctx = canvas.getContext('2d');
 
         for (let i = 0; i < count; i++) {
             const pos = aPosition.subarray(i * positionSize, (i + 1) * positionSize);
@@ -157,11 +245,15 @@ export default class BillBoardPainter extends BasicPainter {
             newPickingId[i * 6 + 3] = pickingId;
             newPickingId[i * 6 + 4] = pickingId;
             newPickingId[i * 6 + 5] = pickingId;
+        }
 
+        const isFnSource = isFunction(source);
+        for (let i = 0; i < count; i++) {
+            const pickingId = aPickingId[i];
             const feature = features[pickingId];
 
             let texture;
-            if (isFunction(source)) {
+            if (isFnSource) {
                 const context = contextCache[pickingId] = contextCache[pickingId] || {};
                 const tex = source(context, feature && feature.feature && feature.feature.properties);
                 texture = tex.data;
@@ -174,34 +266,13 @@ export default class BillBoardPainter extends BasicPainter {
             } else {
                 texture = this._image;
             }
-
-            this._fillExtrude(aExtrude, i, texture, feature, tileZoom);
+            this._fillExtrude(aExtrude, i, feature, tileZoom);
             this._fillQuat(aQuat, i, feature, tileZoom);
         }
+
         const aTexCoord = new Int16Array(newCount * 2);
         if (bins.length) {
-            pack.pack(bins, { inPlace: true });
-            const limit = this.sceneConfig.textureLimit || 1024;
-            let ratio = 1;
-            if (pack.w * pack.h > limit * limit) {
-                ratio = Math.sqrt(limit * limit / (pack.w * pack.h));
-                pack.resize(Math.floor(pack.w * ratio), Math.floor(pack.h * ratio));
-            }
-            const image = new RGBAImage({ width: pack.w, height: pack.h });
-            for (let i = 0; i < count; i++) {
-                const bin = bins[i];
-                this._fillTexCoord(aTexCoord, i, bin, ratio);
-                const texture = textureCache[bin.id];
-                if (!texture) {
-                    continue;
-                }
-                canvas.width = bin.w;
-                canvas.height = bin.h;
-                ctx.drawImage(texture, 0, 0, bin.w, bin.h);
-                const data = ctx.getImageData(0, 0, bin.w, bin.h);
-                RGBAImage.copy(data, image, { x: 0, y: 0 }, { x: bin.x, y: bin.y }, { width: bin.w, height: bin.h });
-            }
-            image.format = 'rgba';
+            const image = this._fillFnTextureData(aTexCoord, geometry, bins);
             geoProps.billTexture = createAtlasTexture(this.regl, image, false, false);
         } else {
             const imageBin = { x: 0, y: 0, w: this._image.width, h: this._image.height };
@@ -232,6 +303,13 @@ export default class BillBoardPainter extends BasicPainter {
             aTexCoord
         };
 
+        const { feaPickingIdMap, aFeaIds } = geometry.properties;
+        const newFeaIds = new aFeaIds.constructor(newCount);
+        for (let i = 0; i < newPickingId.length; i++) {
+            newFeaIds[i] = feaPickingIdMap[newPickingId[i]];
+        }
+        geoProps.aFeaIds = newFeaIds;
+        geoProps.aTexCoord = aTexCoord;
         const geo = new reshader.Geometry(data, new ctor(elements), 0, { positionSize });
         geo.properties = geometry.properties;
         return geo;
@@ -259,7 +337,7 @@ export default class BillBoardPainter extends BasicPainter {
 
     }
 
-    _fillExtrude(aExtrude, i, texture, feature, tileZoom) {
+    _fillExtrude(aExtrude, i, feature, tileZoom) {
         let width = this._width || 0;
         let height = this._height || 0;
         const properties = feature && feature.feature && feature.feature.properties;
@@ -304,13 +382,53 @@ export default class BillBoardPainter extends BasicPainter {
         aExtrude.set(sizeOut, i * 2 + 10);
     }
 
+    _fillFnTextureData(aTexCoord, geometry, bins) {
+        const geoProps = geometry.properties;
+        const { textureCache, oldPickingId } = geoProps;
+        const count = oldPickingId.length;
+        const pack = new ShelfPack(0, 0, { autoResize: true });
+
+        const ctx = canvas.getContext('2d');
+        pack.pack(bins, { inPlace: true });
+        const limit = this.sceneConfig.textureLimit || 1024;
+        let ratio = 1;
+        if (pack.w * pack.h > limit * limit) {
+            ratio = Math.sqrt(limit * limit / (pack.w * pack.h));
+            pack.resize(Math.floor(pack.w * ratio), Math.floor(pack.h * ratio));
+        }
+        const image = new RGBAImage({ width: pack.w, height: pack.h });
+        for (let i = 0; i < count; i++) {
+            const bin = bins[i];
+            if (aTexCoord) {
+                this._fillTexCoord(aTexCoord, i, bin, ratio);
+            }
+            const texture = textureCache[bin.id];
+            if (!texture) {
+                continue;
+            }
+            const w = Math.floor(bin.w * ratio);
+            const h = Math.floor(bin.h * ratio);
+            canvas.width = w;
+            canvas.height = h;
+            ctx.drawImage(texture, 0, 0, w, h);
+            const data = ctx.getImageData(0, 0, w, h);
+            RGBAImage.copy(
+                data, image, { x: 0, y: 0 },
+                { x: Math.floor(bin.x * ratio), y: Math.floor(bin.y * ratio) },
+                { width: w, height: h }
+            );
+        }
+        image.format = 'rgba';
+        return image;
+    }
+
     _fillTexCoord(aTexCoord, i, bin, ratio) {
         const { x, y, w, h } = bin;
 
-        const left = x * ratio;
-        const right = (x + w) * ratio;
-        const top = (y) * ratio;
-        const bottom = (y + h) * ratio;
+        const left = Math.floor(x * ratio);
+        const right = Math.floor((x + w) * ratio);
+        const top = Math.floor(y * ratio);
+        const bottom = Math.floor((y + h) * ratio);
 
         // 左下
         sizeOut[0] = left;
@@ -430,7 +548,15 @@ export default class BillBoardPainter extends BasicPainter {
                         }
                     ],
                     extraCommandProps: {
-                        viewport: this.pickingViewport
+                        viewport: this.pickingViewport,
+                        depth: {
+                            enable: true,
+                            range: this.sceneConfig.depthRange || [0, 1],
+                            func: this.sceneConfig.depthFunc || '<='
+                        },
+                        cull: {
+                            enable: false
+                        }
                     }
                 },
                 this.pickingFBO,
