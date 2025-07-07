@@ -29,13 +29,16 @@ export default class ImageMask extends Mask {
     }
 
     _createMesh(regl) {
-        const geometry = this._createGeometry(regl);
+        const { geometry, copyGeometry } = this._createGeometry(regl);
         const mesh = new reshader.Mesh(geometry);
         const texture = regl.texture()
         this._createTexture(texture);
         mesh.material = new reshader.Material({ maskTexture: texture });
         this._setDefines(mesh);
         this._setLocalTransform(mesh);
+        //this._copyMesh用于后面insect frustum的判断，之所以不直接用this._mesh，有高度的考量
+        this._copyMesh = new reshader.Mesh(copyGeometry);
+        this._setLocalTransform(this._copyMesh);
         return mesh;
     }
 
@@ -67,5 +70,9 @@ export default class ImageMask extends Mask {
         image.onerror = function () {
             console.warn('Image load error');
         }
+    }
+
+    getBBox() {
+        return this._copyMesh.getBoundingBox();
     }
 }

@@ -346,6 +346,36 @@ describe('setMask', () => {
         gltflayer.setMask(mask);
     });
 
+    it('add multiple ImageMask', done => {
+        const gltflayer = new maptalks.GLTFLayer('gltf');
+        const marker = new maptalks.GLTFGeometry(center, {
+            symbol: {
+                url: url4,
+                scaleX: 80,
+                scaleY: 80,
+                scaleZ: 80
+            }
+        }).addTo(gltflayer);
+        marker.once('load', () => {
+            setTimeout(function() {
+                const pixel1 = pickPixel(map, map.width / 2, map.height / 2, 1, 1);
+                expect(pixelMatch([101, 88, 80, 255], pixel1)).to.be.eql(true);
+                const pixel2 = pickPixel(map, map.width / 2 + 100, map.height / 2, 1, 1);
+                expect(pixelMatch([0, 0, 0, 0], pixel2)).to.be.eql(true);
+                done();
+            }, 100);
+        });
+        new maptalks.GroupGLLayer('gl', [gltflayer], { sceneConfig }).addTo(map);
+        const masks = [];
+        [coord1, coord2, coord3].forEach(coord => {
+            const mask = new maptalks.ImageMask(coord, {
+                url: 'resources/ground.jpg'
+            });
+            masks.push(mask);
+        });
+        gltflayer.setMask(masks);
+    });
+
     it('update symbol', done => {
         const gltflayer = new maptalks.GLTFLayer('gltf');
         const marker = new maptalks.GLTFGeometry(center, {
@@ -763,7 +793,7 @@ describe('setMask', () => {
         marker.once('load', () => {
             setTimeout(function() {
                 const pixel1 = pickPixel(map, map.width / 2, map.height / 2, 1, 1);
-                expect(pixelMatch([133, 7, 7, 255], pixel1)).to.be.eql(true);
+                expect(pixelMatch([5, 135, 8, 255], pixel1)).to.be.eql(true);
                 const pixel2 = pickPixel(map, map.width / 2 + 100, map.height / 2, 1, 1);
                 expect(pixelMatch([0, 0, 0, 0], pixel2)).to.be.eql(true);
                 done();

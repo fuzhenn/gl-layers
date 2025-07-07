@@ -31,7 +31,7 @@ export default class Mask extends Polygon {
     }
 
     getMesh(regl, ratio, minHeight) {
-        if (!this.isVisible()) {
+        if (!this.isVisible() || !this.getLayer()) {
             return null;
         }
         if (!this._mesh) {
@@ -61,6 +61,11 @@ export default class Mask extends Polygon {
         geometry.updateData('TEXCOORD', uvs);
         geometry.setElements(triangles);
         this._setLocalTransform(this._mesh);
+        if (this._copyMesh) {
+            const positionWithHeight = this._createPOSITION(earcut.flatten(geojson.geometry.coordinates), true).positions;
+            this._copyMesh.geometry.updateData('POSITION', positionWithHeight);
+            this._setLocalTransform(this._copyMesh);
+        }
     }
 
     _createGeometry(regl) {
@@ -69,6 +74,7 @@ export default class Mask extends Polygon {
         geojson.geometry.coordinates[0].reverse();
         const data = earcut.flatten(geojson.geometry.coordinates);
         const { positions, uvs, triangles } =  mode === 'texture' ? this._createBilinearPOSITON(data) : this._createPOSITION(data);
+        const positionWithHeight = this._createPOSITION(earcut.flatten(geojson.geometry.coordinates), true).positions;
         const geometry = new reshader.Geometry({
             POSITION: positions,
             TEXCOORD: uvs
@@ -80,10 +86,21 @@ export default class Mask extends Polygon {
                 uv0Attribute: 'TEXCOORD'
             });
         geometry.generateBuffers(regl);
-        return geometry;
+        const copyGeometry = new reshader.Geometry({
+            POSITION: positionWithHeight,
+            TEXCOORD: uvs
+        },
+            triangles,
+            0,
+            {
+                positionAttribute: 'POSITION',
+                uv0Attribute: 'TEXCOORD'
+            });
+        copyGeometry.generateBuffers(regl);
+        return mode === 'texture' ? { geometry, copyGeometry } : geometry;
     }
 
-    _createPOSITION(data) {
+    _createPOSITION(data, hasHeight) {
         const map = this.getMap();
         const dimension = data.dimensions;
         for (let ii = 0; ii < data.vertices.length; ii += dimension) {
@@ -101,7 +118,7 @@ export default class Mask extends Polygon {
         for (let i = 0; i < len; i++) {
             pos.push(data.vertices[i * dimension] - centerPos[0]);
             pos.push(data.vertices[i * dimension + 1] - centerPos[1]);
-            pos.push(heightOffset);
+            pos.push(heightOffset + hasHeight ? map.altitudeToPoint(data.vertices[i * dimension + 2], map.getGLRes()) : 0);
         }
         const uvs = this._createTexcoords(data.vertices, dimension);
         const indices = earcut(pos, data.holes, 3);
@@ -228,8 +245,13 @@ export default class Mask extends Polygon {
         if (this._mesh.geometry) {
             this._mesh.geometry.dispose();
         }
+        if (this._copyMesh && this._copyMesh.geometry) {
+            this._copyMesh.geometry.dispose();
+            this._copyMesh.dispose();
+        }
         this._mesh.dispose();
         delete this._mesh;
+        delete this._copyMesh;
     }
 
     containsPoint(coordinate) {
