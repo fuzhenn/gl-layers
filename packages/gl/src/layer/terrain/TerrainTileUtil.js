@@ -10,7 +10,7 @@ export function getCascadeTileIds(layer, x, y, z, center, offset, terrainTileSca
 }
 
 const EMPTY_ARRAY = [];
-export function getTileIdsAtLevel(layer, x, y, z, center, offset, terrainTileScaleY, scale, level) {
+export function getTileIdsAtLevel(layer, x, y, z, center, offset, tileScaleY, scale, level) {
     z -= level;
     if (z <= 0) {
         return EMPTY_ARRAY;
@@ -23,7 +23,7 @@ export function getTileIdsAtLevel(layer, x, y, z, center, offset, terrainTileSca
     const tileConfig = layer['_getTileConfig']();
     const sr = layer.getSpatialReference();
     const tileRes = sr.getResolution(z);
-    const tileYScale = tileConfig.tileSystem.scale.y;
+    const layerTileYScale = tileConfig.tileSystem.scale.y;
 
     const delta = 1E-7;
     scale = scale / Math.pow(2, level);
@@ -45,7 +45,7 @@ export function getTileIdsAtLevel(layer, x, y, z, center, offset, terrainTileSca
         const tx = Math.floor(x * scale);
         let ty = Math.floor(y * scale);
         const skinY = ty;
-        if (tileYScale !== terrainTileScaleY) {
+        if (layerTileYScale !== tileScaleY) {
             ty = getReverseY(tileConfig, ty, tileRes);
         }
         return [
@@ -66,7 +66,7 @@ export function getTileIdsAtLevel(layer, x, y, z, center, offset, terrainTileSca
             const tx = x * scale + i;
             let ty = y * scale + j;
             const skinY = ty;
-            if (tileYScale !== terrainTileScaleY) {
+            if (layerTileYScale !== tileScaleY) {
                 ty = getReverseY(tileConfig, ty, tileRes);
             }
             result.push({
