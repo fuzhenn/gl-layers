@@ -5,7 +5,7 @@ import { extend } from "../util/util";
 import { MixinConstructor } from "maptalks";
 import { intersectsBox } from 'frustum-intersects';
 
-const maskLayerEvents = ['shapechange', 'heightrangechange', 'flatheightchange'];
+// const maskLayerEvents = ['shapechange', 'heightrangechange', 'flatheightchange'];
 const COORD_EXTENT = new Coordinate(0, 0);
 const EXTENT_MIN: vec3 = [0, 0, 0], EXTENT_MAX: vec3 = [0, 0, 0];
 const EMPTY_MAT4 = mat4.identity([0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]);

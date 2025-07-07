@@ -217,7 +217,7 @@ export default class Mask extends Polygon {
         maskColor[0] /= 255;
         maskColor[1] /= 255;
         maskColor[2] /= 255;
-        maskColor[3] = isNumber(polygonOpacity) ? polygonOpacity : DEFAULT_SYMBOL.polygonOpacity;
+        maskColor[3] = isNumber(polygonOpacity) ? polygonOpacity : (this.getMode() === 'texture' ? 1 : DEFAULT_SYMBOL.polygonOpacity);
         return maskColor;
     }
 
