@@ -100,8 +100,8 @@ class NativeLinePainter extends BasicPainter {
             extraCommandProps: {
                 viewport,
                 stencil: {
-                    enable: () => {
-                        return this.isEnableTileStencil(context);
+                    enable: (_, props) => {
+                        return this.isEnableTileStencil(props.painterContext);
                     },
                     mask: 0xFF,
                     func: {
