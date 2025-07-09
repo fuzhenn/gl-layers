@@ -60,6 +60,7 @@ void main() {
         // 使用双线性插值计算正确的纹理坐标
         vec2 texCoord = bilinearTexCoord(pos, mask_position0.xy, mask_position1.xy, mask_position2.xy, mask_position3.xy);
         gl_FragColor = texture2D(maskTexture, texCoord);
+        gl_FragColor.a *= maskColor.a;
     #else
         if (maskColor.a == 0.0) {
             discard;
