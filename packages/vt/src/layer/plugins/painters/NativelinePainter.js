@@ -59,7 +59,7 @@ class NativeLinePainter extends BasicPainter {
         return isEnableStencil;
     }
 
-    init(context) {
+    init() {
         const regl = this.regl;
 
         this.renderer = new reshader.Renderer(regl);
