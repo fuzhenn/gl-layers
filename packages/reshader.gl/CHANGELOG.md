@@ -1,5 +1,11 @@
 # @maptalks/reshader.gl
 
+## 0.107.0
+
+### Minor Changes
+
+- some features and some bug fixes
+
 ## 0.106.0
 
 ### Minor Changes

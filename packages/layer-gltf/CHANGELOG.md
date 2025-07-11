@@ -1,5 +1,11 @@
 # @maptalks/gltf-layer
 
+## 0.105.0
+
+### Minor Changes
+
+- some features and some bug fixes
+
 ## 0.104.3
 
 ### Patch Changes

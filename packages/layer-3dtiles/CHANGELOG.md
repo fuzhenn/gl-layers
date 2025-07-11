@@ -1,5 +1,11 @@
 # @maptalks/3dtiles
 
+## 0.105.4
+
+### Patch Changes
+
+- some features and some bug fixes
+
 ## 0.105.3
 
 ### Patch Changes

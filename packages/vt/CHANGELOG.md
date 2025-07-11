@@ -1,5 +1,16 @@
 # @maptalks/vt
 
+## 0.107.0
+
+### Minor Changes
+
+- some features and some bug fixes
+
+### Patch Changes
+
+- Updated dependencies
+  - @maptalks/gl@0.108.0
+
 ## 0.106.2
 
 ### Patch Changes

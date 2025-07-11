@@ -1,5 +1,11 @@
 # @maptalks/video-layer
 
+## 0.102.4
+
+### Patch Changes
+
+- some features and some bug fixes
+
 ## 0.102.3
 
 ### Patch Changes
