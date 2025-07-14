@@ -1,5 +1,11 @@
 # @maptalks/vt
 
+## 0.107.1
+
+### Patch Changes
+
+- fixes dataConfig.altitudeProperty
+
 ## 0.107.0
 
 ### Minor Changes

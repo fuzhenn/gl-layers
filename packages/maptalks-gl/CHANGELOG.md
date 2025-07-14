@@ -1,5 +1,14 @@
 # maptalks-gl
 
+## 0.110.1
+
+### Patch Changes
+
+- fixes dataConfig.altitudeProperty
+- Updated dependencies
+  - @maptalks/vt@0.107.1
+  - @maptalks/gltf-layer@0.105.0
+
 ## 0.110.0
 
 ### Minor Changes
