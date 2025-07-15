@@ -1,5 +1,11 @@
 # @maptalks/fusiongl
 
+## 0.9.3
+
+### Patch Changes
+
+- upgrade maptalks
+
 ## 0.9.2
 
 ### Patch Changes
