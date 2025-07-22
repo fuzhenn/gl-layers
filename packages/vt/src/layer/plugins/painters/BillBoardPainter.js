@@ -181,7 +181,7 @@ export default class BillBoardPainter extends BasicPainter {
         pointGeo.properties.billGeometry = geometry;
 
         const material = new reshader.Material({
-            texture: geometry.properties.billTexture
+            billTexture: geometry.properties.billTexture
         });
         const mesh = new reshader.Mesh(geometry, material, {
             castShadow: false,
