@@ -1,5 +1,14 @@
 # @maptalks/transform-control
 
+## 0.105.7
+
+### Patch Changes
+
+- bug fixes and upgrade maptalks
+- Updated dependencies
+  - @maptalks/gl@0.108.2
+  - @maptalks/gltf-layer@0.105.2
+
 ## 0.105.6
 
 ### Patch Changes

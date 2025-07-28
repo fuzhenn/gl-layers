@@ -1,5 +1,11 @@
 # @maptalks/3dtiles
 
+## 0.105.6
+
+### Patch Changes
+
+- bug fixes and upgrade maptalks
+
 ## 0.105.5
 
 ### Patch Changes

@@ -1,5 +1,11 @@
 # @maptalks/gltf-loader
 
+## 0.102.6
+
+### Patch Changes
+
+- bug fixes and upgrade maptalks
+
 ## 0.102.5
 
 ### Patch Changes
