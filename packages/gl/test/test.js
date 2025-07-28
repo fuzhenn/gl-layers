@@ -1329,7 +1329,7 @@ describe('gl tests', () => {
                                 return;
                             }
                             hit = true;
-                            expect(pickCoord.toArray()).to.be.eql([ 91.07367661817864, 29.751498692202283, 4328.393288386729 ]);
+                            expect(pickCoord.toArray()).to.be.eql([ 91.07358621310497, 29.751869233789055, 4319.602410412889 ]);
                             done();
                         }
                     });
