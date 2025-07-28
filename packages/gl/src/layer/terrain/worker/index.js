@@ -254,7 +254,9 @@ function generateCesiumTerrain(buffer) {
 
     const triangleCount = view.getUint32(pos, true);
     pos += Uint32Array.BYTES_PER_ELEMENT;
-    const indices = vertexCount > 65536 ? new Uint32Array(buffer, pos, triangleCount * triangleElements) : new Uint16Array(buffer, pos, triangleCount * triangleElements);
+    const indices = vertexCount > 65536 ?
+        new Uint32Array(buffer, pos, triangleCount * triangleElements) :
+        new Uint16Array(buffer, pos, triangleCount * triangleElements);
 
     let highest = 0;
     const length = indices.length;
