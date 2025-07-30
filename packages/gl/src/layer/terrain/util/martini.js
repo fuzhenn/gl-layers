@@ -14,7 +14,7 @@ export function createMartiniData(error, heights, width/* , hasSkirts */) {
     const { triangles, vertices, leftSkirtIndex, rightSkirtIndex, bottomSkirtIndex, topSkirtIndex } = mesh;
     let { numVerticesWithoutSkirts, numTrianglesWithoutSkirts } = mesh;
     if (!numVerticesWithoutSkirts) {
-        numVerticesWithoutSkirts = vertices.legnth / 3;
+        numVerticesWithoutSkirts = vertices.length / 2;
         numTrianglesWithoutSkirts = triangles.length / 3;
     }
     const count = vertices.length / 2;
@@ -59,7 +59,8 @@ export function createMartiniData(error, heights, width/* , hasSkirts */) {
             texcoords[i * 2] = x / maxWidth;
             texcoords[i * 2 + 1] = y / maxWidth;
         }
-        const height = positions[positions.length - 1];
+        // positions为固定长度数组，修复高度取值错误
+        const height = positions[i * 3 + 2];
         if (height < minHeight) {
             minHeight = height;
         }
