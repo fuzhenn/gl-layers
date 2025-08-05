@@ -1,5 +1,11 @@
 # @maptalks/transcoders.crn
 
+## 0.101.5
+
+### Patch Changes
+
+- fix terrain issues and some bugs
+
 ## 0.101.4
 
 ### Patch Changes

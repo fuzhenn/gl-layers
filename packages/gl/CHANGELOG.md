@@ -1,5 +1,14 @@
 # @maptalks/gl
 
+## 0.108.3
+
+### Patch Changes
+
+- fix terrain issues and some bugs
+- Updated dependencies
+  - @maptalks/gltf-loader@0.102.7
+  - @maptalks/reshader.gl@0.107.3
+
 ## 0.108.2
 
 ### Patch Changes

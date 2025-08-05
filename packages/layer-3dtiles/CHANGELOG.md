@@ -1,5 +1,11 @@
 # @maptalks/3dtiles
 
+## 0.105.7
+
+### Patch Changes
+
+- fix terrain issues and some bugs
+
 ## 0.105.6
 
 ### Patch Changes

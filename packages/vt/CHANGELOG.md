@@ -1,5 +1,13 @@
 # @maptalks/vt
 
+## 0.107.4
+
+### Patch Changes
+
+- fix terrain issues and some bugs
+- Updated dependencies
+  - @maptalks/gl@0.108.3
+
 ## 0.107.3
 
 ### Patch Changes

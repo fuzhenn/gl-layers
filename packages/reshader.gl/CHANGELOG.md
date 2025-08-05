@@ -1,5 +1,11 @@
 # @maptalks/reshader.gl
 
+## 0.107.3
+
+### Patch Changes
+
+- fix terrain issues and some bugs
+
 ## 0.107.2
 
 ### Patch Changes

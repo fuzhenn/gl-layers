@@ -1,5 +1,13 @@
 # @maptalks/traffic
 
+## 0.102.7
+
+### Patch Changes
+
+- fix terrain issues and some bugs
+- Updated dependencies
+  - @maptalks/gltf-layer@0.105.3
+
 ## 0.102.6
 
 ### Patch Changes

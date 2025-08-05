@@ -1,5 +1,14 @@
 # @maptalks/transform-control
 
+## 0.105.8
+
+### Patch Changes
+
+- fix terrain issues and some bugs
+- Updated dependencies
+  - @maptalks/gl@0.108.3
+  - @maptalks/gltf-layer@0.105.3
+
 ## 0.105.7
 
 ### Patch Changes

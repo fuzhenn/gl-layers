@@ -1,5 +1,11 @@
 # @maptalks/gltf-layer
 
+## 0.105.3
+
+### Patch Changes
+
+- fix terrain issues and some bugs
+
 ## 0.105.2
 
 ### Patch Changes

@@ -1,5 +1,11 @@
 # @maptalks/gltf-loader
 
+## 0.102.7
+
+### Patch Changes
+
+- fix terrain issues and some bugs
+
 ## 0.102.6
 
 ### Patch Changes
