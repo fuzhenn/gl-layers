@@ -168,18 +168,18 @@ export default class Mask extends Polygon {
             for(let j = 0; j <= cols; j++) {
                 const u = j / cols;
                 const v = i / rows;
-                
+
                 // 双线性插值计算实际位置
                 const x = (1 - u) * (1 - v) * vertices.a.x +
                             u * (1 - v) * vertices.b.x +
                             u * v * vertices.c.x +
                             (1 - u) * v * vertices.d.x;
-                            
+
                 const y = (1 - u) * (1 - v) * vertices.a.y +
                             u * (1 - v) * vertices.b.y +
                             u * v * vertices.c.y +
                             (1 - u) * v * vertices.d.y;
-                
+
                 positions.push(x, y, 0);
                 uvs.push(u, 1 - v); // 注意v坐标翻转
             }
@@ -190,7 +190,7 @@ export default class Mask extends Polygon {
                 const b = a + 1;
                 const c = (i + 1) * (cols + 1) + j;
                 const d = c + 1;
-                
+
                 indices.push(a, b, d);
                 indices.push(a, d, c);
             }
@@ -214,9 +214,6 @@ export default class Mask extends Polygon {
         const symbol = this.getSymbol();
         const { polygonFill, polygonOpacity } = symbol || DEFAULT_SYMBOL;
         const maskColor = normalizeColor([], polygonFill);
-        maskColor[0] /= 255;
-        maskColor[1] /= 255;
-        maskColor[2] /= 255;
         maskColor[3] = isNumber(polygonOpacity) ? polygonOpacity : (this.getMode() === 'texture' ? 1 : DEFAULT_SYMBOL.polygonOpacity);
         return maskColor;
     }
