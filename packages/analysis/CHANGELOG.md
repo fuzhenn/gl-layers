@@ -1,5 +1,11 @@
 # @maptalks/analysis
 
+## 0.102.8
+
+### Patch Changes
+
+- upgrade maptalks and fix vt.highlight with rgba color
+
 ## 0.102.7
 
 ### Patch Changes

@@ -1,5 +1,11 @@
 # @maptalks/transcoders.ktx2
 
+## 0.101.6
+
+### Patch Changes
+
+- upgrade maptalks and fix vt.highlight with rgba color
+
 ## 0.101.5
 
 ### Patch Changes

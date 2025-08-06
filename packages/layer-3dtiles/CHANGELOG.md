@@ -1,5 +1,11 @@
 # @maptalks/3dtiles
 
+## 0.105.8
+
+### Patch Changes
+
+- upgrade maptalks and fix vt.highlight with rgba color
+
 ## 0.105.7
 
 ### Patch Changes

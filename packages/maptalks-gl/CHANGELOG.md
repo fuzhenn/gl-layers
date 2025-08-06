@@ -1,5 +1,18 @@
 # maptalks-gl
 
+## 0.112.1
+
+### Patch Changes
+
+- upgrade maptalks and fix vt.highlight with rgba color
+- Updated dependencies
+  - @maptalks/gl@0.108.4
+  - @maptalks/3dtiles@0.105.8
+  - @maptalks/gltf-layer@0.105.4
+  - @maptalks/video-layer@0.102.8
+  - @maptalks/transform-control@0.105.9
+  - @maptalks/vt@0.107.5
+
 ## 0.112.0
 
 ### Minor Changes

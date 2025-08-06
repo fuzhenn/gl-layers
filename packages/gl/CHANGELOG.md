@@ -1,5 +1,14 @@
 # @maptalks/gl
 
+## 0.108.4
+
+### Patch Changes
+
+- upgrade maptalks and fix vt.highlight with rgba color
+- Updated dependencies
+  - @maptalks/gltf-loader@0.102.8
+  - @maptalks/reshader.gl@0.107.4
+
 ## 0.108.3
 
 ### Patch Changes

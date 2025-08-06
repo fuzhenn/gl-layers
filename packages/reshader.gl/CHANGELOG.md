@@ -1,5 +1,11 @@
 # @maptalks/reshader.gl
 
+## 0.107.4
+
+### Patch Changes
+
+- upgrade maptalks and fix vt.highlight with rgba color
+
 ## 0.107.3
 
 ### Patch Changes

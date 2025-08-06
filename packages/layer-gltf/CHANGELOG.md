@@ -1,5 +1,11 @@
 # @maptalks/gltf-layer
 
+## 0.105.4
+
+### Patch Changes
+
+- upgrade maptalks and fix vt.highlight with rgba color
+
 ## 0.105.3
 
 ### Patch Changes
